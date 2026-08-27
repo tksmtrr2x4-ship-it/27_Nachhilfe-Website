@@ -16,20 +16,20 @@ export default function ImpressumPage() {
         <section>
           <h2 className="font-semibold text-slate-900">Angaben gemäß § 5 TMG</h2>
           <p className="mt-2">
-            [Vor- und Nachname / Firmenname]
+            Jill Manuel Hils / Lernsprung
             <br />
-            [Straße und Hausnummer]
+            Aixheimer Straße 2
             <br />
-            [PLZ und Ort]
+            78056, Villingen-Schwenningen
           </p>
         </section>
 
         <section>
           <h2 className="font-semibold text-slate-900">Kontakt</h2>
           <p className="mt-2">
-            Telefon: [Telefonnummer]
+            Telefon: +49 179 4328302
             <br />
-            E-Mail: [E-Mail-Adresse]
+            E-Mail: jill@hils-vs.de
           </p>
         </section>
 

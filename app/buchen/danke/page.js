@@ -1,11 +1,45 @@
 import Link from "next/link";
-import { getBooking } from "@/lib/db";
+import { getBooking, updateBooking } from "@/lib/db";
+import { getStripe } from "@/lib/stripe";
 import { formatPrice } from "@/lib/format";
 
-export default async function DankePage({ searchParams }) {
-  const { bookingId } = await searchParams;
-  const booking = bookingId ? await getBooking(bookingId) : null;
+export const dynamic = "force-dynamic";
 
+// Fallback-Bestätigung beim Rücksprung von Stripe: falls der Webhook noch
+// nicht durchgelaufen ist (oder lokal nicht eingerichtet), prüfen wir die
+// Checkout-Session direkt und markieren die Buchung als bezahlt.
+async function confirmFromStripe(bookingId, sessionId) {
+  if (!bookingId || !sessionId) return;
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== "paid") return;
+    const sessionBookingId =
+      session.metadata?.bookingId || session.client_reference_id;
+    if (sessionBookingId !== bookingId) return;
+
+    const booking = await getBooking(bookingId);
+    if (!booking || booking.status === "paid") return;
+
+    await updateBooking(bookingId, {
+      status: "paid",
+      stripeSessionId: session.id,
+      stripePaymentIntentId:
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null,
+      paidAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Stripe-Bestätigung fehlgeschlagen:", err);
+  }
+}
+
+export default async function DankePage({ searchParams }) {
+  const { bookingId, session_id: sessionId } = await searchParams;
+
+  await confirmFromStripe(bookingId, sessionId);
+
+  const booking = bookingId ? await getBooking(bookingId) : null;
   const paid = booking?.status === "paid";
 
   return (

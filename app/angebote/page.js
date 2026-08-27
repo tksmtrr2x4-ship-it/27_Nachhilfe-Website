@@ -2,6 +2,8 @@ import Link from "next/link";
 import { listOffers } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Angebote",
 };

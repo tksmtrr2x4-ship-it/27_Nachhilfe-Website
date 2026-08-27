@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 const FEATURES = [
   {
     title: "Individuell abgestimmt",
@@ -19,7 +21,7 @@ const FEATURES = [
 const STEPS = [
   { n: "1", title: "Angebot wählen", text: "Passendes Kursabo oder Einzelangebot aussuchen." },
   { n: "2", title: "Daten eingeben", text: "Kurzes Formular für Schüler:in und Erziehungsberechtigte." },
-  { n: "3", title: "Sicher bezahlen & starten", text: "Bezahlung per PayPal, danach melden wir uns zur Terminplanung." },
+  { n: "3", title: "Sicher bezahlen & starten", text: "Bezahlung per Karte über Stripe, danach melden wir uns zur Terminplanung." },
 ];
 
 export default async function HomePage() {

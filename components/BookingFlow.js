@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { formatPrice } from "@/lib/format";
 
-const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+const stripeConfigured = Boolean(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+);
 
 export default function BookingFlow({ offer, classOptions }) {
-  const router = useRouter();
   const [step, setStep] = useState("form");
   const [booking, setBooking] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [form, setForm] = useState({
     studentName: "",
     studentClass: classOptions[0] || "",
@@ -56,54 +57,56 @@ export default function BookingFlow({ offer, classOptions }) {
     }
   }
 
+  async function startCheckout() {
+    setError("");
+    setPaying(true);
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: booking._id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setError(data.error || "Bezahlung konnte nicht gestartet werden.");
+        setPaying(false);
+        return;
+      }
+      // Weiter zur gehosteten Stripe-Bezahlseite; von dort geht es
+      // zurück auf /buchen/danke.
+      window.location.href = data.url;
+    } catch {
+      setError("Verbindung fehlgeschlagen. Bitte erneut versuchen.");
+      setPaying(false);
+    }
+  }
+
   if (step === "payment" && booking) {
     return (
       <div className="rounded-2xl border border-slate-200 p-6">
         <h2 className="text-lg font-semibold text-slate-900">Bezahlung abschließen</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Buchung für {form.studentName} – {offer.title}. Bitte schließe die Zahlung über
-          PayPal ab, um die Buchung zu bestätigen.
+          Buchung für {form.studentName} – {offer.title}. Bitte schließe die Zahlung
+          über Stripe ab, um die Buchung zu bestätigen.
         </p>
 
-        {!paypalClientId ? (
+        {!stripeConfigured ? (
           <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-            PayPal ist auf dieser Seite noch nicht konfiguriert (NEXT_PUBLIC_PAYPAL_CLIENT_ID
-            fehlt). Siehe README für die Einrichtung.
+            Stripe ist auf dieser Seite noch nicht konfiguriert
+            (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY fehlt). Siehe README für die
+            Einrichtung.
           </div>
         ) : (
-          <div className="mt-6">
-            <PayPalScriptProvider
-              options={{ clientId: paypalClientId, currency: "EUR", intent: "capture" }}
-            >
-              <PayPalButtons
-                style={{ layout: "vertical", shape: "pill" }}
-                createOrder={async () => {
-                  const res = await fetch("/api/paypal/create-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ bookingId: booking._id }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || "Fehler bei PayPal-Bestellung");
-                  return data.orderID;
-                }}
-                onApprove={async (data) => {
-                  const res = await fetch("/api/paypal/capture-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ orderID: data.orderID, bookingId: booking._id }),
-                  });
-                  const result = await res.json();
-                  if (result.status === "COMPLETED") {
-                    router.push(`/buchen/danke?bookingId=${booking._id}`);
-                  } else {
-                    setError("Zahlung konnte nicht bestätigt werden.");
-                  }
-                }}
-                onError={() => setError("Bei der Zahlung ist ein Fehler aufgetreten.")}
-              />
-            </PayPalScriptProvider>
-          </div>
+          <button
+            type="button"
+            onClick={startCheckout}
+            disabled={paying}
+            className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+          >
+            {paying
+              ? "Weiterleitung zu Stripe…"
+              : `${formatPrice(offer.priceCents)} sicher bezahlen`}
+          </button>
         )}
 
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}

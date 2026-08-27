@@ -3,6 +3,8 @@ import { getOffer, getSettings } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 import BookingFlow from "@/components/BookingFlow";
 
+export const dynamic = "force-dynamic";
+
 export default async function BuchenPage({ params }) {
   const { id } = await params;
   const [offer, settings] = await Promise.all([getOffer(id), getSettings()]);

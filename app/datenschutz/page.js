@@ -7,7 +7,7 @@ export default function DatenschutzPage() {
 
       <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
         Platzhalter-Seite: Diese Datenschutzerklärung deckt bereits ab, welche Daten diese
-        Website technisch verarbeitet (Buchungsformular, PayPal). Bitte trotzdem vor dem
+        Website technisch verarbeitet (Buchungsformular, Stripe). Bitte trotzdem vor dem
         Live-Gang von einer fachkundigen Stelle prüfen lassen – insbesondere weil hier
         personenbezogene Daten von Minderjährigen (Schüler:innen) verarbeitet werden und dafür
         besondere Sorgfaltspflichten gelten (u.a. Einwilligung der Erziehungsberechtigten).
@@ -39,13 +39,14 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">3. Zahlungsabwicklung über PayPal</h2>
+          <h2 className="font-semibold text-slate-900">3. Zahlungsabwicklung über Stripe</h2>
           <p className="mt-2">
-            Zahlungen werden über PayPal (PayPal (Europe) S.à r.l. et Cie, S.C.A., 22-24
-            Boulevard Royal, L-2449 Luxembourg) abgewickelt. Dabei werden die zur
-            Zahlungsabwicklung erforderlichen Daten an PayPal übermittelt. Es gilt die
-            Datenschutzerklärung von PayPal: https://www.paypal.com/de/webapps/mpp/ua/privacy-full.
-            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+            Zahlungen werden über Stripe (Stripe Payments Europe, Ltd., 1 Grand Canal Street
+            Lower, Grand Canal Dock, Dublin, Irland) abgewickelt. Beim Bezahlvorgang wird auf
+            eine von Stripe gehostete Bezahlseite weitergeleitet; die zur Zahlungsabwicklung
+            erforderlichen Daten (u.a. Zahlungsmittel, Name, E-Mail-Adresse) werden dabei an
+            Stripe übermittelt. Es gilt die Datenschutzerklärung von Stripe:
+            https://stripe.com/de/privacy. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
           </p>
         </section>
 

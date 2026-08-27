@@ -9,14 +9,14 @@ export default function Footer({ siteName, contactEmail, contactPhone }) {
           <div>
             <p className="text-sm font-semibold text-slate-900">{siteName}</p>
             <p className="mt-2 text-sm text-slate-500">
-              Nachhilfe für Schülerinnen und Schüler ab Klasse 8.
+              Nachhilfe für Schüler ab der achten Klasse.
             </p>
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-900">Kontakt</p>
             <ul className="mt-2 space-y-1 text-sm text-slate-500">
-              <li>{contactEmail || "E-Mail folgt in Kürze"}</li>
-              <li>{contactPhone || "Telefon folgt in Kürze"}</li>
+              <li>{contactEmail || "jill@hils-vs.de"}</li>
+              <li>{contactPhone || "+49 179 4328302"}</li>
             </ul>
           </div>
           <div>

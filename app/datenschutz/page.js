@@ -5,23 +5,19 @@ export default function DatenschutzPage() {
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-3xl font-bold text-slate-900">Datenschutzerklärung</h1>
 
-      <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-        Platzhalter-Seite: Diese Datenschutzerklärung deckt bereits ab, welche Daten diese
-        Website technisch verarbeitet (Buchungsformular, Stripe). Bitte trotzdem vor dem
-        Live-Gang von einer fachkundigen Stelle prüfen lassen – insbesondere weil hier
-        personenbezogene Daten von Minderjährigen (Schüler:innen) verarbeitet werden und dafür
-        besondere Sorgfaltspflichten gelten (u.a. Einwilligung der Erziehungsberechtigten).
-      </div>
-
       <div className="mt-8 space-y-6 text-sm text-slate-700">
         <section>
           <h2 className="font-semibold text-slate-900">1. Verantwortlicher</h2>
           <p className="mt-2">
-            [Name / Firmenname]
+            Jill Manuel Hils / Lernsprung
             <br />
-            [Anschrift]
+            Aixheimer Straße 2
             <br />
-            E-Mail: [E-Mail-Adresse]
+            78056, Villingen-Schwenningen
+            <br />
+            Telefon: +49 179 4328302
+            <br />
+            E-Mail: jill@hils-vs.de
           </p>
         </section>
 

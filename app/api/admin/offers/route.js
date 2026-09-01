@@ -1,5 +1,6 @@
 import { listOffers, createOffer } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
+import { normalizeOfferInput } from "@/lib/offerFields";
 
 export async function GET(request) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
@@ -10,16 +11,6 @@ export async function GET(request) {
 export async function POST(request) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   const body = await request.json();
-  const offer = await createOffer({
-    type: body.type === "session" ? "session" : "package",
-    title: body.title?.trim() || "Neues Angebot",
-    subject: body.subject?.trim() || "",
-    durationLabel: body.durationLabel?.trim() || "",
-    durationMinutes: Number.isFinite(body.durationMinutes) ? body.durationMinutes : null,
-    description: body.description?.trim() || "",
-    features: Array.isArray(body.features) ? body.features : [],
-    priceCents: Number.isFinite(body.priceCents) ? body.priceCents : 0,
-    active: body.active !== undefined ? Boolean(body.active) : true,
-  });
+  const offer = await createOffer(normalizeOfferInput(body, { partial: false }));
   return Response.json({ offer }, { status: 201 });
 }

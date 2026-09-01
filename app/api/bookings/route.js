@@ -12,10 +12,12 @@ export async function POST(request) {
     offerId,
     studentName,
     studentClass,
+    subject,
     parentName,
     parentEmail,
     parentPhone,
     notes,
+    guardianConsent,
     requestedDate,
     requestedTime,
     locationType,
@@ -27,7 +29,13 @@ export async function POST(request) {
     return Response.json({ error: "Angebot nicht gefunden." }, { status: 404 });
   }
 
-  if (!studentName?.trim() || !studentClass || !parentName?.trim() || !parentEmail?.trim()) {
+  if (
+    !studentName?.trim() ||
+    !studentClass ||
+    !subject?.trim() ||
+    !parentName?.trim() ||
+    !parentEmail?.trim()
+  ) {
     return Response.json(
       { error: "Bitte alle Pflichtfelder ausfüllen." },
       { status: 400 }
@@ -41,13 +49,31 @@ export async function POST(request) {
     );
   }
 
+  if (!guardianConsent) {
+    return Response.json(
+      {
+        error:
+          "Bitte bestätigen, dass Sie erziehungsberechtigt sind und diesen Vertrag abschließen.",
+      },
+      { status: 400 }
+    );
+  }
+
   const isSession = offer.type === "session";
+  const allowedLocations = offer.mode === "online" ? ["online"] : ["tutor", "student"];
+  if (offer.mode === "both") allowedLocations.push("online");
 
   if (isSession) {
     if (!requestedDate || !requestedTime) {
       return Response.json({ error: "Bitte einen Termin auswählen." }, { status: 400 });
     }
-    if (!["tutor", "student"].includes(locationType)) {
+    // Nur zukünftige Termine akzeptieren (serverseitig, unabhängig vom
+    // clientseitigen `min` am Datumsfeld).
+    const requestedDateTime = new Date(`${requestedDate}T${requestedTime}:00`);
+    if (Number.isNaN(requestedDateTime.getTime()) || requestedDateTime.getTime() < Date.now()) {
+      return Response.json({ error: "Bitte einen Termin in der Zukunft wählen." }, { status: 400 });
+    }
+    if (!allowedLocations.includes(locationType)) {
       return Response.json({ error: "Bitte einen Unterrichtsort auswählen." }, { status: 400 });
     }
     if (locationType === "student" && !locationAddress?.trim()) {
@@ -70,10 +96,12 @@ export async function POST(request) {
     },
     studentName: studentName.trim(),
     studentClass: String(studentClass),
+    subject: subject.trim(),
     parentName: parentName.trim(),
     parentEmail: parentEmail.trim(),
     parentPhone: parentPhone?.trim() || "",
     notes: notes?.trim() || "",
+    guardianConsent: true,
     ...(isSession
       ? {
           requestedDate,
@@ -105,7 +133,7 @@ async function notifyAdminOfSessionRequest(booking) {
       `Termin-Wunsch: ${formatDate(booking.requestedDate)} um ${booking.requestedTime} Uhr`,
       `Ort: ${locationLabel(booking)}`,
       ``,
-      `Schüler:in: ${booking.studentName}, Klasse ${booking.studentClass}`,
+      `Schüler:in: ${booking.studentName}, Klasse ${booking.studentClass}, Fach: ${booking.subject}`,
       `Erziehungsberechtigte:r: ${booking.parentName}`,
       `E-Mail: ${booking.parentEmail}`,
       `Telefon: ${booking.parentPhone || "–"}`,

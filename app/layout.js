@@ -17,11 +17,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export async function generateMetadata() {
   const settings = await getSettings();
+  const description = `${settings.subline} Nachhilfe Villingen-Schwenningen von Jill Manuel Hils.`;
   return {
-    title: `${settings.siteName} – ${settings.slogan}`,
-    description: settings.subline,
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: `${settings.siteName} – ${settings.slogan}`,
+      template: `%s – ${settings.siteName}`,
+    },
+    description,
+    openGraph: {
+      title: `${settings.siteName} – ${settings.slogan}`,
+      description,
+      url: siteUrl,
+      siteName: settings.siteName,
+      locale: "de_DE",
+      type: "website",
+      images: ["/logo.png"],
+    },
+    twitter: {
+      card: "summary",
+      title: `${settings.siteName} – ${settings.slogan}`,
+      description,
+      images: ["/logo.png"],
+    },
   };
 }
 
@@ -29,12 +51,52 @@ export default async function RootLayout({ children }) {
   const settings = await getSettings();
   const logoSrc = getLogoSrc();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: settings.siteName,
+    founder: "Jill Manuel Hils",
+    description: settings.subline,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Aixheimer Straße 2",
+      postalCode: "78056",
+      addressLocality: "Villingen-Schwenningen",
+      addressCountry: "DE",
+    },
+    areaServed: "Villingen-Schwenningen",
+    telephone: settings.contactPhone || undefined,
+    email: settings.contactEmail || undefined,
+    url: siteUrl,
+    priceRange: "€€",
+    // Zeitfenster, in dem Termine angefragt werden können (Admin-Einstellungen).
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: `${String(settings.bookingHourStart).padStart(2, "0")}:00`,
+        closes: `${String(settings.bookingHourEnd).padStart(2, "0")}:00`,
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Saturday",
+        opens: "10:00",
+        closes: "16:00",
+      },
+    ],
+  };
+
   return (
     <html
       lang="de"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <Header siteName={settings.siteName} logoSrc={logoSrc} />
         <main className="flex-1">{children}</main>
         <Footer

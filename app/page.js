@@ -4,30 +4,30 @@ import { getLogoSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
 
-const FEATURES = [
-  {
-    title: "Individuell abgestimmt",
-    text: "Fach, Klassenstufe und Lernziel bestimmen, wer und wie unterrichtet wird – kein Einheitsprogramm.",
-  },
-  {
-    title: "Erfahrene Lehrkräfte",
-    text: "Geprüfte Nachhilfelehrkräfte mit Erfahrung ab Klasse 8 bis zum Abitur.",
-  },
-  {
-    title: "Einfache Buchung & Bezahlung",
-    text: "Angebot wählen, Daten eintragen, sicher online bezahlen – startklar in wenigen Minuten.",
-  },
-];
-
 const STEPS = [
-  { n: "1", title: "Angebot wählen", text: "Passendes Kursabo oder Einzelangebot aussuchen." },
-  { n: "2", title: "Daten eingeben", text: "Kurzes Formular für Schüler:in und Erziehungsberechtigte." },
-  { n: "3", title: "Sicher bezahlen & starten", text: "Bezahlung per Karte über Stripe, danach melden wir uns zur Terminplanung." },
+  {
+    n: "1",
+    title: "Angebot wählen",
+    text: "Kursabo direkt buchen oder eine Einzelstunde mit deinem Wunschtermin anfragen.",
+  },
+  {
+    n: "2",
+    title: "Daten eingeben",
+    text: "Kurzes Formular für dich und deine Erziehungsberechtigten.",
+  },
+  {
+    n: "3",
+    title: "Loslegen",
+    text: "Pakete zahlst du sofort sicher per Karte. Bei Einzelstunden bestätige ich deinen Termin per E-Mail.",
+  },
 ];
 
 export default async function HomePage() {
   const settings = await getSettings();
   const logoSrc = getLogoSrc();
+  const aboutBullets = settings.aboutBullets?.length
+    ? settings.aboutBullets
+    : ["Individuell auf dein Fach und deine Klasse abgestimmt"];
 
   return (
     <div>
@@ -40,17 +40,15 @@ export default async function HomePage() {
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-28 sm:py-36">
-          {logoSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoSrc} alt={settings.siteName} className="mb-8 h-16 w-auto sm:h-20" />
-          ) : null}
-          <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-indigo-200">
-            Nachhilfe ab Klasse {settings.minClass}
+          <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold text-indigo-200">
+            Nachhilfe ab Klasse {settings.minClass} · Villingen-Schwenningen
           </span>
-          <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-6xl">
+          <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl">
             {settings.slogan}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-slate-300">{settings.subline}</p>
+          <p className="mx-auto mt-6 max-w-prose text-lg text-slate-300 sm:mx-0">
+            {settings.subline}
+          </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
               href="/angebote"
@@ -69,40 +67,69 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            {settings.aboutTitle}
-          </h2>
-          <p className="mt-4 text-slate-600">{settings.aboutText}</p>
-        </div>
-        <div className="mt-12 grid gap-8 sm:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-slate-900">{f.title}</h3>
-              <p className="mt-2 text-sm text-slate-600">{f.text}</p>
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+              {settings.aboutTitle}
+            </h2>
+            <p className="mt-4 max-w-prose text-slate-600">{settings.aboutText}</p>
+            <ul className="mt-6 space-y-3">
+              {aboutBullets.map((bullet) => (
+                <li key={bullet} className="flex items-start gap-2.5 text-sm text-slate-700">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/ueber-mich"
+              className="mt-6 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+            >
+              Mehr über mich →
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2">
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
-          ))}
+            <h3 className="mt-4 font-semibold text-slate-900">Mein Abitur als Beleg</h3>
+            <p className="mt-2 max-w-prose text-sm text-slate-600">
+              Abiturschnitt 1,8 (679 Punkte, Abitur 2026), Leistungsfächer Mathematik, Biologie
+              und Wirtschaft. Ich weiß
+              also aus erster Hand, wie die Prüfungen ablaufen und worauf es ankommt – nicht nur
+              aus dem Lehrbuch.
+            </p>
+          </div>
         </div>
       </section>
 
+      <MascotDivider logoSrc={logoSrc} siteName={settings.siteName} />
+
       <section id="so-funktionierts" className="bg-slate-50 py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
             So funktioniert die Buchung
           </h2>
           <div className="mt-12 grid gap-10 sm:grid-cols-3">
             {STEPS.map((s) => (
               <div key={s.n}>
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
                   {s.n}
                 </div>
                 <h3 className="mt-4 font-semibold text-slate-900">{s.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{s.text}</p>
+                <p className="mt-2 max-w-prose text-sm text-slate-600">{s.text}</p>
               </div>
             ))}
           </div>
@@ -112,9 +139,9 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-indigo-600 px-8 py-12 sm:flex-row sm:items-center sm:px-12">
           <div>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">Bereit durchzustarten?</h2>
+            <h2 className="text-2xl font-semibold text-white sm:text-3xl">Bereit durchzustarten?</h2>
             <p className="mt-2 max-w-md text-indigo-100">
-              Alle Angebote im Überblick – in wenigen Minuten gebucht und bezahlt.
+              Alle Angebote im Überblick – Paket sofort buchen oder Einzelstunde anfragen.
             </p>
           </div>
           <Link
@@ -125,6 +152,21 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+// Dezentes wiederkehrendes Maskottchen-Element als Section-Trenner – ein
+// einziger kleiner Auftritt zwischen den Homepage-Abschnitten, kein
+// Cartoon-Overload.
+function MascotDivider({ logoSrc, siteName }) {
+  if (!logoSrc) return null;
+  return (
+    <div className="flex items-center justify-center gap-4 py-2">
+      <span className="h-px w-16 bg-slate-200" aria-hidden="true" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logoSrc} alt={siteName} className="h-6 w-auto opacity-70" />
+      <span className="h-px w-16 bg-slate-200" aria-hidden="true" />
     </div>
   );
 }

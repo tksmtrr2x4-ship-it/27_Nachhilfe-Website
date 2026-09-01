@@ -12,21 +12,24 @@ export default function Header({ siteName, logoSrc }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoSrc} alt={siteName} className="h-8 w-auto" />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-semibold text-white">
               {siteName?.[0]?.toUpperCase() || "N"}
             </span>
           )}
           {siteName}
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
-          <Link href="/angebote" className="transition hover:text-indigo-600">
-            Angebote
+        <nav className="flex items-center gap-6 text-sm font-semibold text-slate-600">
+          <Link href="/ueber-mich" className="hidden transition hover:text-indigo-600 sm:inline">
+            Über mich
+          </Link>
+          <Link href="/faq" className="hidden transition hover:text-indigo-600 sm:inline">
+            FAQ
           </Link>
           <Link
             href="/angebote"
-            className="rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-500"
+            className="rounded-full bg-indigo-600 px-4 py-2.5 text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-500"
           >
-            Jetzt buchen
+            Angebote
           </Link>
         </nav>
       </div>

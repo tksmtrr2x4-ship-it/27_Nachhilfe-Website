@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { formatPrice, formatDate, locationLabel } from "@/lib/format";
+import { computeListPriceCents, computeSavings, computeTotalHours } from "@/lib/pricing";
 
 const EMPTY_OFFER = {
   type: "package",
   title: "",
   subject: "",
   durationLabel: "",
-  durationMinutes: "",
+  durationMinutes: "45",
+  sessionCount: "",
+  sessionMinutes: "45",
+  weeks: "",
+  mode: "both",
+  catchmentAreaText: "Villingen-Schwenningen und Umgebung (15 km)",
+  cancellationText: "Kostenlose Stornierung bis 24 Stunden vor dem Termin.",
+  validityText: "",
   description: "",
   featuresText: "",
   price: "",
@@ -21,6 +29,12 @@ const STATUS_LABEL = {
   paid: "Bezahlt",
   cancelled: "Storniert",
 };
+
+const MODE_OPTIONS = [
+  ["both", "Online oder vor Ort"],
+  ["presence", "Nur vor Ort"],
+  ["online", "Nur online"],
+];
 
 export default function AdminPage() {
   const [pin, setPin] = useState("");
@@ -112,12 +126,10 @@ export default function AdminPage() {
       type: offerForm.type,
       title: offerForm.title,
       subject: offerForm.subject,
-      durationLabel: isSession
-        ? offerForm.durationMinutes === "90"
-          ? "90 Minuten (Doppelstunde)"
-          : "45 Minuten"
-        : offerForm.durationLabel,
-      durationMinutes: isSession ? Number(offerForm.durationMinutes) || 45 : null,
+      mode: offerForm.mode,
+      catchmentAreaText: offerForm.catchmentAreaText,
+      cancellationText: offerForm.cancellationText,
+      validityText: offerForm.validityText,
       description: offerForm.description,
       features: offerForm.featuresText
         .split("\n")
@@ -126,6 +138,25 @@ export default function AdminPage() {
       priceCents: Math.round(parseFloat(offerForm.price.replace(",", ".")) * 100) || 0,
       active: offerForm.active,
     };
+
+    if (isSession) {
+      payload.durationMinutes = Number(offerForm.durationMinutes) || 45;
+      payload.durationLabel =
+        offerForm.durationMinutes === "90" ? "90 Minuten (Doppelstunde)" : "45 Minuten";
+      payload.sessionCount = null;
+      payload.sessionMinutes = null;
+      payload.weeks = null;
+    } else {
+      payload.durationMinutes = null;
+      payload.sessionCount = Number(offerForm.sessionCount) || null;
+      payload.sessionMinutes = Number(offerForm.sessionMinutes) || null;
+      payload.weeks = Number(offerForm.weeks) || null;
+      // durationLabel wird bei Paketen aus den strukturierten Feldern
+      // angezeigt (lib/pricing.js) – der freie Text bleibt nur als Fallback
+      // für ältere Angebote ohne diese Felder erhalten.
+      payload.durationLabel = offerForm.durationLabel;
+    }
+
     try {
       if (id) {
         await adminFetch(`/api/admin/offers/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
@@ -194,19 +225,28 @@ export default function AdminPage() {
   if (!authed) {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-6">
-        <h1 className="text-xl font-bold text-slate-900">Admin-Login</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Admin-Login</h1>
         <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <label htmlFor="admin-pin" className="sr-only">
+            PIN
+          </label>
           <input
+            id="admin-pin"
             type="password"
             placeholder="PIN"
             value={loginPin}
             onChange={(e) => setLoginPin(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            aria-describedby={loginError ? "admin-pin-error" : undefined}
+            className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
-          {loginError ? <p className="text-sm text-red-600">{loginError}</p> : null}
+          {loginError ? (
+            <p id="admin-pin-error" role="alert" className="text-sm text-red-600">
+              {loginError}
+            </p>
+          ) : null}
           <button
             type="submit"
-            className="w-full rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500"
+            className="w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
           >
             Anmelden
           </button>
@@ -218,14 +258,16 @@ export default function AdminPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Admin-Bereich</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Admin-Bereich</h1>
         <button onClick={logout} className="text-sm text-slate-500 underline underline-offset-2">
           Abmelden
         </button>
       </div>
 
       {notice ? (
-        <div className="mt-4 rounded-lg bg-slate-100 px-4 py-2.5 text-sm text-slate-700">{notice}</div>
+        <div role="status" className="mt-4 rounded-lg bg-slate-100 px-4 py-2.5 text-sm text-slate-700">
+          {notice}
+        </div>
       ) : null}
 
       <div className="mt-6 flex gap-2 border-b border-slate-200">
@@ -237,7 +279,7 @@ export default function AdminPage() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`border-b-2 px-4 py-2.5 text-sm font-medium ${
+            className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${
               tab === key ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-500"
             }`}
           >
@@ -258,7 +300,7 @@ export default function AdminPage() {
             <>
               <button
                 onClick={() => setEditingOffer("new")}
-                className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500"
+                className="rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
               >
                 + Neues Angebot
               </button>
@@ -269,7 +311,7 @@ export default function AdminPage() {
                     className="flex items-center justify-between rounded-xl border border-slate-200 p-4"
                   >
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-semibold text-slate-900">
                         {offer.title}{" "}
                         <span className="ml-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600">
                           {offer.type === "session" ? "Einzelstunde" : "Paket"}
@@ -294,6 +336,13 @@ export default function AdminPage() {
                             ...offer,
                             type: offer.type || "package",
                             durationMinutes: offer.durationMinutes ? String(offer.durationMinutes) : "45",
+                            sessionCount: offer.sessionCount ? String(offer.sessionCount) : "",
+                            sessionMinutes: offer.sessionMinutes ? String(offer.sessionMinutes) : "45",
+                            weeks: offer.weeks ? String(offer.weeks) : "",
+                            mode: offer.mode || "both",
+                            catchmentAreaText: offer.catchmentAreaText || "",
+                            cancellationText: offer.cancellationText || "",
+                            validityText: offer.validityText || "",
                             price: (offer.priceCents / 100).toString(),
                             featuresText: (offer.features || []).join("\n"),
                           })
@@ -321,7 +370,7 @@ export default function AdminPage() {
             <thead className="text-slate-500">
               <tr className="border-b border-slate-200">
                 <th className="py-2 pr-4">Schüler:in</th>
-                <th className="py-2 pr-4">Klasse</th>
+                <th className="py-2 pr-4">Klasse / Fach</th>
                 <th className="py-2 pr-4">Angebot</th>
                 <th className="py-2 pr-4">Termin / Ort</th>
                 <th className="py-2 pr-4">Erziehungsberechtigte:r</th>
@@ -335,7 +384,10 @@ export default function AdminPage() {
                 return (
                   <tr key={b._id} className="border-b border-slate-100 align-top">
                     <td className="py-2.5 pr-4">{b.studentName}</td>
-                    <td className="py-2.5 pr-4">{b.studentClass}</td>
+                    <td className="py-2.5 pr-4">
+                      {b.studentClass}
+                      {b.subject ? <span className="text-slate-500"> · {b.subject}</span> : null}
+                    </td>
                     <td className="py-2.5 pr-4">{b.offerSnapshot?.title}</td>
                     <td className="py-2.5 pr-4">
                       {isSession ? (
@@ -422,6 +474,14 @@ function OfferForm({ initial, onCancel, onSave }) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  const priceCents = Math.round(parseFloat((form.price || "0").replace(",", ".")) * 100) || 0;
+  const listPriceCents =
+    !isSession && form.sessionCount && Number(form.sessionCount) > 1
+      ? computeListPriceCents(Number(form.sessionCount), Number(form.sessionMinutes))
+      : null;
+  const savings = computeSavings(listPriceCents, priceCents);
+  const totalHours = computeTotalHours(Number(form.sessionCount), Number(form.sessionMinutes));
+
   return (
     <form
       onSubmit={(e) => {
@@ -432,7 +492,7 @@ function OfferForm({ initial, onCancel, onSave }) {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Art des Angebots</label>
+          <label className="text-sm font-semibold text-slate-700">Art des Angebots</label>
           <div className="mt-1.5 flex gap-4 text-sm">
             <label className="flex items-center gap-1.5">
               <input
@@ -455,8 +515,11 @@ function OfferForm({ initial, onCancel, onSave }) {
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700">Titel *</label>
+          <label htmlFor="offer-title" className="text-sm font-semibold text-slate-700">
+            Titel *
+          </label>
           <input
+            id="offer-title"
             required
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
@@ -464,17 +527,25 @@ function OfferForm({ initial, onCancel, onSave }) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700">Fach</label>
+          <label htmlFor="offer-subject" className="text-sm font-semibold text-slate-700">
+            Fach/Fächer (mit „ | " trennen)
+          </label>
           <input
+            id="offer-subject"
             value={form.subject}
             onChange={(e) => update("subject", e.target.value)}
+            placeholder="Mathematik | Physik"
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>
+
         {isSession ? (
           <div>
-            <label className="text-sm font-medium text-slate-700">Dauer</label>
+            <label htmlFor="offer-duration-minutes" className="text-sm font-semibold text-slate-700">
+              Dauer
+            </label>
             <select
+              id="offer-duration-minutes"
               value={form.durationMinutes || "45"}
               onChange={(e) => update("durationMinutes", e.target.value)}
               className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
@@ -484,18 +555,57 @@ function OfferForm({ initial, onCancel, onSave }) {
             </select>
           </div>
         ) : (
-          <div>
-            <label className="text-sm font-medium text-slate-700">Dauer / Laufzeit (z.B. "1 Monat")</label>
-            <input
-              value={form.durationLabel}
-              onChange={(e) => update("durationLabel", e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-            />
-          </div>
+          <>
+            <div>
+              <label htmlFor="offer-session-count" className="text-sm font-semibold text-slate-700">
+                Anzahl Einheiten *
+              </label>
+              <input
+                id="offer-session-count"
+                required
+                type="number"
+                min={1}
+                value={form.sessionCount}
+                onChange={(e) => update("sessionCount", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="offer-session-minutes" className="text-sm font-semibold text-slate-700">
+                Minuten je Einheit *
+              </label>
+              <select
+                id="offer-session-minutes"
+                value={form.sessionMinutes || "45"}
+                onChange={(e) => update("sessionMinutes", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+              >
+                <option value="45">45 Minuten</option>
+                <option value="90">90 Minuten</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="offer-weeks" className="text-sm font-semibold text-slate-700">
+                Laufzeit in Wochen (leer lassen bei Tages-Intensivpaketen)
+              </label>
+              <input
+                id="offer-weeks"
+                type="number"
+                min={0}
+                value={form.weeks}
+                onChange={(e) => update("weeks", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+              />
+            </div>
+          </>
         )}
+
         <div>
-          <label className="text-sm font-medium text-slate-700">Preis in Euro *</label>
+          <label htmlFor="offer-price" className="text-sm font-semibold text-slate-700">
+            Preis in Euro *
+          </label>
           <input
+            id="offer-price"
             required
             value={form.price}
             onChange={(e) => update("price", e.target.value)}
@@ -503,9 +613,81 @@ function OfferForm({ initial, onCancel, onSave }) {
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>
+
+        {!isSession && form.sessionCount ? (
+          <div className="sm:col-span-2 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+            {totalHours ? <>Gesamt: {totalHours} Stunden. </> : null}
+            Vergleichspreis (Basis 30 € / 45 Min.):{" "}
+            {listPriceCents ? formatPrice(listPriceCents) : "–"}.{" "}
+            {savings ? (
+              <>
+                Ersparnis: {formatPrice(savings.savingCents)} ({savings.percent} %) – wird als
+                Badge auf der Karte angezeigt.
+              </>
+            ) : (
+              "Kein Rabatt-Badge (Endpreis liegt nicht unter dem Vergleichspreis)."
+            )}
+          </div>
+        ) : null}
+
+        <div>
+          <label htmlFor="offer-mode" className="text-sm font-semibold text-slate-700">
+            Online/Präsenz
+          </label>
+          <select
+            id="offer-mode"
+            value={form.mode}
+            onChange={(e) => update("mode", e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          >
+            {MODE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="offer-catchment" className="text-sm font-semibold text-slate-700">
+            Einzugsgebiet (bei Präsenz)
+          </label>
+          <input
+            id="offer-catchment"
+            value={form.catchmentAreaText}
+            onChange={(e) => update("catchmentAreaText", e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="offer-cancellation" className="text-sm font-semibold text-slate-700">
+            Stornofrist
+          </label>
+          <input
+            id="offer-cancellation"
+            value={form.cancellationText}
+            onChange={(e) => update("cancellationText", e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="offer-validity" className="text-sm font-semibold text-slate-700">
+            Gültigkeitsdauer des Pakets
+          </label>
+          <input
+            id="offer-validity"
+            value={form.validityText}
+            onChange={(e) => update("validityText", e.target.value)}
+            placeholder="z.B. 6 Wochen ab Buchung einzulösen"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Beschreibung</label>
+          <label htmlFor="offer-description" className="text-sm font-semibold text-slate-700">
+            Beschreibung
+          </label>
           <textarea
+            id="offer-description"
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
             rows={3}
@@ -513,12 +695,15 @@ function OfferForm({ initial, onCancel, onSave }) {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Leistungsmerkmale (eine Zeile je Punkt)</label>
+          <label htmlFor="offer-features" className="text-sm font-semibold text-slate-700">
+            Leistungsmerkmale (eine Zeile je Punkt, keine Rabatt-Texte – die kommen automatisch als Badge)
+          </label>
           <textarea
+            id="offer-features"
             value={form.featuresText}
             onChange={(e) => update("featuresText", e.target.value)}
             rows={4}
-            placeholder={"4x 60 Min. pro Monat\nFlexible Terminwahl\nOnline oder vor Ort"}
+            placeholder={"Übungsblätter inklusive\nFlexible Terminwahl"}
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>
@@ -536,7 +721,7 @@ function OfferForm({ initial, onCancel, onSave }) {
       <div className="mt-6 flex gap-3">
         <button
           type="submit"
-          className="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500"
+          className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
         >
           Speichern
         </button>
@@ -549,47 +734,71 @@ function OfferForm({ initial, onCancel, onSave }) {
 }
 
 function SettingsForm({ settings, onSave }) {
-  const [form, setForm] = useState(settings);
+  const [form, setForm] = useState({
+    ...settings,
+    aboutBulletsText: (settings.aboutBullets || []).join("\n"),
+  });
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    const { aboutBulletsText, ...rest } = form;
+    onSave({
+      ...rest,
+      aboutBullets: aboutBulletsText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    });
+  }
+
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave(form);
-      }}
+      onSubmit={handleSubmit}
       className="mt-8 grid gap-5 rounded-2xl border border-slate-200 p-6 sm:grid-cols-2"
     >
       <div>
-        <label className="text-sm font-medium text-slate-700">Website-Name</label>
+        <label htmlFor="s-siteName" className="text-sm font-semibold text-slate-700">
+          Website-Name
+        </label>
         <input
+          id="s-siteName"
           value={form.siteName}
           onChange={(e) => update("siteName", e.target.value)}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Kontakt-E-Mail</label>
+        <label htmlFor="s-contactEmail" className="text-sm font-semibold text-slate-700">
+          Kontakt-E-Mail
+        </label>
         <input
+          id="s-contactEmail"
           value={form.contactEmail}
           onChange={(e) => update("contactEmail", e.target.value)}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
       </div>
       <div className="sm:col-span-2">
-        <label className="text-sm font-medium text-slate-700">Slogan (große Überschrift auf der Startseite)</label>
+        <label htmlFor="s-slogan" className="text-sm font-semibold text-slate-700">
+          Slogan (große Überschrift auf der Startseite)
+        </label>
         <input
+          id="s-slogan"
           value={form.slogan}
           onChange={(e) => update("slogan", e.target.value)}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
       </div>
       <div className="sm:col-span-2">
-        <label className="text-sm font-medium text-slate-700">Untertitel</label>
+        <label htmlFor="s-subline" className="text-sm font-semibold text-slate-700">
+          Untertitel
+        </label>
         <textarea
+          id="s-subline"
           value={form.subline}
           onChange={(e) => update("subline", e.target.value)}
           rows={2}
@@ -597,8 +806,11 @@ function SettingsForm({ settings, onSave }) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-slate-700">Kontakt-Telefon</label>
+        <label htmlFor="s-contactPhone" className="text-sm font-semibold text-slate-700">
+          Kontakt-Telefon
+        </label>
         <input
+          id="s-contactPhone"
           value={form.contactPhone}
           onChange={(e) => update("contactPhone", e.target.value)}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
@@ -606,8 +818,11 @@ function SettingsForm({ settings, onSave }) {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium text-slate-700">Klasse ab</label>
+          <label htmlFor="s-minClass" className="text-sm font-semibold text-slate-700">
+            Klasse ab
+          </label>
           <input
+            id="s-minClass"
             type="number"
             value={form.minClass}
             onChange={(e) => update("minClass", Number(e.target.value))}
@@ -615,8 +830,11 @@ function SettingsForm({ settings, onSave }) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700">Klasse bis</label>
+          <label htmlFor="s-maxClass" className="text-sm font-semibold text-slate-700">
+            Klasse bis
+          </label>
           <input
+            id="s-maxClass"
             type="number"
             value={form.maxClass}
             onChange={(e) => update("maxClass", Number(e.target.value))}
@@ -626,10 +844,11 @@ function SettingsForm({ settings, onSave }) {
       </div>
 
       <div className="sm:col-span-2">
-        <label className="text-sm font-medium text-slate-700">
-          Deine Adresse (für Einzelstunden "bei der Lehrkraft")
+        <label htmlFor="s-tutorAddress" className="text-sm font-semibold text-slate-700">
+          Deine Adresse (für Einzelstunden "bei der Lehrkraft" und Impressum/Schema.org)
         </label>
         <input
+          id="s-tutorAddress"
           value={form.tutorAddress}
           onChange={(e) => update("tutorAddress", e.target.value)}
           placeholder="Straße Hausnummer, PLZ Ort"
@@ -638,8 +857,11 @@ function SettingsForm({ settings, onSave }) {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium text-slate-700">Termine buchbar ab (Uhrzeit)</label>
+          <label htmlFor="s-hourStart" className="text-sm font-semibold text-slate-700">
+            Termine buchbar ab (Uhrzeit, Mo-Fr)
+          </label>
           <input
+            id="s-hourStart"
             type="number"
             min={0}
             max={23}
@@ -649,8 +871,11 @@ function SettingsForm({ settings, onSave }) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700">Termine buchbar bis (Uhrzeit)</label>
+          <label htmlFor="s-hourEnd" className="text-sm font-semibold text-slate-700">
+            Termine buchbar bis (Uhrzeit, Mo-Fr)
+          </label>
           <input
+            id="s-hourEnd"
             type="number"
             min={1}
             max={24}
@@ -660,19 +885,67 @@ function SettingsForm({ settings, onSave }) {
           />
         </div>
       </div>
+      <p className="sm:col-span-2 -mt-3 text-xs text-slate-500">
+        Samstags gilt automatisch ein kürzeres Fenster (10–16 Uhr), sonntags sind keine Termine
+        buchbar.
+      </p>
+
+      <div className="sm:col-span-2 grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-4">
+        <label className="col-span-2 flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={form.kleinunternehmer}
+            onChange={(e) => update("kleinunternehmer", e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+          />
+          Kleinunternehmer nach § 19 UStG (keine USt. ausgewiesen)
+        </label>
+        {!form.kleinunternehmer && (
+          <div className="col-span-2">
+            <label htmlFor="s-ustId" className="text-sm font-semibold text-slate-700">
+              USt-IdNr.
+            </label>
+            <input
+              id="s-ustId"
+              value={form.ustId}
+              onChange={(e) => update("ustId", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+          </div>
+        )}
+      </div>
+
       <div className="sm:col-span-2">
-        <label className="text-sm font-medium text-slate-700">Abschnitt "{form.aboutTitle}" – Titel</label>
+        <label htmlFor="s-aboutTitle" className="text-sm font-semibold text-slate-700">
+          Abschnitt "Warum Lernsprung" – Titel
+        </label>
         <input
+          id="s-aboutTitle"
           value={form.aboutTitle}
           onChange={(e) => update("aboutTitle", e.target.value)}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
       </div>
       <div className="sm:col-span-2">
-        <label className="text-sm font-medium text-slate-700">Abschnittstext</label>
+        <label htmlFor="s-aboutText" className="text-sm font-semibold text-slate-700">
+          Einleitung (max. ca. 90 Wörter)
+        </label>
         <textarea
+          id="s-aboutText"
           value={form.aboutText}
           onChange={(e) => update("aboutText", e.target.value)}
+          rows={3}
+          className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+        />
+      </div>
+      <div className="sm:col-span-2">
+        <label htmlFor="s-aboutBullets" className="text-sm font-semibold text-slate-700">
+          Stichpunkte (eine Zeile je Punkt, max. 3)
+        </label>
+        <textarea
+          id="s-aboutBullets"
+          value={form.aboutBulletsText}
+          onChange={(e) => update("aboutBulletsText", e.target.value)}
           rows={3}
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
@@ -681,7 +954,7 @@ function SettingsForm({ settings, onSave }) {
       <div className="sm:col-span-2">
         <button
           type="submit"
-          className="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500"
+          className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
         >
           Speichern
         </button>

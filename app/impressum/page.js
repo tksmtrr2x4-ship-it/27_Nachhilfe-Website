@@ -1,26 +1,24 @@
+import { getSettings } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Impressum" };
 
-export default function ImpressumPage() {
+export default async function ImpressumPage() {
+  const settings = await getSettings();
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-bold text-slate-900">Impressum</h1>
+      <h1 className="text-3xl font-semibold text-slate-900">Impressum</h1>
 
-      <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-        Platzhalter-Seite: Bitte alle eckigen Klammern durch deine echten Angaben ersetzen,
-        bevor die Website live geht. Angaben gemäß § 5 TMG / § 18 Abs. 2 MStV sind für
-        gewerbliche Websites in Deutschland Pflicht. Im Zweifel Angaben mit einem
-        Impressum-Generator (z.B. e-recht24.de) oder einer Rechtsberatung prüfen.
-      </div>
-
-      <div className="mt-8 space-y-6 text-sm text-slate-700">
+      <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700">
         <section>
           <h2 className="font-semibold text-slate-900">Angaben gemäß § 5 TMG</h2>
           <p className="mt-2">
-            Jill Manuel Hils / Lernsprung
+            Jill Manuel Hils / {settings.siteName}
             <br />
             Aixheimer Straße 2
             <br />
-            78056, Villingen-Schwenningen
+            78056 Villingen-Schwenningen
           </p>
         </section>
 
@@ -34,26 +32,33 @@ export default function ImpressumPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Umsatzsteuer-ID</h2>
+          <h2 className="font-semibold text-slate-900">Umsatzsteuer</h2>
           <p className="mt-2">
-            [Falls vorhanden: Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG. Falls
-            Kleinunternehmerregelung nach § 19 UStG genutzt wird, entsprechenden Hinweis
-            ergänzen.]
+            {settings.kleinunternehmer ? (
+              <>
+                Als Kleinunternehmer im Sinne von § 19 Abs. 1 UStG wird keine Umsatzsteuer
+                berechnet.
+              </>
+            ) : (
+              <>Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: {settings.ustId || "–"}</>
+            )}
           </p>
         </section>
 
         <section>
           <h2 className="font-semibold text-slate-900">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-          <p className="mt-2">[Name, Anschrift wie oben]</p>
+          <p className="mt-2">
+            Jill Manuel Hils, Aixheimer Straße 2, 78056 Villingen-Schwenningen
+          </p>
         </section>
 
         <section>
           <h2 className="font-semibold text-slate-900">Streitschlichtung</h2>
           <p className="mt-2">
             Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
-            bereit: https://ec.europa.eu/consumers/odr/. Wir sind nicht verpflichtet und nicht
+            bereit: https://ec.europa.eu/consumers/odr/. Ich bin nicht verpflichtet und nicht
             bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
-            teilzunehmen. [Falls doch, entsprechenden Hinweis ergänzen.]
+            teilzunehmen.
           </p>
         </section>
       </div>

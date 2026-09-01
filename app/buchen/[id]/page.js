@@ -1,9 +1,20 @@
 import { notFound } from "next/navigation";
 import { getOffer, getSettings } from "@/lib/db";
-import { formatPrice } from "@/lib/format";
+import { buildDurationSummary, MODE_LABEL } from "@/lib/pricing";
+import OfferPriceBlock from "@/components/OfferPriceBlock";
 import BookingFlow from "@/components/BookingFlow";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const offer = await getOffer(id);
+  if (!offer) return { title: "Buchung" };
+  return {
+    title: `${offer.title} buchen`,
+    description: `${offer.title} bei Lernsprung Nachhilfe Villingen-Schwenningen – jetzt Termin anfragen oder Paket buchen.`,
+  };
+}
 
 export default async function BuchenPage({ params }) {
   const { id } = await params;
@@ -16,18 +27,47 @@ export default async function BuchenPage({ params }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <p className="text-sm font-medium text-indigo-600">Buchung</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{offer.title}</h1>
+      <p className="text-sm font-semibold text-indigo-600">Buchung</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{offer.title}</h1>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
         {offer.subject ? (
           <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-600">{offer.subject}</span>
         ) : null}
-        {offer.durationLabel ? <span>{offer.durationLabel}</span> : null}
-        <span className="font-semibold text-slate-900">{formatPrice(offer.priceCents)}</span>
+        <span>{buildDurationSummary(offer)}</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+          {MODE_LABEL[offer.mode] || MODE_LABEL.both}
+        </span>
       </div>
 
-      {offer.description ? <p className="mt-4 text-slate-600">{offer.description}</p> : null}
+      {offer.description ? (
+        <p className="mt-4 max-w-prose text-slate-600">{offer.description}</p>
+      ) : null}
+
+      <div className="mt-4">
+        <OfferPriceBlock offer={offer} settings={settings} size="lg" />
+      </div>
+
+      <dl className="mt-6 grid gap-x-6 gap-y-2 text-sm text-slate-500 sm:grid-cols-2">
+        {offer.catchmentAreaText && offer.mode !== "online" ? (
+          <div>
+            <dt className="inline font-semibold text-slate-600">Einzugsgebiet: </dt>
+            <dd className="inline">{offer.catchmentAreaText}</dd>
+          </div>
+        ) : null}
+        {offer.cancellationText ? (
+          <div>
+            <dt className="inline font-semibold text-slate-600">Stornierung: </dt>
+            <dd className="inline">{offer.cancellationText}</dd>
+          </div>
+        ) : null}
+        {offer.validityText ? (
+          <div>
+            <dt className="inline font-semibold text-slate-600">Gültigkeit: </dt>
+            <dd className="inline">{offer.validityText}</dd>
+          </div>
+        ) : null}
+      </dl>
 
       <div className="mt-10">
         <BookingFlow

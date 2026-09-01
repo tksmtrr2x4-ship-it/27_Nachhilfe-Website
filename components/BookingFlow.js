@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/format";
 
@@ -8,13 +8,21 @@ const stripeConfigured = Boolean(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
-function buildTimeSlots(hourStart, hourEnd) {
+const DEFAULT_SUBJECTS = ["Mathematik", "Physik", "Biologie", "Wirtschaft"];
+
+// Wochentag-abhängige Zeitfenster: Sonntags keine Termine, samstags ein
+// kürzeres Fenster, unter der Woche das im Admin-Bereich hinterlegte Fenster.
+function slotsForDate(dateIso, hourStart, hourEnd) {
+  if (!dateIso) return [];
+  const weekday = new Date(`${dateIso}T00:00:00`).getDay(); // 0 = Sonntag
+  if (weekday === 0) return [];
+  const [start, end] = weekday === 6 ? [10, Math.min(hourEnd, 16)] : [hourStart, hourEnd];
   const slots = [];
-  for (let h = hourStart; h < hourEnd; h++) {
+  for (let h = start; h < end; h++) {
     slots.push(`${String(h).padStart(2, "0")}:00`);
     slots.push(`${String(h).padStart(2, "0")}:30`);
   }
-  slots.push(`${String(hourEnd).padStart(2, "0")}:00`);
+  slots.push(`${String(end).padStart(2, "0")}:00`);
   return slots;
 }
 
@@ -25,7 +33,15 @@ function todayIso() {
 export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   const router = useRouter();
   const isSession = offer.type === "session";
-  const timeSlots = buildTimeSlots(bookingSettings.hourStart, bookingSettings.hourEnd);
+  const subjectOptions = useMemo(() => {
+    const fromOffer = (offer.subject || "")
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return fromOffer.length > 0 ? fromOffer : DEFAULT_SUBJECTS;
+  }, [offer.subject]);
+  const allowedLocations =
+    offer.mode === "online" ? ["online"] : offer.mode === "both" ? ["tutor", "student", "online"] : ["tutor", "student"];
 
   const [step, setStep] = useState("form");
   const [booking, setBooking] = useState(null);
@@ -35,19 +51,28 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   const [form, setForm] = useState({
     studentName: "",
     studentClass: classOptions[0] || "",
+    subject: subjectOptions[0] || "",
     parentName: "",
     parentEmail: "",
     parentPhone: "",
     notes: "",
     agreeTerms: false,
+    guardianConsent: false,
     requestedDate: "",
-    requestedTime: timeSlots[0] || "",
-    locationType: "tutor",
+    requestedTime: "",
+    locationType: allowedLocations[0],
     locationAddress: "",
   });
 
+  const timeSlots = slotsForDate(form.requestedDate, bookingSettings.hourStart, bookingSettings.hourEnd);
+
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function updateDate(value) {
+    const slots = slotsForDate(value, bookingSettings.hourStart, bookingSettings.hourEnd);
+    setForm((f) => ({ ...f, requestedDate: value, requestedTime: slots[0] || "" }));
   }
 
   async function handleSubmit(e) {
@@ -58,9 +83,13 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       setError("Bitte bestätige die Datenschutzhinweise.");
       return;
     }
+    if (!form.guardianConsent) {
+      setError("Bitte bestätigen Sie, dass Sie erziehungsberechtigt sind und diesen Vertrag abschließen.");
+      return;
+    }
     if (isSession) {
-      if (!form.requestedDate) {
-        setError("Bitte einen Termin auswählen.");
+      if (!form.requestedDate || !form.requestedTime) {
+        setError("Bitte einen Termin auswählen (sonntags sind keine Termine möglich).");
         return;
       }
       if (form.locationType === "student" && !form.locationAddress.trim()) {
@@ -124,9 +153,9 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     return (
       <div className="rounded-2xl border border-slate-200 p-6">
         <h2 className="text-lg font-semibold text-slate-900">Bezahlung abschließen</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Buchung für {form.studentName} – {offer.title}. Bitte schließe die Zahlung
-          über Stripe ab, um die Buchung zu bestätigen.
+        <p className="mt-2 max-w-prose text-sm text-slate-600">
+          Buchung für {form.studentName} – {offer.title}. Schließe die Zahlung über
+          Stripe ab, um die Buchung fest zu sichern.
         </p>
 
         {!stripeConfigured ? (
@@ -140,7 +169,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             type="button"
             onClick={startCheckout}
             disabled={paying}
-            className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+            className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
           >
             {paying
               ? "Weiterleitung zu Stripe…"
@@ -148,7 +177,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           </button>
         )}
 
-        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-4 text-sm text-red-600">
+            {error}
+          </p>
+        ) : null}
 
         <button
           type="button"
@@ -162,27 +195,33 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Angaben zur Buchung</h2>
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 p-6" noValidate>
+      <h2 className="text-lg font-semibold text-slate-900">Angaben zur Schülerin / zum Schüler</h2>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Name der Schülerin / des Schülers *</label>
+          <label htmlFor="studentName" className="text-sm font-semibold text-slate-700">
+            Wie heißt du? *
+          </label>
           <input
+            id="studentName"
             required
             value={form.studentName}
             onChange={(e) => update("studentName", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">Klassenstufe *</label>
+          <label htmlFor="studentClass" className="text-sm font-semibold text-slate-700">
+            In welche Klasse gehst du? *
+          </label>
           <select
+            id="studentClass"
             required
             value={form.studentClass}
             onChange={(e) => update("studentClass", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           >
             {classOptions.map((c) => (
               <option key={c} value={c}>
@@ -193,143 +232,243 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">Name Erziehungsberechtigte:r *</label>
-          <input
+          <label htmlFor="subject" className="text-sm font-semibold text-slate-700">
+            Welches Fach brauchst du? *
+          </label>
+          <select
+            id="subject"
             required
-            value={form.parentName}
-            onChange={(e) => update("parentName", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-700">E-Mail *</label>
-          <input
-            required
-            type="email"
-            value={form.parentEmail}
-            onChange={(e) => update("parentEmail", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-700">Telefon (optional)</label>
-          <input
-            value={form.parentPhone}
-            onChange={(e) => update("parentPhone", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
+            value={form.subject}
+            onChange={(e) => update("subject", e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          >
+            {subjectOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Anmerkungen (optional)</label>
+          <label htmlFor="notes" className="text-sm font-semibold text-slate-700">
+            Worauf soll ich besonders eingehen? (optional)
+          </label>
           <textarea
+            id="notes"
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
             rows={3}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
+        </div>
+      </div>
+
+      <div className="mt-8 border-t border-slate-200 pt-6">
+        <h2 className="text-lg font-semibold text-slate-900">Ihre Angaben (Erziehungsberechtigte:r)</h2>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="parentName" className="text-sm font-semibold text-slate-700">
+              Ihr Name *
+            </label>
+            <input
+              id="parentName"
+              required
+              value={form.parentName}
+              onChange={(e) => update("parentName", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="parentEmail" className="text-sm font-semibold text-slate-700">
+              Ihre E-Mail-Adresse *
+            </label>
+            <input
+              id="parentEmail"
+              required
+              type="email"
+              value={form.parentEmail}
+              onChange={(e) => update("parentEmail", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="parentPhone" className="text-sm font-semibold text-slate-700">
+              Ihre Telefonnummer (optional)
+            </label>
+            <input
+              id="parentPhone"
+              value={form.parentPhone}
+              onChange={(e) => update("parentPhone", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
         </div>
       </div>
 
       {isSession ? (
         <div className="mt-8 border-t border-slate-200 pt-6">
-          <h3 className="text-sm font-semibold text-slate-900">Terminwunsch</h3>
+          <h2 className="text-lg font-semibold text-slate-900">Terminwunsch</h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-slate-700">Datum *</label>
+              <label htmlFor="requestedDate" className="text-sm font-semibold text-slate-700">
+                Datum *
+              </label>
               <input
+                id="requestedDate"
                 required
                 type="date"
                 min={todayIso()}
                 value={form.requestedDate}
-                onChange={(e) => update("requestedDate", e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                onChange={(e) => updateDate(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Uhrzeit *</label>
-              <select
-                required
-                value={form.requestedTime}
-                onChange={(e) => update("requestedTime", e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              >
-                {timeSlots.map((t) => (
-                  <option key={t} value={t}>
-                    {t} Uhr
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="requestedTime" className="text-sm font-semibold text-slate-700">
+                Uhrzeit *
+              </label>
+              {form.requestedDate && timeSlots.length === 0 ? (
+                <p className="mt-1.5 rounded-lg bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
+                  Sonntags sind keine Termine möglich. Bitte einen anderen Tag wählen.
+                </p>
+              ) : (
+                <select
+                  id="requestedTime"
+                  required
+                  disabled={!form.requestedDate}
+                  value={form.requestedTime}
+                  onChange={(e) => update("requestedTime", e.target.value)}
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-400"
+                >
+                  {!form.requestedDate ? <option value="">Erst Datum wählen</option> : null}
+                  {timeSlots.map((t) => (
+                    <option key={t} value={t}>
+                      {t} Uhr
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Das ist ein Terminwunsch – die Bestätigung erfolgt anschließend per E-Mail.
+            Das ist ein Terminwunsch, keine feste Buchung – die Verfügbarkeit wird geprüft und der
+            Termin anschließend per E-Mail bestätigt.
           </p>
 
-          <div className="mt-5">
-            <label className="text-sm font-medium text-slate-700">Wo soll der Unterricht stattfinden? *</label>
+          <fieldset className="mt-5">
+            <legend className="text-sm font-semibold text-slate-700">
+              Wo soll der Unterricht stattfinden? *
+            </legend>
             <div className="mt-2 space-y-2">
-              <label className="flex items-start gap-2.5 text-sm text-slate-700">
-                <input
-                  type="radio"
-                  checked={form.locationType === "tutor"}
-                  onChange={() => update("locationType", "tutor")}
-                  className="mt-0.5 h-4 w-4 text-indigo-600"
-                />
-                <span>
-                  Bei der Nachhilfelehrkraft
-                  {bookingSettings.tutorAddress ? (
-                    <span className="block text-slate-500">{bookingSettings.tutorAddress}</span>
-                  ) : (
-                    <span className="block text-slate-500">Adresse wird nach Bestätigung mitgeteilt.</span>
-                  )}
-                </span>
-              </label>
-              <label className="flex items-start gap-2.5 text-sm text-slate-700">
-                <input
-                  type="radio"
-                  checked={form.locationType === "student"}
-                  onChange={() => update("locationType", "student")}
-                  className="mt-0.5 h-4 w-4 text-indigo-600"
-                />
-                Bei mir zuhause
-              </label>
+              {allowedLocations.includes("tutor") && (
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    checked={form.locationType === "tutor"}
+                    onChange={() => update("locationType", "tutor")}
+                    className="mt-0.5 h-4 w-4 text-indigo-600"
+                  />
+                  <span>
+                    Bei der Nachhilfelehrkraft
+                    {bookingSettings.tutorAddress ? (
+                      <span className="block text-slate-500">{bookingSettings.tutorAddress}</span>
+                    ) : (
+                      <span className="block text-slate-500">Adresse wird nach Bestätigung mitgeteilt.</span>
+                    )}
+                  </span>
+                </label>
+              )}
+              {allowedLocations.includes("student") && (
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    checked={form.locationType === "student"}
+                    onChange={() => update("locationType", "student")}
+                    className="mt-0.5 h-4 w-4 text-indigo-600"
+                  />
+                  Bei mir zuhause
+                </label>
+              )}
+              {allowedLocations.includes("online") && (
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    checked={form.locationType === "online"}
+                    onChange={() => update("locationType", "online")}
+                    className="mt-0.5 h-4 w-4 text-indigo-600"
+                  />
+                  Online per Video-Call
+                </label>
+              )}
             </div>
             {form.locationType === "student" ? (
-              <input
-                required
-                value={form.locationAddress}
-                onChange={(e) => update("locationAddress", e.target.value)}
-                placeholder="Straße Hausnummer, PLZ Ort"
-                className="mt-3 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-              />
+              <>
+                <label htmlFor="locationAddress" className="sr-only">
+                  Deine Adresse
+                </label>
+                <input
+                  id="locationAddress"
+                  required
+                  value={form.locationAddress}
+                  onChange={(e) => update("locationAddress", e.target.value)}
+                  placeholder="Straße Hausnummer, PLZ Ort"
+                  className="mt-3 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                />
+              </>
             ) : null}
-          </div>
+          </fieldset>
         </div>
       ) : null}
 
-      <label className="mt-6 flex items-start gap-2.5 text-sm text-slate-600">
-        <input
-          type="checkbox"
-          checked={form.agreeTerms}
-          onChange={(e) => update("agreeTerms", e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-        />
-        Ich habe die{" "}
-        <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2">
-          Datenschutzhinweise
-        </a>{" "}
-        gelesen und stimme der Verarbeitung der Angaben zur Buchungsabwicklung zu.
-      </label>
+      <div className="mt-8 space-y-3 border-t border-slate-200 pt-6">
+        <label className="flex items-start gap-2.5 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={form.agreeTerms}
+            onChange={(e) => update("agreeTerms", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          Ich habe die{" "}
+          <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2">
+            Datenschutzhinweise
+          </a>{" "}
+          gelesen und stimme der Verarbeitung der Angaben zur Buchungsabwicklung zu. *
+        </label>
+        <label className="flex items-start gap-2.5 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={form.guardianConsent}
+            onChange={(e) => update("guardianConsent", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          Ich bin erziehungsberechtigt und schließe diesen Vertrag ab. Ich habe die{" "}
+          <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2">
+            AGB
+          </a>{" "}
+          und die{" "}
+          <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2">
+            Widerrufsbelehrung
+          </a>{" "}
+          gelesen. *
+        </label>
+      </div>
 
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p role="alert" aria-live="polite" className="mt-4 text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+        className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
       >
         {submitting ? "Wird gesendet…" : isSession ? "Termin anfragen" : "Weiter zur Bezahlung"}
       </button>

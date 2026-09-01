@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatPrice, formatDate, locationLabel } from "@/lib/format";
-import { computeListPriceCents, computeSavings, computeTotalHours } from "@/lib/pricing";
+import { computeSavings, computeTotalHours } from "@/lib/pricing";
 
 const EMPTY_OFFER = {
   type: "package",
@@ -20,6 +20,7 @@ const EMPTY_OFFER = {
   description: "",
   featuresText: "",
   price: "",
+  listPrice: "",
   active: true,
 };
 
@@ -136,6 +137,9 @@ export default function AdminPage() {
         .map((f) => f.trim())
         .filter(Boolean),
       priceCents: Math.round(parseFloat(offerForm.price.replace(",", ".")) * 100) || 0,
+      listPriceCents: offerForm.listPrice.trim()
+        ? Math.round(parseFloat(offerForm.listPrice.replace(",", ".")) * 100) || null
+        : null,
       active: offerForm.active,
     };
 
@@ -344,6 +348,7 @@ export default function AdminPage() {
                             cancellationText: offer.cancellationText || "",
                             validityText: offer.validityText || "",
                             price: (offer.priceCents / 100).toString(),
+                            listPrice: offer.listPriceCents ? (offer.listPriceCents / 100).toString() : "",
                             featuresText: (offer.features || []).join("\n"),
                           })
                         }

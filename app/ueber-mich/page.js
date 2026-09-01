@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 const FACTS = [
-  { label: "Abiturschnitt 2026", value: "1,8 (679 Punkte)" },
+  { label: "Abiturschnitt 2026", value: "1,8" },
   { label: "Leistungsfächer", value: "Mathematik, Biologie, Wirtschaft" },
   { label: "Unterrichtsfächer", value: "Mathematik, Physik, Biologie, Wirtschaft" },
   { label: "Ort", value: "Villingen-Schwenningen und Umgebung, online deutschlandweit" },

@@ -1,23 +1,21 @@
 import { formatPrice } from "@/lib/format";
-import { computeListPriceCents, computeSavings } from "@/lib/pricing";
+import { computeSavings } from "@/lib/pricing";
 
-// Preis inkl. Streichpreis/Ersparnis (nur bei Mehrfach-Paketen, siehe
-// lib/pricing.js) sowie der USt.-Pflichtangabe. Wird auf der Angebotskarte
-// und der Buchungsseite identisch verwendet, damit die Zahlen nie
-// auseinanderlaufen.
+// Preis inkl. Streichpreis/Ersparnis sowie der USt.-Pflichtangabe. Der
+// Streichpreis (offer.listPriceCents) wird von der Lehrkraft im
+// Admin-Bereich selbst festgelegt, nicht automatisch berechnet. Wird auf
+// der Angebotskarte und der Buchungsseite identisch verwendet.
 export default function OfferPriceBlock({ offer, settings, size = "md" }) {
-  const listPriceCents =
-    offer.type === "package" && offer.sessionCount > 1
-      ? computeListPriceCents(offer.sessionCount, offer.sessionMinutes)
-      : null;
-  const savings = computeSavings(listPriceCents, offer.priceCents);
+  const savings = computeSavings(offer.listPriceCents, offer.priceCents);
   const priceClass = size === "lg" ? "text-3xl" : "text-2xl";
 
   return (
     <div>
       <div className="flex items-baseline gap-2">
         {savings ? (
-          <span className="text-sm text-slate-500 line-through">{formatPrice(listPriceCents)}</span>
+          <span className="text-sm text-slate-500 line-through">
+            {formatPrice(offer.listPriceCents)}
+          </span>
         ) : null}
         <span className={`${priceClass} font-semibold text-slate-900`}>
           {formatPrice(offer.priceCents)}
@@ -33,11 +31,7 @@ export default function OfferPriceBlock({ offer, settings, size = "md" }) {
 }
 
 export function DiscountBadge({ offer }) {
-  const listPriceCents =
-    offer.type === "package" && offer.sessionCount > 1
-      ? computeListPriceCents(offer.sessionCount, offer.sessionMinutes)
-      : null;
-  const savings = computeSavings(listPriceCents, offer.priceCents);
+  const savings = computeSavings(offer.listPriceCents, offer.priceCents);
   if (!savings) return null;
 
   return (

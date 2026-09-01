@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getSettings } from "@/lib/db";
+import { getLogoSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900">
-        <Header siteName={settings.siteName} />
+        <Header siteName={settings.siteName} logoSrc={getLogoSrc()} />
         <main className="flex-1">{children}</main>
         <Footer
           siteName={settings.siteName}

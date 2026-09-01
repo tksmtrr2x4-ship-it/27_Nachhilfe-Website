@@ -480,10 +480,9 @@ function OfferForm({ initial, onCancel, onSave }) {
   }
 
   const priceCents = Math.round(parseFloat((form.price || "0").replace(",", ".")) * 100) || 0;
-  const listPriceCents =
-    !isSession && form.sessionCount && Number(form.sessionCount) > 1
-      ? computeListPriceCents(Number(form.sessionCount), Number(form.sessionMinutes))
-      : null;
+  const listPriceCents = form.listPrice.trim()
+    ? Math.round(parseFloat(form.listPrice.replace(",", ".")) * 100) || null
+    : null;
   const savings = computeSavings(listPriceCents, priceCents);
   const totalHours = computeTotalHours(Number(form.sessionCount), Number(form.sessionMinutes));
 
@@ -618,19 +617,31 @@ function OfferForm({ initial, onCancel, onSave }) {
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>
+        <div>
+          <label htmlFor="offer-list-price" className="text-sm font-semibold text-slate-700">
+            Streichpreis in Euro (optional, für Rabatt-Badge)
+          </label>
+          <input
+            id="offer-list-price"
+            value={form.listPrice}
+            onChange={(e) => update("listPrice", e.target.value)}
+            placeholder="leer lassen = kein Badge"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
 
-        {!isSession && form.sessionCount ? (
+        {!isSession && form.sessionCount && totalHours ? (
+          <p className="sm:col-span-2 text-xs text-slate-500">Gesamt: {totalHours} Stunden.</p>
+        ) : null}
+        {form.listPrice.trim() ? (
           <div className="sm:col-span-2 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
-            {totalHours ? <>Gesamt: {totalHours} Stunden. </> : null}
-            Vergleichspreis (Basis 30 € / 45 Min.):{" "}
-            {listPriceCents ? formatPrice(listPriceCents) : "–"}.{" "}
             {savings ? (
               <>
                 Ersparnis: {formatPrice(savings.savingCents)} ({savings.percent} %) – wird als
                 Badge auf der Karte angezeigt.
               </>
             ) : (
-              "Kein Rabatt-Badge (Endpreis liegt nicht unter dem Vergleichspreis)."
+              "Kein Rabatt-Badge (Streichpreis liegt nicht über dem Preis)."
             )}
           </div>
         ) : null}

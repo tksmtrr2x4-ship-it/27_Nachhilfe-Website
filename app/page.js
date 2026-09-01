@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
+import { getLogoSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ const STEPS = [
 
 export default async function HomePage() {
   const settings = await getSettings();
+  const logoSrc = getLogoSrc();
 
   return (
     <div>
@@ -38,6 +40,10 @@ export default async function HomePage() {
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-28 sm:py-36">
+          {logoSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoSrc} alt={settings.siteName} className="mb-8 h-16 w-auto sm:h-20" />
+          ) : null}
           <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-indigo-200">
             Nachhilfe ab Klasse {settings.minClass}
           </span>

@@ -1,12 +1,16 @@
 import Link from "next/link";
 
-export default function Footer({ siteName, contactEmail, contactPhone }) {
+export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }) {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
+            {logoSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoSrc} alt={siteName} className="mb-3 h-12 w-auto" />
+            ) : null}
             <p className="text-sm font-semibold text-slate-900">{siteName}</p>
             <p className="mt-2 text-sm text-slate-500">
               Nachhilfe für Schüler ab der achten Klasse.

@@ -106,7 +106,7 @@ export default async function HomePage() {
             </div>
             <h3 className="mt-4 font-semibold text-slate-900">Mein Abitur als Beleg</h3>
             <p className="mt-2 max-w-prose text-sm text-slate-600">
-              Abiturschnitt 1,8 (679 Punkte, Abitur 2026), Leistungsfächer Mathematik, Biologie
+              Abiturschnitt 1,8 (Abitur 2026), Leistungsfächer Mathematik, Biologie
               und Wirtschaft. Ich weiß
               also aus erster Hand, wie die Prüfungen ablaufen und worauf es ankommt – nicht nur
               aus dem Lehrbuch.

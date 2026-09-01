@@ -1,13 +1,32 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/format";
 
 const stripeConfigured = Boolean(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
-export default function BookingFlow({ offer, classOptions }) {
+function buildTimeSlots(hourStart, hourEnd) {
+  const slots = [];
+  for (let h = hourStart; h < hourEnd; h++) {
+    slots.push(`${String(h).padStart(2, "0")}:00`);
+    slots.push(`${String(h).padStart(2, "0")}:30`);
+  }
+  slots.push(`${String(hourEnd).padStart(2, "0")}:00`);
+  return slots;
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export default function BookingFlow({ offer, classOptions, bookingSettings }) {
+  const router = useRouter();
+  const isSession = offer.type === "session";
+  const timeSlots = buildTimeSlots(bookingSettings.hourStart, bookingSettings.hourEnd);
+
   const [step, setStep] = useState("form");
   const [booking, setBooking] = useState(null);
   const [error, setError] = useState("");
@@ -21,6 +40,10 @@ export default function BookingFlow({ offer, classOptions }) {
     parentPhone: "",
     notes: "",
     agreeTerms: false,
+    requestedDate: "",
+    requestedTime: timeSlots[0] || "",
+    locationType: "tutor",
+    locationAddress: "",
   });
 
   function update(field, value) {
@@ -34,6 +57,16 @@ export default function BookingFlow({ offer, classOptions }) {
     if (!form.agreeTerms) {
       setError("Bitte bestätige die Datenschutzhinweise.");
       return;
+    }
+    if (isSession) {
+      if (!form.requestedDate) {
+        setError("Bitte einen Termin auswählen.");
+        return;
+      }
+      if (form.locationType === "student" && !form.locationAddress.trim()) {
+        setError("Bitte deine Adresse für den Unterrichtsort angeben.");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -49,7 +82,13 @@ export default function BookingFlow({ offer, classOptions }) {
         return;
       }
       setBooking(data.booking);
-      setStep("payment");
+      // Einzelstunden sind eine Terminanfrage ohne Online-Zahlung – direkt
+      // zur Bestätigungsseite. Pakete gehen weiter zur Stripe-Zahlung.
+      if (isSession) {
+        router.push(`/buchen/danke?bookingId=${data.booking._id}`);
+      } else {
+        setStep("payment");
+      }
     } catch {
       setError("Verbindung fehlgeschlagen. Bitte erneut versuchen.");
     } finally {
@@ -194,6 +233,83 @@ export default function BookingFlow({ offer, classOptions }) {
         </div>
       </div>
 
+      {isSession ? (
+        <div className="mt-8 border-t border-slate-200 pt-6">
+          <h3 className="text-sm font-semibold text-slate-900">Terminwunsch</h3>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium text-slate-700">Datum *</label>
+              <input
+                required
+                type="date"
+                min={todayIso()}
+                value={form.requestedDate}
+                onChange={(e) => update("requestedDate", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700">Uhrzeit *</label>
+              <select
+                required
+                value={form.requestedTime}
+                onChange={(e) => update("requestedTime", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              >
+                {timeSlots.map((t) => (
+                  <option key={t} value={t}>
+                    {t} Uhr
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Das ist ein Terminwunsch – die Bestätigung erfolgt anschließend per E-Mail.
+          </p>
+
+          <div className="mt-5">
+            <label className="text-sm font-medium text-slate-700">Wo soll der Unterricht stattfinden? *</label>
+            <div className="mt-2 space-y-2">
+              <label className="flex items-start gap-2.5 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  checked={form.locationType === "tutor"}
+                  onChange={() => update("locationType", "tutor")}
+                  className="mt-0.5 h-4 w-4 text-indigo-600"
+                />
+                <span>
+                  Bei der Nachhilfelehrkraft
+                  {bookingSettings.tutorAddress ? (
+                    <span className="block text-slate-500">{bookingSettings.tutorAddress}</span>
+                  ) : (
+                    <span className="block text-slate-500">Adresse wird nach Bestätigung mitgeteilt.</span>
+                  )}
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  checked={form.locationType === "student"}
+                  onChange={() => update("locationType", "student")}
+                  className="mt-0.5 h-4 w-4 text-indigo-600"
+                />
+                Bei mir zuhause
+              </label>
+            </div>
+            {form.locationType === "student" ? (
+              <input
+                required
+                value={form.locationAddress}
+                onChange={(e) => update("locationAddress", e.target.value)}
+                placeholder="Straße Hausnummer, PLZ Ort"
+                className="mt-3 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <label className="mt-6 flex items-start gap-2.5 text-sm text-slate-600">
         <input
           type="checkbox"
@@ -215,7 +331,7 @@ export default function BookingFlow({ offer, classOptions }) {
         disabled={submitting}
         className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
       >
-        {submitting ? "Wird gesendet…" : "Weiter zur Bezahlung"}
+        {submitting ? "Wird gesendet…" : isSession ? "Termin anfragen" : "Weiter zur Bezahlung"}
       </button>
     </form>
   );

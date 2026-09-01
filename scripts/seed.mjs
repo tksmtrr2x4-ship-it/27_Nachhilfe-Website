@@ -27,6 +27,9 @@ const DEFAULT_SETTINGS = {
   contactPhone: "",
   minClass: 8,
   maxClass: 13,
+  tutorAddress: "",
+  bookingHourStart: 14,
+  bookingHourEnd: 20,
 };
 
 const SEED_OFFERS = [
@@ -74,6 +77,32 @@ const SEED_OFFERS = [
       "Unverbindliches erstes Kennenlernen – wir klären Lernstand und passendes Angebot.",
     features: ["60 Minuten Einzeltermin", "Unverbindlich"],
     priceCents: 2500,
+    active: true,
+  },
+  {
+    _id: "seed-einzelstunde-45",
+    order: 3,
+    type: "session",
+    title: "Einzelstunde",
+    subject: "Alle Fächer",
+    durationLabel: "45 Minuten",
+    durationMinutes: 45,
+    description: "Einzeltermin nach Wahl – Datum, Uhrzeit und Ort wählst du direkt bei der Buchung.",
+    features: [],
+    priceCents: 3500,
+    active: true,
+  },
+  {
+    _id: "seed-doppelstunde-90",
+    order: 4,
+    type: "session",
+    title: "Doppelstunde",
+    subject: "Alle Fächer",
+    durationLabel: "90 Minuten (Doppelstunde)",
+    durationMinutes: 90,
+    description: "Für mehr Zeit pro Termin – ideal vor Klausuren. Datum, Uhrzeit und Ort wählst du direkt bei der Buchung.",
+    features: [],
+    priceCents: 6500,
     active: true,
   },
 ];

@@ -1,4 +1,6 @@
-import { createBooking, getOffer } from "@/lib/db";
+import { createBooking, getOffer, getSettings } from "@/lib/db";
+import { sendMail } from "@/lib/mail";
+import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -14,6 +16,10 @@ export async function POST(request) {
     parentEmail,
     parentPhone,
     notes,
+    requestedDate,
+    requestedTime,
+    locationType,
+    locationAddress,
   } = body || {};
 
   const offer = offerId ? await getOffer(offerId) : null;
@@ -35,6 +41,23 @@ export async function POST(request) {
     );
   }
 
+  const isSession = offer.type === "session";
+
+  if (isSession) {
+    if (!requestedDate || !requestedTime) {
+      return Response.json({ error: "Bitte einen Termin auswählen." }, { status: 400 });
+    }
+    if (!["tutor", "student"].includes(locationType)) {
+      return Response.json({ error: "Bitte einen Unterrichtsort auswählen." }, { status: 400 });
+    }
+    if (locationType === "student" && !locationAddress?.trim()) {
+      return Response.json(
+        { error: "Bitte deine Adresse für den Unterrichtsort angeben." },
+        { status: 400 }
+      );
+    }
+  }
+
   const booking = await createBooking({
     offerId: offer._id,
     offerSnapshot: {
@@ -42,6 +65,8 @@ export async function POST(request) {
       subject: offer.subject,
       durationLabel: offer.durationLabel,
       priceCents: offer.priceCents,
+      type: offer.type,
+      durationMinutes: offer.durationMinutes,
     },
     studentName: studentName.trim(),
     studentClass: String(studentClass),
@@ -49,7 +74,46 @@ export async function POST(request) {
     parentEmail: parentEmail.trim(),
     parentPhone: parentPhone?.trim() || "",
     notes: notes?.trim() || "",
+    ...(isSession
+      ? {
+          requestedDate,
+          requestedTime,
+          locationType,
+          locationAddress: locationType === "student" ? locationAddress.trim() : "",
+        }
+      : {}),
   });
 
+  if (isSession) {
+    await notifyAdminOfSessionRequest(booking);
+  }
+
   return Response.json({ booking });
+}
+
+async function notifyAdminOfSessionRequest(booking) {
+  const settings = await getSettings();
+  if (!settings.contactEmail) return;
+
+  await sendMail({
+    to: settings.contactEmail,
+    subject: `Neue Terminanfrage: ${booking.offerSnapshot.title}`,
+    text: [
+      `Neue Terminanfrage über die Website:`,
+      ``,
+      `Angebot: ${booking.offerSnapshot.title} (${formatPrice(booking.offerSnapshot.priceCents)})`,
+      `Termin-Wunsch: ${formatDate(booking.requestedDate)} um ${booking.requestedTime} Uhr`,
+      `Ort: ${locationLabel(booking)}`,
+      ``,
+      `Schüler:in: ${booking.studentName}, Klasse ${booking.studentClass}`,
+      `Erziehungsberechtigte:r: ${booking.parentName}`,
+      `E-Mail: ${booking.parentEmail}`,
+      `Telefon: ${booking.parentPhone || "–"}`,
+      booking.notes ? `Anmerkungen: ${booking.notes}` : null,
+      ``,
+      `Im Admin-Bereich unter "Buchungen" bestätigen oder Kontakt aufnehmen.`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
 }

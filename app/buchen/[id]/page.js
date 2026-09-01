@@ -30,7 +30,15 @@ export default async function BuchenPage({ params }) {
       {offer.description ? <p className="mt-4 text-slate-600">{offer.description}</p> : null}
 
       <div className="mt-10">
-        <BookingFlow offer={offer} classOptions={classOptions} />
+        <BookingFlow
+          offer={offer}
+          classOptions={classOptions}
+          bookingSettings={{
+            hourStart: settings.bookingHourStart,
+            hourEnd: settings.bookingHourEnd,
+            tutorAddress: settings.tutorAddress,
+          }}
+        />
       </div>
     </div>
   );

@@ -7,9 +7,13 @@ export async function PATCH(request, { params }) {
   const body = await request.json();
 
   const patch = {};
+  if (body.type !== undefined) patch.type = body.type === "session" ? "session" : "package";
   if (body.title !== undefined) patch.title = body.title.trim();
   if (body.subject !== undefined) patch.subject = body.subject.trim();
   if (body.durationLabel !== undefined) patch.durationLabel = body.durationLabel.trim();
+  if (body.durationMinutes !== undefined) {
+    patch.durationMinutes = body.durationMinutes === null ? null : Number(body.durationMinutes) || null;
+  }
   if (body.description !== undefined) patch.description = body.description.trim();
   if (body.features !== undefined) patch.features = Array.isArray(body.features) ? body.features : [];
   if (body.priceCents !== undefined) patch.priceCents = Number(body.priceCents) || 0;

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDate, locationLabel } from "@/lib/format";
 
 const EMPTY_OFFER = {
+  type: "package",
   title: "",
   subject: "",
   durationLabel: "",
+  durationMinutes: "",
   description: "",
   featuresText: "",
   price: "",
@@ -15,6 +17,7 @@ const EMPTY_OFFER = {
 
 const STATUS_LABEL = {
   pending: "Offen",
+  confirmed: "Bestätigt",
   paid: "Bezahlt",
   cancelled: "Storniert",
 };
@@ -104,10 +107,17 @@ export default function AdminPage() {
   }
 
   async function saveOffer(offerForm, id) {
+    const isSession = offerForm.type === "session";
     const payload = {
+      type: offerForm.type,
       title: offerForm.title,
       subject: offerForm.subject,
-      durationLabel: offerForm.durationLabel,
+      durationLabel: isSession
+        ? offerForm.durationMinutes === "90"
+          ? "90 Minuten (Doppelstunde)"
+          : "45 Minuten"
+        : offerForm.durationLabel,
+      durationMinutes: isSession ? Number(offerForm.durationMinutes) || 45 : null,
       description: offerForm.description,
       features: offerForm.featuresText
         .split("\n")
@@ -155,7 +165,17 @@ export default function AdminPage() {
   async function setBookingStatus(id, status) {
     try {
       await adminFetch(`/api/admin/bookings/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+      setNotice(status === "confirmed" ? "Termin bestätigt, Kunde wurde per Mail informiert." : "Status aktualisiert.");
       refreshAll();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function resendConfirmation(id) {
+    try {
+      await adminFetch(`/api/admin/bookings/${id}`, { method: "POST" });
+      setNotice("Bestätigungsmail erneut gesendet.");
     } catch (err) {
       setNotice(err.message);
     }
@@ -251,6 +271,9 @@ export default function AdminPage() {
                     <div>
                       <p className="font-medium text-slate-900">
                         {offer.title}{" "}
+                        <span className="ml-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600">
+                          {offer.type === "session" ? "Einzelstunde" : "Paket"}
+                        </span>{" "}
                         {!offer.active && (
                           <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
                             inaktiv
@@ -269,6 +292,8 @@ export default function AdminPage() {
                         onClick={() =>
                           setEditingOffer({
                             ...offer,
+                            type: offer.type || "package",
+                            durationMinutes: offer.durationMinutes ? String(offer.durationMinutes) : "45",
                             price: (offer.priceCents / 100).toString(),
                             featuresText: (offer.features || []).join("\n"),
                           })
@@ -298,38 +323,81 @@ export default function AdminPage() {
                 <th className="py-2 pr-4">Schüler:in</th>
                 <th className="py-2 pr-4">Klasse</th>
                 <th className="py-2 pr-4">Angebot</th>
+                <th className="py-2 pr-4">Termin / Ort</th>
                 <th className="py-2 pr-4">Erziehungsberechtigte:r</th>
                 <th className="py-2 pr-4">Status</th>
                 <th className="py-2 pr-4">Aktion</th>
               </tr>
             </thead>
             <tbody>
-              {bookings.map((b) => (
-                <tr key={b._id} className="border-b border-slate-100">
-                  <td className="py-2.5 pr-4">{b.studentName}</td>
-                  <td className="py-2.5 pr-4">{b.studentClass}</td>
-                  <td className="py-2.5 pr-4">{b.offerSnapshot?.title}</td>
-                  <td className="py-2.5 pr-4">
-                    {b.parentName}
-                    <br />
-                    <span className="text-slate-500">{b.parentEmail}</span>
-                  </td>
-                  <td className="py-2.5 pr-4">{STATUS_LABEL[b.status] || b.status}</td>
-                  <td className="py-2.5 pr-4">
-                    {b.status !== "cancelled" && (
-                      <button
-                        onClick={() => setBookingStatus(b._id, "cancelled")}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        Stornieren
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {bookings.map((b) => {
+                const isSession = b.offerSnapshot?.type === "session";
+                return (
+                  <tr key={b._id} className="border-b border-slate-100 align-top">
+                    <td className="py-2.5 pr-4">{b.studentName}</td>
+                    <td className="py-2.5 pr-4">{b.studentClass}</td>
+                    <td className="py-2.5 pr-4">{b.offerSnapshot?.title}</td>
+                    <td className="py-2.5 pr-4">
+                      {isSession ? (
+                        <>
+                          {formatDate(b.requestedDate)} · {b.requestedTime} Uhr
+                          <br />
+                          <span className="text-slate-500">{locationLabel(b)}</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">–</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      {b.parentName}
+                      <br />
+                      <span className="text-slate-500">{b.parentEmail}</span>
+                    </td>
+                    <td className="py-2.5 pr-4">{STATUS_LABEL[b.status] || b.status}</td>
+                    <td className="py-2.5 pr-4">
+                      <div className="flex flex-col items-start gap-1">
+                        {isSession && b.status === "pending" && (
+                          <button
+                            onClick={() => setBookingStatus(b._id, "confirmed")}
+                            className="text-emerald-600 hover:text-emerald-700"
+                          >
+                            Bestätigen
+                          </button>
+                        )}
+                        {isSession && b.status === "confirmed" && (
+                          <button
+                            onClick={() => resendConfirmation(b._id)}
+                            className="text-slate-500 hover:text-indigo-600"
+                          >
+                            Mail erneut senden
+                          </button>
+                        )}
+                        {isSession && b.status !== "cancelled" && (
+                          <a
+                            href={`mailto:${b.parentEmail}?subject=${encodeURIComponent(
+                              `Deine Terminanfrage – ${b.offerSnapshot?.title}`
+                            )}`}
+                            className="text-slate-500 hover:text-indigo-600"
+                          >
+                            Kontaktieren
+                          </a>
+                        )}
+                        {b.status !== "cancelled" && (
+                          <button
+                            onClick={() => setBookingStatus(b._id, "cancelled")}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            Stornieren
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {bookings.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-500">
+                  <td colSpan={7} className="py-6 text-center text-slate-500">
                     Noch keine Buchungen.
                   </td>
                 </tr>
@@ -348,6 +416,7 @@ export default function AdminPage() {
 
 function OfferForm({ initial, onCancel, onSave }) {
   const [form, setForm] = useState(initial);
+  const isSession = form.type === "session";
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -362,6 +431,29 @@ function OfferForm({ initial, onCancel, onSave }) {
       className="rounded-2xl border border-slate-200 p-6"
     >
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="text-sm font-medium text-slate-700">Art des Angebots</label>
+          <div className="mt-1.5 flex gap-4 text-sm">
+            <label className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                checked={!isSession}
+                onChange={() => update("type", "package")}
+                className="h-4 w-4 text-indigo-600"
+              />
+              Paket (z.B. Kursabo)
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                checked={isSession}
+                onChange={() => update("type", "session")}
+                className="h-4 w-4 text-indigo-600"
+              />
+              Einzelstunde (Kunde wählt Termin)
+            </label>
+          </div>
+        </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Titel *</label>
           <input
@@ -379,14 +471,28 @@ function OfferForm({ initial, onCancel, onSave }) {
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>
-        <div>
-          <label className="text-sm font-medium text-slate-700">Dauer / Laufzeit (z.B. "1 Monat")</label>
-          <input
-            value={form.durationLabel}
-            onChange={(e) => update("durationLabel", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-          />
-        </div>
+        {isSession ? (
+          <div>
+            <label className="text-sm font-medium text-slate-700">Dauer</label>
+            <select
+              value={form.durationMinutes || "45"}
+              onChange={(e) => update("durationMinutes", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            >
+              <option value="45">45 Minuten</option>
+              <option value="90">90 Minuten (Doppelstunde)</option>
+            </select>
+          </div>
+        ) : (
+          <div>
+            <label className="text-sm font-medium text-slate-700">Dauer / Laufzeit (z.B. "1 Monat")</label>
+            <input
+              value={form.durationLabel}
+              onChange={(e) => update("durationLabel", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+          </div>
+        )}
         <div>
           <label className="text-sm font-medium text-slate-700">Preis in Euro *</label>
           <input
@@ -514,6 +620,42 @@ function SettingsForm({ settings, onSave }) {
             type="number"
             value={form.maxClass}
             onChange={(e) => update("maxClass", Number(e.target.value))}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+      </div>
+
+      <div className="sm:col-span-2">
+        <label className="text-sm font-medium text-slate-700">
+          Deine Adresse (für Einzelstunden "bei der Lehrkraft")
+        </label>
+        <input
+          value={form.tutorAddress}
+          onChange={(e) => update("tutorAddress", e.target.value)}
+          placeholder="Straße Hausnummer, PLZ Ort"
+          className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-slate-700">Termine buchbar ab (Uhrzeit)</label>
+          <input
+            type="number"
+            min={0}
+            max={23}
+            value={form.bookingHourStart}
+            onChange={(e) => update("bookingHourStart", Number(e.target.value))}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Termine buchbar bis (Uhrzeit)</label>
+          <input
+            type="number"
+            min={1}
+            max={24}
+            value={form.bookingHourEnd}
+            onChange={(e) => update("bookingHourEnd", Number(e.target.value))}
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>

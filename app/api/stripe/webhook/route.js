@@ -1,5 +1,6 @@
 import { getStripe } from "@/lib/stripe";
 import { getBooking, updateBooking } from "@/lib/db";
+import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 
 // Stripe braucht den unveränderten Rohtext des Requests für die
 // Signaturprüfung – deshalb hier request.text() statt request.json().
@@ -40,11 +41,19 @@ async function markBookingPaid(session) {
   const booking = await getBooking(bookingId);
   if (!booking || booking.status === "paid") return;
 
-  await updateBooking(bookingId, {
+  const paid = await updateBooking(bookingId, {
     status: "paid",
     stripeSessionId: session.id,
     stripePaymentIntentId:
       typeof session.payment_intent === "string" ? session.payment_intent : null,
     paidAt: new Date().toISOString(),
   });
+
+  // Bestellbestätigung auf dauerhaftem Datenträger (§ 312f Abs. 2 BGB).
+  // Best-Effort: ein Mail-Fehler darf die Webhook-Verarbeitung nicht kippen.
+  try {
+    await sendOrderConfirmationEmail(paid);
+  } catch (err) {
+    console.error("Bestellbestätigung fehlgeschlagen:", err);
+  }
 }

@@ -129,12 +129,14 @@ Hoster.
 Wichtig: Damit die Benachrichtigung bei neuen Terminanfragen ankommt, muss unter
 **Admin → Einstellungen → Kontakt-E-Mail** deine eigene Adresse hinterlegt sein.
 
-## 6. Rechtliches ausfüllen
+## 6. Rechtliches
 
-`/impressum` und `/datenschutz` enthalten Platzhalter (`[...]`), die vor dem Live-Gang durch
-deine echten Angaben ersetzt werden müssen. Da hier personenbezogene Daten von Minderjährigen
-verarbeitet werden, lohnt sich eine kurze Prüfung durch eine fachkundige Stelle (z.B.
-Rechtsberatung oder ein spezialisierter Generator wie e-recht24.de).
+`/impressum`, `/datenschutz`, `/agb` und `/widerruf` sind bereits mit echten Angaben befüllt.
+AGB- und Widerrufstext liegen als einzige Quelle in `lib/legal/` (agb.js, widerruf.js) und
+werden von dort sowohl in die Seiten als auch in die Bestellbestätigungs-E-Mail
+(`lib/orderConfirmation.js`) eingespeist – bei inhaltlichen Änderungen nur dort anpassen. Da
+hier personenbezogene Daten von Minderjährigen verarbeitet werden, lohnt sich bei größeren
+Änderungen weiterhin eine kurze Prüfung durch eine fachkundige Stelle.
 
 ## 7. Deployment auf Vercel
 

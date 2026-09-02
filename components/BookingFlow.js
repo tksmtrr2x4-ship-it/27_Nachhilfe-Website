@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatPrice } from "@/lib/format";
+import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
+import OrderSummary from "@/components/OrderSummary";
 
 const stripeConfigured = Boolean(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -41,12 +42,22 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     parentPhone: "",
     notes: "",
     agreeTerms: false,
+    agbWiderrufConsent: false,
     guardianConsent: false,
+    earlyStartConsent: false,
     requestedDate: "",
     requestedTime: "",
     locationType: allowedLocations[0],
     locationAddress: "",
   });
+
+  // Checkbox 3 (§ 356 Abs. 4 BGB) nur zeigen, wenn der Leistungsbeginn
+  // innerhalb der 14-tägigen Widerrufsfrist liegen kann – bei Einzelstunden
+  // aus dem gewählten Termin, bei Paketen aus dem Angebot selbst (z.B.
+  // "Last-Minute-Boarding"). Der Server prüft das unabhängig noch einmal.
+  const showEarlyStartCheckbox = isSession
+    ? requiresEarlyStartConsent(offer, form.requestedDate)
+    : requiresEarlyStartConsent(offer, null);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -58,6 +69,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
     if (!form.agreeTerms) {
       setError("Bitte bestätige die Datenschutzhinweise.");
+      return;
+    }
+    if (!form.agbWiderrufConsent) {
+      setError("Bitte bestätige, dass du die AGB und die Widerrufsbelehrung gelesen hast.");
       return;
     }
     if (!form.guardianConsent) {
@@ -74,6 +89,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         return;
       }
     }
+    if (showEarlyStartCheckbox && !form.earlyStartConsent) {
+      setError("Bitte bestätige den vorzeitigen Leistungsbeginn, um fortzufahren.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -89,7 +108,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       }
       setBooking(data.booking);
       // Einzelstunden sind eine Terminanfrage ohne Online-Zahlung – direkt
-      // zur Bestätigungsseite. Pakete gehen weiter zur Stripe-Zahlung.
+      // zur Bestätigungsseite. Pakete gehen weiter zur Zahlungsübersicht.
       if (isSession) {
         router.push(`/buchen/danke?bookingId=${data.booking._id}`);
       } else {
@@ -129,11 +148,14 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   if (step === "payment" && booking) {
     return (
       <div className="rounded-2xl border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Bezahlung abschließen</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Bestellung abschließen</h2>
         <p className="mt-2 max-w-prose text-sm text-slate-600">
-          Buchung für {form.studentName} – {offer.title}. Schließe die Zahlung über
-          Stripe ab, um die Buchung fest zu sichern.
+          Buchung für {form.studentName} – {offer.title}.
         </p>
+
+        <div className="mt-4">
+          <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
+        </div>
 
         {!stripeConfigured ? (
           <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
@@ -148,9 +170,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             disabled={paying}
             className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
           >
-            {paying
-              ? "Weiterleitung zu Stripe…"
-              : `${formatPrice(offer.priceCents)} sicher bezahlen`}
+            {paying ? "Weiterleitung zu Stripe…" : "Zahlungspflichtig buchen"}
           </button>
         )}
 
@@ -391,7 +411,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
       ) : null}
 
-      <div className="mt-8 space-y-3 border-t border-slate-200 pt-6">
+      <div className="mt-8 border-t border-slate-200 pt-6">
+        <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
+      </div>
+
+      <div className="mt-6 space-y-3">
         <label className="flex items-start gap-2.5 text-sm text-slate-600">
           <input
             type="checkbox"
@@ -408,11 +432,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         <label className="flex items-start gap-2.5 text-sm text-slate-600">
           <input
             type="checkbox"
-            checked={form.guardianConsent}
-            onChange={(e) => update("guardianConsent", e.target.checked)}
+            checked={form.agbWiderrufConsent}
+            onChange={(e) => update("agbWiderrufConsent", e.target.checked)}
             className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
           />
-          Ich bin erziehungsberechtigt und schließe diesen Vertrag ab. Ich habe die{" "}
+          Ich habe die{" "}
           <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2">
             AGB
           </a>{" "}
@@ -420,8 +444,28 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2">
             Widerrufsbelehrung
           </a>{" "}
-          gelesen. *
+          gelesen und stimme ihnen zu. *
         </label>
+        <label className="flex items-start gap-2.5 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={form.guardianConsent}
+            onChange={(e) => update("guardianConsent", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          {CONSENT_TEXT.guardian} *
+        </label>
+        {showEarlyStartCheckbox ? (
+          <label className="flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+            <input
+              type="checkbox"
+              checked={form.earlyStartConsent}
+              onChange={(e) => update("earlyStartConsent", e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-amber-400 text-indigo-600 focus:ring-indigo-500"
+            />
+            {CONSENT_TEXT.earlyStart} *
+          </label>
+        ) : null}
       </div>
 
       {error ? (
@@ -435,7 +479,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         disabled={submitting}
         className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
       >
-        {submitting ? "Wird gesendet…" : isSession ? "Termin anfragen" : "Weiter zur Bezahlung"}
+        {submitting
+          ? "Wird gesendet…"
+          : isSession
+          ? "Termin unverbindlich anfragen"
+          : "Weiter zur Bezahlung"}
       </button>
     </form>
   );

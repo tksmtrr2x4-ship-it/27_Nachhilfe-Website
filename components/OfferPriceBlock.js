@@ -1,26 +1,19 @@
 import { formatPrice } from "@/lib/format";
-import { computeSavings } from "@/lib/pricing";
 
-// Preis inkl. Streichpreis/Ersparnis sowie der USt.-Pflichtangabe. Der
-// Streichpreis (offer.listPriceCents) wird von der Lehrkraft im
-// Admin-Bereich selbst festgelegt, nicht automatisch berechnet. Wird auf
-// der Angebotskarte und der Buchungsseite identisch verwendet.
+// Streichpreis/Rabatt-Badge sind deaktiviert: § 11 PAngV verlangt bei einer
+// Preisermäßigung die Angabe des niedrigsten Gesamtpreises der letzten
+// 30 Tage; ohne eine echte, geführte Preishistorie wäre ein Streichpreis
+// zudem nach § 5 UWG irreführend. offer.listPriceCents bleibt im Datenmodell
+// erhalten (siehe lib/db.js, lib/pricing.js computeSavings), damit die
+// Anzeige reaktiviert werden kann, sobald eine 30-Tage-Historie geführt wird.
 export default function OfferPriceBlock({ offer, settings, size = "md" }) {
-  const savings = computeSavings(offer.listPriceCents, offer.priceCents);
   const priceClass = size === "lg" ? "text-3xl" : "text-2xl";
 
   return (
     <div>
-      <div className="flex items-baseline gap-2">
-        {savings ? (
-          <span className="text-sm text-slate-500 line-through">
-            {formatPrice(offer.listPriceCents)}
-          </span>
-        ) : null}
-        <span className={`${priceClass} font-semibold text-slate-900`}>
-          {formatPrice(offer.priceCents)}
-        </span>
-      </div>
+      <span className={`${priceClass} font-semibold text-slate-900`}>
+        {formatPrice(offer.priceCents)}
+      </span>
       <p className="mt-0.5 text-xs text-slate-500">
         {settings.kleinunternehmer
           ? "Kleinunternehmer nach § 19 UStG, keine USt. ausgewiesen"
@@ -30,13 +23,9 @@ export default function OfferPriceBlock({ offer, settings, size = "md" }) {
   );
 }
 
-export function DiscountBadge({ offer }) {
-  const savings = computeSavings(offer.listPriceCents, offer.priceCents);
-  if (!savings) return null;
-
-  return (
-    <span className="absolute -right-2 -top-2 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-amber-950 shadow-sm">
-      -{savings.percent}%
-    </span>
-  );
+// Deaktiviert (§ 11 PAngV, siehe Kommentar oben) – offer bewusst nicht mehr
+// destrukturiert, um ESLint-„unused"-Warnungen zu vermeiden, falls die
+// Anzeige später wieder aktiviert wird.
+export function DiscountBadge() {
+  return null;
 }

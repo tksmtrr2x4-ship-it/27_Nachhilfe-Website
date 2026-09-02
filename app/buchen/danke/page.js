@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getBooking, updateBooking } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
+import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 import { formatPrice, formatDate, locationLabelForCustomer } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ async function confirmFromStripe(bookingId, sessionId) {
     const booking = await getBooking(bookingId);
     if (!booking || booking.status === "paid") return;
 
-    await updateBooking(bookingId, {
+    const paid = await updateBooking(bookingId, {
       status: "paid",
       stripeSessionId: session.id,
       stripePaymentIntentId:
@@ -30,6 +31,11 @@ async function confirmFromStripe(bookingId, sessionId) {
           : null,
       paidAt: new Date().toISOString(),
     });
+
+    // Fallback, falls der Stripe-Webhook (noch) nicht gegriffen hat –
+    // sendOrderConfirmationEmail ist über confirmationEmailSentAt
+    // idempotent, verschickt also nie doppelt.
+    await sendOrderConfirmationEmail(paid);
   } catch (err) {
     console.error("Stripe-Bestätigung fehlgeschlagen:", err);
   }
@@ -65,7 +71,7 @@ export default async function DankePage({ searchParams }) {
         <>
           <h1 className="mt-6 text-2xl font-semibold text-slate-900">Buchung bestätigt!</h1>
           <p className="mx-auto mt-3 max-w-prose text-slate-600">
-            Vielen Dank, {booking.parentName}. Die Buchung „{booking.offerSnapshot?.title}" für{" "}
+            Vielen Dank, {booking.parentName}. Die Buchung „{booking.offerSnapshot?.title}&quot; für{" "}
             {booking.studentName} ({booking.subject}) über{" "}
             {formatPrice(booking.offerSnapshot?.priceCents || 0)} wurde erfolgreich bezahlt. Ich
             melde mich unter {booking.parentEmail} zur Terminabstimmung.

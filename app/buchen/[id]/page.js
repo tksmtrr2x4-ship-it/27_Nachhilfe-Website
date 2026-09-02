@@ -92,6 +92,7 @@ export default async function BuchenPage({ params }) {
             bookingSettings={{
               tutorAddress: settings.tutorAddress,
               openingHoursText: settings.openingHoursText,
+              kleinunternehmer: settings.kleinunternehmer,
             }}
           />
         )}

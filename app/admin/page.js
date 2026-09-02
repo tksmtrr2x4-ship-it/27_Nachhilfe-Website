@@ -22,6 +22,7 @@ const EMPTY_OFFER = {
   price: "",
   listPrice: "",
   active: true,
+  earlyStartPossible: false,
 };
 
 const EMPTY_TESTIMONIAL = {
@@ -45,8 +46,15 @@ const MODE_OPTIONS = [
 ];
 
 export default function AdminPage() {
-  const [pin, setPin] = useState("");
-  const [authed, setAuthed] = useState(false);
+  // Beim ersten Rendern direkt aus sessionStorage lesen (statt in einem
+  // Effect nachträglich zu setzen) – vermeidet einen zusätzlichen,
+  // kaskadierenden Re-Render nach dem Mount.
+  const [pin, setPin] = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("admin_pin") || "" : ""
+  );
+  const [authed, setAuthed] = useState(() =>
+    typeof window !== "undefined" ? Boolean(sessionStorage.getItem("admin_pin")) : false
+  );
   const [loginPin, setLoginPin] = useState("");
   const [loginError, setLoginError] = useState("");
 
@@ -58,14 +66,6 @@ export default function AdminPage() {
   const [editingOffer, setEditingOffer] = useState(null);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [notice, setNotice] = useState("");
-
-  useEffect(() => {
-    const stored = typeof window !== "undefined" ? sessionStorage.getItem("admin_pin") : null;
-    if (stored) {
-      setPin(stored);
-      setAuthed(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (authed) refreshAll();
@@ -152,6 +152,7 @@ export default function AdminPage() {
         ? Math.round(parseFloat(offerForm.listPrice.replace(",", ".")) * 100) || null
         : null,
       active: offerForm.active,
+      earlyStartPossible: offerForm.earlyStartPossible,
     };
 
     if (isSession) {
@@ -354,7 +355,7 @@ export default function AdminPage() {
           </p>
           <p className="mt-0.5 text-xs text-slate-500">
             Steuert, ob neue Buchungen auf der Website angenommen werden. Details (Nachricht,
-            Wiedereröffnungsdatum) unter „Einstellungen".
+            Wiedereröffnungsdatum) unter „Einstellungen&quot;.
           </p>
         </div>
         <button
@@ -444,6 +445,7 @@ export default function AdminPage() {
                             price: (offer.priceCents / 100).toString(),
                             listPrice: offer.listPriceCents ? (offer.listPriceCents / 100).toString() : "",
                             featuresText: (offer.features || []).join("\n"),
+                            earlyStartPossible: Boolean(offer.earlyStartPossible),
                           })
                         }
                         className="text-slate-500 hover:text-indigo-600"
@@ -592,7 +594,7 @@ export default function AdminPage() {
                           </span>
                         )}
                       </p>
-                      <p className="mt-1 max-w-prose text-sm text-slate-600">„{t.text}"</p>
+                      <p className="mt-1 max-w-prose text-sm text-slate-600">„{t.text}&quot;</p>
                     </div>
                     <div className="flex shrink-0 gap-3 text-sm">
                       <button
@@ -618,7 +620,7 @@ export default function AdminPage() {
                 ))}
                 {testimonials.length === 0 && (
                   <p className="text-sm text-slate-500">
-                    Noch keine Rückmeldungen angelegt. Erscheinen erst auf "Über mich", wenn hier
+                    Noch keine Rückmeldungen angelegt. Erscheinen erst auf &quot;Über mich&quot;, wenn hier
                     mindestens eine aktive Rückmeldung existiert.
                   </p>
                 )}
@@ -696,7 +698,7 @@ function OfferForm({ initial, onCancel, onSave }) {
         </div>
         <div>
           <label htmlFor="offer-subject" className="text-sm font-semibold text-slate-700">
-            Fach/Fächer (mit „ | " trennen)
+            Fach/Fächer (mit „ | &quot; trennen)
           </label>
           <input
             id="offer-subject"
@@ -896,6 +898,23 @@ function OfferForm({ initial, onCancel, onSave }) {
           />
           Sofort sichtbar (aktiv)
         </label>
+        <label className="flex items-start gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={form.earlyStartPossible}
+            onChange={(e) => update("earlyStartPossible", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+          />
+          <span>
+            Sofortiger Beginn möglich (&lt;14 Tage)
+            <span className="block text-xs text-slate-500">
+              Nur bei Paketen mit typischerweise kurzfristigem Start (z.B. Last-Minute-Boarding).
+              Blendet im Buchungsformular die Pflicht-Checkbox zum vorzeitigen Leistungsbeginn
+              ein (§ 356 Abs. 4 BGB). Bei Einzelstunden wird das automatisch aus dem gewählten
+              Termin bestimmt.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="mt-6 flex gap-3">
@@ -974,7 +993,7 @@ function TestimonialForm({ initial, onCancel, onSave }) {
             onChange={(e) => update("active", e.target.checked)}
             className="h-4 w-4 rounded border-slate-300 text-indigo-600"
           />
-          Sofort sichtbar auf "Über mich" (aktiv)
+          Sofort sichtbar auf &quot;Über mich&quot; (aktiv)
         </label>
       </div>
 
@@ -1105,7 +1124,7 @@ function SettingsForm({ settings, onSave }) {
 
       <div className="sm:col-span-2">
         <label htmlFor="s-tutorAddress" className="text-sm font-semibold text-slate-700">
-          Deine Adresse (für Einzelstunden "bei der Lehrkraft" und Impressum/Schema.org)
+          Deine Adresse (für Einzelstunden &quot;bei der Lehrkraft&quot; und Impressum/Schema.org)
         </label>
         <input
           id="s-tutorAddress"
@@ -1195,7 +1214,7 @@ function SettingsForm({ settings, onSave }) {
 
       <div className="sm:col-span-2">
         <label htmlFor="s-aboutTitle" className="text-sm font-semibold text-slate-700">
-          Abschnitt "Warum Lernsprung" – Titel
+          Abschnitt &quot;Warum Lernsprung&quot; – Titel
         </label>
         <input
           id="s-aboutTitle"

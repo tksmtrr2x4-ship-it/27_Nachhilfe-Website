@@ -2,6 +2,7 @@ import { createBooking, getOffer, getSettings } from "@/lib/db";
 import { sendMail } from "@/lib/mail";
 import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 import { getShopStatus } from "@/lib/shopStatus";
+import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -18,7 +19,10 @@ export async function POST(request) {
     parentEmail,
     parentPhone,
     notes,
+    agreeTerms,
+    agbWiderrufConsent,
     guardianConsent,
+    earlyStartConsent,
     requestedDate,
     requestedTime,
     locationType,
@@ -59,6 +63,18 @@ export async function POST(request) {
     );
   }
 
+  if (!agreeTerms) {
+    return Response.json(
+      { error: "Bitte die Datenschutzhinweise bestätigen." },
+      { status: 400 }
+    );
+  }
+  if (!agbWiderrufConsent) {
+    return Response.json(
+      { error: "Bitte AGB und Widerrufsbelehrung bestätigen." },
+      { status: 400 }
+    );
+  }
   if (!guardianConsent) {
     return Response.json(
       {
@@ -94,6 +110,29 @@ export async function POST(request) {
     }
   }
 
+  // Checkbox 3 (§ 356 Abs. 4 BGB): serverseitig unabhängig vom Client neu
+  // bestimmt, ob sie für diese Buchung Pflicht ist – bei Einzelstunden aus
+  // dem echten Terminwunsch, bei Paketen aus offer.earlyStartPossible.
+  const earlyStartRequired = requiresEarlyStartConsent(offer, requestedDate);
+  if (earlyStartRequired && !earlyStartConsent) {
+    return Response.json(
+      { error: "Bitte den vorzeitigen Leistungsbeginn ausdrücklich bestätigen." },
+      { status: 400 }
+    );
+  }
+
+  // Beweisbares Protokoll: exakt angezeigter Wortlaut + Server-Zeitstempel
+  // je Checkbox (nicht vom Client übernommen).
+  const consentTimestamp = new Date().toISOString();
+  const consents = {
+    privacy: { text: CONSENT_TEXT.privacy, checkedAt: consentTimestamp },
+    agbWiderruf: { text: CONSENT_TEXT.agbWiderruf, checkedAt: consentTimestamp },
+    guardian: { text: CONSENT_TEXT.guardian, checkedAt: consentTimestamp },
+    ...(earlyStartRequired
+      ? { earlyStart: { text: CONSENT_TEXT.earlyStart, checkedAt: consentTimestamp } }
+      : {}),
+  };
+
   const booking = await createBooking({
     offerId: offer._id,
     offerSnapshot: {
@@ -103,6 +142,8 @@ export async function POST(request) {
       priceCents: offer.priceCents,
       type: offer.type,
       durationMinutes: offer.durationMinutes,
+      validityText: offer.validityText,
+      mode: offer.mode,
     },
     studentName: studentName.trim(),
     studentClass: String(studentClass),
@@ -112,6 +153,7 @@ export async function POST(request) {
     parentPhone: parentPhone?.trim() || "",
     notes: notes?.trim() || "",
     guardianConsent: true,
+    consents,
     ...(isSession
       ? {
           requestedDate,

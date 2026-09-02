@@ -23,6 +23,17 @@ export async function POST(request) {
     // Preis kommt aus dem gespeicherten Snapshot der Buchung, nicht vom Client.
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // § 312j Abs. 3 BGB (Button-Lösung): submit_type "pay" beschriftet den
+      // Stripe-eigenen Button eindeutig zahlungspflichtig, custom_text
+      // ergänzt einen zusätzlichen Hinweis direkt auf der Stripe-Seite.
+      submit_type: "pay",
+      locale: "de",
+      custom_text: {
+        submit: {
+          message:
+            "Mit Klick auf „Bezahlen“ schließen Sie einen zahlungspflichtigen Vertrag ab.",
+        },
+      },
       line_items: [
         {
           quantity: 1,

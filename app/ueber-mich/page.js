@@ -77,7 +77,7 @@ export default async function UeberMichPage() {
           <br />
           <br />
           Nicht jede und jeder ist für ein System gemacht, das auf Durchschnitt zielt – aber alle
-          müssen da durch. Genau da möchte ich unterstützen."
+          müssen da durch. Genau da möchte ich unterstützen.&quot;
         </blockquote>
         <figcaption className="mt-6 flex items-center gap-3 text-sm font-semibold text-slate-900">
           {logoSrc ? (
@@ -121,7 +121,7 @@ export default async function UeberMichPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {testimonials.map((t) => (
               <figure key={t._id} className="flex h-full flex-col rounded-2xl border border-slate-200 p-5">
-                <blockquote className="flex-1 text-sm text-slate-700">„{t.text}"</blockquote>
+                <blockquote className="flex-1 text-sm text-slate-700">„{t.text}&quot;</blockquote>
                 <figcaption className="mt-3 text-xs font-semibold text-slate-500">
                   {t.name}
                   {t.role ? <span className="font-normal text-slate-400"> · {t.role}</span> : null}

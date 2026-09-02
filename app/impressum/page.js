@@ -12,7 +12,7 @@ export default async function ImpressumPage() {
 
       <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700">
         <section>
-          <h2 className="font-semibold text-slate-900">Angaben gemäß § 5 TMG</h2>
+          <h2 className="font-semibold text-slate-900">Angaben gemäß § 5 DDG</h2>
           <p className="mt-2">
             Jill Manuel Hils / {settings.siteName}
             <br />
@@ -53,12 +53,10 @@ export default async function ImpressumPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Streitschlichtung</h2>
+          <h2 className="font-semibold text-slate-900">Verbraucherstreitbeilegung</h2>
           <p className="mt-2">
-            Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
-            bereit: https://ec.europa.eu/consumers/odr/. Ich bin nicht verpflichtet und nicht
-            bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
-            teilzunehmen.
+            Ich bin nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer
+            Verbraucherschlichtungsstelle teilzunehmen.
           </p>
         </section>
       </div>

@@ -80,7 +80,6 @@ export default async function RootLayout({ children }) {
       <body className="flex min-h-full flex-col bg-white text-slate-900">
         <script
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Header siteName={settings.siteName} logoSrc={logoSrc} />

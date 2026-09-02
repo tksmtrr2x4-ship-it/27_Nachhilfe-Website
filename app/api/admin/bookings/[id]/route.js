@@ -1,7 +1,6 @@
-import { updateBooking, getBooking, getSettings } from "@/lib/db";
+import { updateBooking, getBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
-import { sendMail } from "@/lib/mail";
-import { formatDate, locationLabel } from "@/lib/format";
+import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 
 const ALLOWED_STATUSES = ["pending", "confirmed", "paid", "cancelled"];
 
@@ -21,42 +20,25 @@ export async function PATCH(request, { params }) {
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
 
   if (status === "confirmed") {
-    await sendConfirmationMail(booking);
+    await sendOrderConfirmationEmail(booking);
   }
 
   return Response.json({ booking });
 }
 
-async function sendConfirmationMail(booking) {
-  const settings = await getSettings();
-  await sendMail({
-    to: booking.parentEmail,
-    subject: `Termin bestätigt: ${booking.offerSnapshot?.title}`,
-    text: [
-      `Guten Tag ${booking.parentName},`,
-      ``,
-      `der Termin für ${booking.studentName} ist bestätigt:`,
-      ``,
-      `${booking.offerSnapshot?.title} (${booking.subject})`,
-      `Termin: ${formatDate(booking.requestedDate)} um ${booking.requestedTime} Uhr`,
-      `Ort: ${locationLabel(booking)}`,
-      ``,
-      `Bei Fragen erreichen Sie mich unter ${settings.contactEmail || settings.contactPhone || "den bekannten Kontaktdaten"}.`,
-      ``,
-      `Viele Grüße`,
-      "Jill Manuel Hils",
-      settings.siteName,
-    ].join("\n"),
-  });
-}
-
-// Erneut sendet auf Wunsch die Bestätigungsmail (falls Kontaktdaten korrigiert
-// wurden oder die erste Mail nicht angekommen ist).
+// Erneut sendet auf Wunsch die Bestellbestätigung (falls Kontaktdaten
+// korrigiert wurden oder die erste Mail nicht angekommen ist). Setzt dafür
+// confirmationEmailSentAt zurück, da sendOrderConfirmationEmail sonst
+// idempotent ist und nichts erneut verschickt.
 export async function POST(request, { params }) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   const booking = await getBooking(id);
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
-  await sendConfirmationMail(booking);
+  await updateBooking(id, { confirmationEmailSentAt: null });
+  const result = await sendOrderConfirmationEmail({ ...booking, confirmationEmailSentAt: null });
+  if (result.error) {
+    return Response.json({ error: "Mailversand fehlgeschlagen." }, { status: 502 });
+  }
   return Response.json({ ok: true });
 }

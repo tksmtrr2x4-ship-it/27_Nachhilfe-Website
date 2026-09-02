@@ -1,4 +1,4 @@
-import { getSettings } from "@/lib/db";
+import { getSettings, listTestimonials } from "@/lib/db";
 import { getPortraitSrc, getLogoSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,10 @@ const FACTS = [
 ];
 
 export default async function UeberMichPage() {
-  const settings = await getSettings();
+  const [settings, testimonials] = await Promise.all([
+    getSettings(),
+    listTestimonials({ onlyActive: true }),
+  ]);
   const portraitSrc = getPortraitSrc();
   const logoSrc = getLogoSrc();
 
@@ -98,20 +101,35 @@ export default async function UeberMichPage() {
 
       <div className="mt-12">
         <h2 className="text-xl font-semibold text-slate-900">Rückmeldungen</h2>
-        <p className="mt-2 max-w-prose text-sm text-slate-500">
-          Hier stehen bald echte Rückmeldungen von Schüler:innen und Eltern – Platzhalter, bis
-          die ersten Stimmen vorliegen.
-        </p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500"
-            >
-              Rückmeldung folgt
+        {testimonials.length === 0 ? (
+          <>
+            <p className="mt-2 max-w-prose text-sm text-slate-500">
+              Hier stehen bald echte Rückmeldungen von Schüler:innen und Eltern.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500"
+                >
+                  Rückmeldung folgt
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            {testimonials.map((t) => (
+              <figure key={t._id} className="flex h-full flex-col rounded-2xl border border-slate-200 p-5">
+                <blockquote className="flex-1 text-sm text-slate-700">„{t.text}"</blockquote>
+                <figcaption className="mt-3 text-xs font-semibold text-slate-500">
+                  {t.name}
+                  {t.role ? <span className="font-normal text-slate-400"> · {t.role}</span> : null}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

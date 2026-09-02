@@ -24,6 +24,13 @@ const EMPTY_OFFER = {
   active: true,
 };
 
+const EMPTY_TESTIMONIAL = {
+  name: "",
+  role: "",
+  text: "",
+  active: true,
+};
+
 const STATUS_LABEL = {
   pending: "Offen",
   confirmed: "Bestätigt",
@@ -47,7 +54,9 @@ export default function AdminPage() {
   const [offers, setOffers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [testimonials, setTestimonials] = useState([]);
   const [editingOffer, setEditingOffer] = useState(null);
+  const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -84,14 +93,16 @@ export default function AdminPage() {
 
   async function refreshAll() {
     try {
-      const [o, b, s] = await Promise.all([
+      const [o, b, s, t] = await Promise.all([
         adminFetch("/api/admin/offers"),
         adminFetch("/api/admin/bookings"),
         adminFetch("/api/admin/settings"),
+        adminFetch("/api/admin/testimonials"),
       ]);
       setOffers(o.offers);
       setBookings(b.bookings);
       setSettings(s.settings);
+      setTestimonials(t.testimonials);
     } catch (err) {
       setNotice(err.message);
     }
@@ -191,6 +202,49 @@ export default function AdminPage() {
     if (!confirm("Angebot wirklich löschen?")) return;
     try {
       await adminFetch(`/api/admin/offers/${id}`, { method: "DELETE" });
+      refreshAll();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function saveTestimonial(form, id) {
+    const payload = {
+      name: form.name,
+      role: form.role,
+      text: form.text,
+      active: form.active,
+    };
+    try {
+      if (id) {
+        await adminFetch(`/api/admin/testimonials/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+      } else {
+        await adminFetch("/api/admin/testimonials", { method: "POST", body: JSON.stringify(payload) });
+      }
+      setEditingTestimonial(null);
+      setNotice("Rückmeldung gespeichert.");
+      refreshAll();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function toggleTestimonialActive(testimonial) {
+    try {
+      await adminFetch(`/api/admin/testimonials/${testimonial._id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ active: !testimonial.active }),
+      });
+      refreshAll();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
+  async function deleteTestimonialItem(id) {
+    if (!confirm("Rückmeldung wirklich löschen?")) return;
+    try {
+      await adminFetch(`/api/admin/testimonials/${id}`, { method: "DELETE" });
       refreshAll();
     } catch (err) {
       setNotice(err.message);
@@ -317,6 +371,7 @@ export default function AdminPage() {
         {[
           ["offers", "Angebote"],
           ["bookings", "Buchungen"],
+          ["testimonials", "Rückmeldungen"],
           ["settings", "Einstellungen"],
         ].map(([key, label]) => (
           <button
@@ -500,6 +555,76 @@ export default function AdminPage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {tab === "testimonials" && (
+        <div className="mt-8">
+          {editingTestimonial ? (
+            <TestimonialForm
+              initial={editingTestimonial === "new" ? EMPTY_TESTIMONIAL : editingTestimonial}
+              onCancel={() => setEditingTestimonial(null)}
+              onSave={(form) =>
+                saveTestimonial(form, editingTestimonial === "new" ? null : editingTestimonial._id)
+              }
+            />
+          ) : (
+            <>
+              <button
+                onClick={() => setEditingTestimonial("new")}
+                className="rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
+              >
+                + Neue Rückmeldung
+              </button>
+              <div className="mt-6 space-y-3">
+                {testimonials.map((t) => (
+                  <div
+                    key={t._id}
+                    className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 p-4"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {t.name}
+                        {t.role ? <span className="font-normal text-slate-500"> · {t.role}</span> : null}{" "}
+                        {!t.active && (
+                          <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                            inaktiv
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-1 max-w-prose text-sm text-slate-600">„{t.text}"</p>
+                    </div>
+                    <div className="flex shrink-0 gap-3 text-sm">
+                      <button
+                        onClick={() => toggleTestimonialActive(t)}
+                        className="text-slate-500 hover:text-indigo-600"
+                      >
+                        {t.active ? "Verstecken" : "Anzeigen"}
+                      </button>
+                      <button
+                        onClick={() => setEditingTestimonial(t)}
+                        className="text-slate-500 hover:text-indigo-600"
+                      >
+                        Bearbeiten
+                      </button>
+                      <button
+                        onClick={() => deleteTestimonialItem(t._id)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        Löschen
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {testimonials.length === 0 && (
+                  <p className="text-sm text-slate-500">
+                    Noch keine Rückmeldungen angelegt. Erscheinen erst auf "Über mich", wenn hier
+                    mindestens eine aktive Rückmeldung existiert.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -770,6 +895,86 @@ function OfferForm({ initial, onCancel, onSave }) {
             className="h-4 w-4 rounded border-slate-300 text-indigo-600"
           />
           Sofort sichtbar (aktiv)
+        </label>
+      </div>
+
+      <div className="mt-6 flex gap-3">
+        <button
+          type="submit"
+          className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
+        >
+          Speichern
+        </button>
+        <button type="button" onClick={onCancel} className="text-sm text-slate-500">
+          Abbrechen
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function TestimonialForm({ initial, onCancel, onSave }) {
+  const [form, setForm] = useState(initial);
+
+  function update(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave(form);
+      }}
+      className="rounded-2xl border border-slate-200 p-6"
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="t-name" className="text-sm font-semibold text-slate-700">
+            Name *
+          </label>
+          <input
+            id="t-name"
+            required
+            value={form.name}
+            onChange={(e) => update("name", e.target.value)}
+            placeholder="z.B. Anna M."
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="t-role" className="text-sm font-semibold text-slate-700">
+            Rolle/Bezug (optional)
+          </label>
+          <input
+            id="t-role"
+            value={form.role}
+            onChange={(e) => update("role", e.target.value)}
+            placeholder="z.B. Mutter von Max, Klasse 9"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="t-text" className="text-sm font-semibold text-slate-700">
+            Text der Rückmeldung *
+          </label>
+          <textarea
+            id="t-text"
+            required
+            value={form.text}
+            onChange={(e) => update("text", e.target.value)}
+            rows={4}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={form.active}
+            onChange={(e) => update("active", e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+          />
+          Sofort sichtbar auf "Über mich" (aktiv)
         </label>
       </div>
 

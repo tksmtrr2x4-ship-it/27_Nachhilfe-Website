@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ShopStatusBanner from "@/components/ShopStatusBanner";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
 
@@ -69,21 +70,6 @@ export default async function RootLayout({ children }) {
     email: settings.contactEmail || undefined,
     url: siteUrl,
     priceRange: "€€",
-    // Zeitfenster, in dem Termine angefragt werden können (Admin-Einstellungen).
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        opens: `${String(settings.bookingHourStart).padStart(2, "0")}:00`,
-        closes: `${String(settings.bookingHourEnd).padStart(2, "0")}:00`,
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: "Saturday",
-        opens: "10:00",
-        closes: "16:00",
-      },
-    ],
   };
 
   return (
@@ -98,6 +84,7 @@ export default async function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Header siteName={settings.siteName} logoSrc={logoSrc} />
+        <ShopStatusBanner settings={settings} />
         <main className="flex-1">{children}</main>
         <Footer
           siteName={settings.siteName}

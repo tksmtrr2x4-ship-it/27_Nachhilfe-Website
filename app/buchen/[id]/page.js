@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOffer, getSettings } from "@/lib/db";
 import { buildDurationSummary, MODE_LABEL } from "@/lib/pricing";
+import { getShopStatus } from "@/lib/shopStatus";
 import OfferPriceBlock from "@/components/OfferPriceBlock";
 import BookingFlow from "@/components/BookingFlow";
 
@@ -21,6 +23,8 @@ export default async function BuchenPage({ params }) {
   const [offer, settings] = await Promise.all([getOffer(id), getSettings()]);
 
   if (!offer || !offer.active) notFound();
+
+  const shopStatus = getShopStatus(settings);
 
   const classOptions = [];
   for (let c = settings.minClass; c <= settings.maxClass; c++) classOptions.push(String(c));
@@ -70,15 +74,27 @@ export default async function BuchenPage({ params }) {
       </dl>
 
       <div className="mt-10">
-        <BookingFlow
-          offer={offer}
-          classOptions={classOptions}
-          bookingSettings={{
-            hourStart: settings.bookingHourStart,
-            hourEnd: settings.bookingHourEnd,
-            tutorAddress: settings.tutorAddress,
-          }}
-        />
+        {shopStatus.closed ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+            <p className="font-semibold">Aktuell keine neuen Buchungen möglich</p>
+            <p className="mt-2">{shopStatus.message}</p>
+            <Link
+              href="/angebote"
+              className="mt-4 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+            >
+              Zurück zu den Angeboten
+            </Link>
+          </div>
+        ) : (
+          <BookingFlow
+            offer={offer}
+            classOptions={classOptions}
+            bookingSettings={{
+              tutorAddress: settings.tutorAddress,
+              openingHoursText: settings.openingHoursText,
+            }}
+          />
+        )}
       </div>
     </div>
   );

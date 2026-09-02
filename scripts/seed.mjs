@@ -32,8 +32,10 @@ const DEFAULT_SETTINGS = {
   minClass: 8,
   maxClass: 13,
   tutorAddress: "",
-  bookingHourStart: 14,
-  bookingHourEnd: 20,
+  openingHoursText: "",
+  shopOpen: true,
+  shopClosedMessage: "",
+  shopReopensAt: "",
   kleinunternehmer: true,
   ustId: "",
 };

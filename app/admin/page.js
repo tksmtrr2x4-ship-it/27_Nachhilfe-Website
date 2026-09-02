@@ -226,6 +226,19 @@ export default function AdminPage() {
     }
   }
 
+  async function toggleShop() {
+    try {
+      const data = await adminFetch("/api/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ shopOpen: !settings.shopOpen }),
+      });
+      setSettings(data.settings);
+      setNotice(data.settings.shopOpen ? "Shop ist jetzt geöffnet." : "Shop ist jetzt geschlossen.");
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
   if (!authed) {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-6">
@@ -273,6 +286,32 @@ export default function AdminPage() {
           {notice}
         </div>
       ) : null}
+
+      <div
+        className={`mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${
+          settings?.shopOpen === false
+            ? "border-red-200 bg-red-50"
+            : "border-emerald-200 bg-emerald-50"
+        }`}
+      >
+        <div>
+          <p className={`text-sm font-semibold ${settings?.shopOpen === false ? "text-red-800" : "text-emerald-800"}`}>
+            {settings?.shopOpen === false ? "Shop ist geschlossen" : "Shop ist geöffnet"}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Steuert, ob neue Buchungen auf der Website angenommen werden. Details (Nachricht,
+            Wiedereröffnungsdatum) unter „Einstellungen".
+          </p>
+        </div>
+        <button
+          onClick={toggleShop}
+          className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold text-white ${
+            settings?.shopOpen === false ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
+          }`}
+        >
+          {settings?.shopOpen === false ? "Shop öffnen" : "Shop schließen"}
+        </button>
+      </div>
 
       <div className="mt-6 flex gap-2 border-b border-slate-200">
         {[
@@ -871,40 +910,58 @@ function SettingsForm({ settings, onSave }) {
           className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="s-hourStart" className="text-sm font-semibold text-slate-700">
-            Termine buchbar ab (Uhrzeit, Mo-Fr)
-          </label>
-          <input
-            id="s-hourStart"
-            type="number"
-            min={0}
-            max={23}
-            value={form.bookingHourStart}
-            onChange={(e) => update("bookingHourStart", Number(e.target.value))}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="s-hourEnd" className="text-sm font-semibold text-slate-700">
-            Termine buchbar bis (Uhrzeit, Mo-Fr)
-          </label>
-          <input
-            id="s-hourEnd"
-            type="number"
-            min={1}
-            max={24}
-            value={form.bookingHourEnd}
-            onChange={(e) => update("bookingHourEnd", Number(e.target.value))}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-          />
+      <div className="sm:col-span-2">
+        <label htmlFor="s-openingHours" className="text-sm font-semibold text-slate-700">
+          Deine Öffnungszeiten (frei, wird auf der Buchungsseite angezeigt)
+        </label>
+        <textarea
+          id="s-openingHours"
+          value={form.openingHoursText}
+          onChange={(e) => update("openingHoursText", e.target.value)}
+          rows={2}
+          placeholder="z.B. Mo-Fr 14-20 Uhr, Sa nach Vereinbarung"
+          className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Nur ein Hinweistext – buchbar ist jeder Tag und jede Uhrzeit, du bestätigst jede
+          Anfrage ohnehin manuell.
+        </p>
+      </div>
+
+      <div className="sm:col-span-2 rounded-lg bg-slate-50 p-4">
+        <p className="text-sm font-semibold text-slate-700">Shop geschlossen – Details</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Der Ein/Aus-Schalter ist oben auf dieser Seite. Hier optional festlegen, was Kund:innen
+          während der Schließung sehen.
+        </p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="s-shopClosedMessage" className="text-sm font-semibold text-slate-700">
+              Nachricht an Kund:innen
+            </label>
+            <textarea
+              id="s-shopClosedMessage"
+              value={form.shopClosedMessage}
+              onChange={(e) => update("shopClosedMessage", e.target.value)}
+              rows={2}
+              placeholder="z.B. Aktuell ausgebucht wegen Klausurphase."
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="s-shopReopensAt" className="text-sm font-semibold text-slate-700">
+              Öffnet wieder am (optional)
+            </label>
+            <input
+              id="s-shopReopensAt"
+              type="date"
+              value={form.shopReopensAt}
+              onChange={(e) => update("shopReopensAt", e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+          </div>
         </div>
       </div>
-      <p className="sm:col-span-2 -mt-3 text-xs text-slate-500">
-        Samstags gilt automatisch ein kürzeres Fenster (10–16 Uhr), sonntags sind keine Termine
-        buchbar.
-      </p>
 
       <div className="sm:col-span-2 grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-4">
         <label className="col-span-2 flex items-center gap-2 text-sm text-slate-700">

@@ -10,22 +10,6 @@ const stripeConfigured = Boolean(
 
 const DEFAULT_SUBJECTS = ["Mathematik", "Physik", "Biologie", "Wirtschaft"];
 
-// Wochentag-abhängige Zeitfenster: Sonntags keine Termine, samstags ein
-// kürzeres Fenster, unter der Woche das im Admin-Bereich hinterlegte Fenster.
-function slotsForDate(dateIso, hourStart, hourEnd) {
-  if (!dateIso) return [];
-  const weekday = new Date(`${dateIso}T00:00:00`).getDay(); // 0 = Sonntag
-  if (weekday === 0) return [];
-  const [start, end] = weekday === 6 ? [10, Math.min(hourEnd, 16)] : [hourStart, hourEnd];
-  const slots = [];
-  for (let h = start; h < end; h++) {
-    slots.push(`${String(h).padStart(2, "0")}:00`);
-    slots.push(`${String(h).padStart(2, "0")}:30`);
-  }
-  slots.push(`${String(end).padStart(2, "0")}:00`);
-  return slots;
-}
-
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -64,15 +48,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     locationAddress: "",
   });
 
-  const timeSlots = slotsForDate(form.requestedDate, bookingSettings.hourStart, bookingSettings.hourEnd);
-
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  function updateDate(value) {
-    const slots = slotsForDate(value, bookingSettings.hourStart, bookingSettings.hourEnd);
-    setForm((f) => ({ ...f, requestedDate: value, requestedTime: slots[0] || "" }));
   }
 
   async function handleSubmit(e) {
@@ -89,7 +66,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     }
     if (isSession) {
       if (!form.requestedDate || !form.requestedTime) {
-        setError("Bitte einen Termin auswählen (sonntags sind keine Termine möglich).");
+        setError("Bitte Datum und Uhrzeit für deinen Terminwunsch auswählen.");
         return;
       }
       if (form.locationType === "student" && !form.locationAddress.trim()) {
@@ -322,7 +299,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                 type="date"
                 min={todayIso()}
                 value={form.requestedDate}
-                onChange={(e) => updateDate(e.target.value)}
+                onChange={(e) => update("requestedDate", e.target.value)}
                 className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
               />
             </div>
@@ -330,32 +307,20 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
               <label htmlFor="requestedTime" className="text-sm font-semibold text-slate-700">
                 Uhrzeit *
               </label>
-              {form.requestedDate && timeSlots.length === 0 ? (
-                <p className="mt-1.5 rounded-lg bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
-                  Sonntags sind keine Termine möglich. Bitte einen anderen Tag wählen.
-                </p>
-              ) : (
-                <select
-                  id="requestedTime"
-                  required
-                  disabled={!form.requestedDate}
-                  value={form.requestedTime}
-                  onChange={(e) => update("requestedTime", e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  {!form.requestedDate ? <option value="">Erst Datum wählen</option> : null}
-                  {timeSlots.map((t) => (
-                    <option key={t} value={t}>
-                      {t} Uhr
-                    </option>
-                  ))}
-                </select>
-              )}
+              <input
+                id="requestedTime"
+                required
+                type="time"
+                value={form.requestedTime}
+                onChange={(e) => update("requestedTime", e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-500">
             Das ist ein Terminwunsch, keine feste Buchung – die Verfügbarkeit wird geprüft und der
             Termin anschließend per E-Mail bestätigt.
+            {bookingSettings.openingHoursText ? ` Meine Öffnungszeiten: ${bookingSettings.openingHoursText}` : ""}
           </p>
 
           <fieldset className="mt-5">

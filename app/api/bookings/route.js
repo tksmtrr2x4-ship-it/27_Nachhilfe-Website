@@ -1,6 +1,7 @@
 import { createBooking, getOffer, getSettings } from "@/lib/db";
 import { sendMail } from "@/lib/mail";
 import { formatDate, formatPrice, locationLabel } from "@/lib/format";
+import { getShopStatus } from "@/lib/shopStatus";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -23,6 +24,15 @@ export async function POST(request) {
     locationType,
     locationAddress,
   } = body || {};
+
+  const settings = await getSettings();
+  const shopStatus = getShopStatus(settings);
+  if (shopStatus.closed) {
+    return Response.json(
+      { error: `Aktuell keine neuen Buchungen möglich. ${shopStatus.message}` },
+      { status: 409 }
+    );
+  }
 
   const offer = offerId ? await getOffer(offerId) : null;
   if (!offer || !offer.active) {
@@ -113,14 +123,13 @@ export async function POST(request) {
   });
 
   if (isSession) {
-    await notifyAdminOfSessionRequest(booking);
+    await notifyAdminOfSessionRequest(booking, settings);
   }
 
   return Response.json({ booking });
 }
 
-async function notifyAdminOfSessionRequest(booking) {
-  const settings = await getSettings();
+async function notifyAdminOfSessionRequest(booking, settings) {
   if (!settings.contactEmail) return;
 
   await sendMail({

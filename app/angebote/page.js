@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listOffers, getSettings } from "@/lib/db";
 import { buildDurationSummary, MODE_LABEL } from "@/lib/pricing";
+import { getShopStatus } from "@/lib/shopStatus";
 import OfferPriceBlock, { DiscountBadge } from "@/components/OfferPriceBlock";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ export const metadata = {
     "Kursabos und Einzelstunden für Nachhilfe in Villingen-Schwenningen, Klasse 8 bis Abitur. Transparente Preise, direkt online buchen oder Termin anfragen.",
 };
 
-function OfferCard({ offer, settings }) {
+function OfferCard({ offer, settings, shopClosed }) {
   return (
     <div className="relative flex h-full flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:shadow-md">
       <DiscountBadge offer={offer} />
@@ -61,12 +62,18 @@ function OfferCard({ offer, settings }) {
         )}
         <div className="flex items-end justify-between gap-4">
           <OfferPriceBlock offer={offer} settings={settings} />
-          <Link
-            href={`/buchen/${offer._id}`}
-            className="shrink-0 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
-          >
-            {offer.type === "session" ? "Termin anfragen" : "Jetzt buchen"}
-          </Link>
+          {shopClosed ? (
+            <span className="shrink-0 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-400">
+              Aktuell geschlossen
+            </span>
+          ) : (
+            <Link
+              href={`/buchen/${offer._id}`}
+              className="shrink-0 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
+            >
+              {offer.type === "session" ? "Termin anfragen" : "Jetzt buchen"}
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -81,6 +88,7 @@ export default async function AngebotePage() {
   const packageOffers = offers.filter((o) => o.type !== "session");
   const sessionOffers = offers.filter((o) => o.type === "session");
   const showGroups = sessionOffers.length > 0 && packageOffers.length > 0;
+  const shopClosed = getShopStatus(settings).closed;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 pb-28 sm:pb-16">
@@ -107,7 +115,7 @@ export default async function AngebotePage() {
               )}
               <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {packageOffers.map((offer) => (
-                  <OfferCard key={offer._id} offer={offer} settings={settings} />
+                  <OfferCard key={offer._id} offer={offer} settings={settings} shopClosed={shopClosed} />
                 ))}
               </div>
             </section>
@@ -120,7 +128,7 @@ export default async function AngebotePage() {
               )}
               <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sessionOffers.map((offer) => (
-                  <OfferCard key={offer._id} offer={offer} settings={settings} />
+                  <OfferCard key={offer._id} offer={offer} settings={settings} shopClosed={shopClosed} />
                 ))}
               </div>
             </section>

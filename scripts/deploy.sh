@@ -9,7 +9,14 @@ git pull --ff-only
 echo "→ npm ci"
 npm ci
 
+# next build muss NEXT_PUBLIC_*-Variablen zur Build-Zeit im Prozess-Environment
+# sehen (sie werden fest in den Browser-Bundle einkompiliert) – das reine
+# env_file in ecosystem.config.js greift erst beim Start durch pm2, nicht
+# beim Build. Deshalb hier explizit einlesen.
 echo "→ npm run build"
+set -a
+source /etc/lernsprung/.env.production
+set +a
 npm run build
 
 echo "→ pm2 reload (zero-downtime)"

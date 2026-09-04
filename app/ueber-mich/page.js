@@ -64,20 +64,17 @@ export default async function UeberMichPage() {
 
       <figure className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8">
         <blockquote className="max-w-prose text-lg text-slate-700">
-          „Ein System, das auf die breite Masse ausgelegt ist, führt schnell dazu,
-          dass man mit einem langsameren Fortschritt schneller vom Stoff abgehängt wird, als andere. Wichtig ist, solche Lücken früh zu
-          erkennen und ihnen entgegenzuwirken.
+          „Jeder hat seine Stärken und Schwächen, ziel ist es seine Stärken zu fördern und seine Schwächen zu verringern.
+          Es ist kein Geheimnis, dass man als Schüler nicht in jedem Fach gleich gut ist. Ich möchte Schülern dabei helfen, ihre Schwächen zu erkennen und zu verringern, damit sie in der Schule mit weniger Frustration und mehr Selbsvertrauen lernen können.
           <br />
           <br />
-          Mir hilft dabei, dass der Altersunterschied zwischen mir und meinen Schüler:innen
-          gering ist – meine eigene Schulzeit liegt noch nicht lange zurück, ich kann mich gut in
-          ihre Situation hineinversetzen. Jede und jeder lernt anders, jede und jeder versteht
-          anders. Genau das kann der reguläre Unterricht oft nicht auffangen: individuelle
-          Erklärungen, im eigenen Tempo, ohne Angst vor Nachfragen.
+          Mit 16 Jahren war ich das erste Mal Nachhilfeschülers unseren schuleigenen Nachhilfeprogramms "Buddy-Club - Schüler lehren Schüler"
+          Das Überraschende: Das System geht auf. Das Herausragende: Die Stoffnähe und gleichzeitig die Realitätsnähe, die man als Schüler oder Abiturient mit sich bringt ist unvergleichbar. 
+          Das System erwies sich als sehr effektiv, da man sich so besser in die Lage der Schüler hineinversetzen kann und so den Stoff verständlicher vermitteln kann.
           <br />
           <br />
-          Nicht jede und jeder ist für ein System gemacht, das auf Durchschnitt zielt – aber alle
-          müssen da durch. Genau da möchte ich unterstützen.&quot;
+          Nicht jeder ist für ein System gemacht, das auf Durchschnitt zielt – aber alle
+          müssen da durch. Genau da möchte ich ansetzen.&quot;
         </blockquote>
         <figcaption className="mt-6 flex items-center gap-3 text-sm font-semibold text-slate-900">
           {logoSrc ? (

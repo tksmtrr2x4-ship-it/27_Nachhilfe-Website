@@ -23,6 +23,7 @@ const EMPTY_OFFER = {
   listPrice: "",
   active: true,
   earlyStartPossible: false,
+  minClass: "",
 };
 
 const EMPTY_TESTIMONIAL = {
@@ -153,6 +154,7 @@ export default function AdminPage() {
         : null,
       active: offerForm.active,
       earlyStartPossible: offerForm.earlyStartPossible,
+      minClass: offerForm.minClass ? Number(offerForm.minClass) : null,
     };
 
     if (isSession) {
@@ -423,6 +425,7 @@ export default function AdminPage() {
                       </p>
                       <p className="text-sm text-slate-500">
                         {offer.subject} · {offer.durationLabel} · {formatPrice(offer.priceCents)}
+                        {offer.minClass ? ` · ab Klasse ${offer.minClass}` : ""}
                       </p>
                     </div>
                     <div className="flex gap-3 text-sm">
@@ -446,6 +449,7 @@ export default function AdminPage() {
                             listPrice: offer.listPriceCents ? (offer.listPriceCents / 100).toString() : "",
                             featuresText: (offer.features || []).join("\n"),
                             earlyStartPossible: Boolean(offer.earlyStartPossible),
+                            minClass: offer.minClass ? String(offer.minClass) : "",
                           })
                         }
                         className="text-slate-500 hover:text-indigo-600"
@@ -705,6 +709,21 @@ function OfferForm({ initial, onCancel, onSave }) {
             value={form.subject}
             onChange={(e) => update("subject", e.target.value)}
             placeholder="Mathematik | Physik"
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label htmlFor="offer-min-class" className="text-sm font-semibold text-slate-700">
+            Ab welcher Klasse buchbar (optional)
+          </label>
+          <input
+            id="offer-min-class"
+            type="number"
+            min={1}
+            max={13}
+            value={form.minClass}
+            onChange={(e) => update("minClass", e.target.value)}
+            placeholder="z.B. 8"
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
           />
         </div>

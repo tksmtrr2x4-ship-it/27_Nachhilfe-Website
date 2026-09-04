@@ -64,7 +64,7 @@ export default async function UeberMichPage() {
 
       <figure className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8">
         <blockquote className="max-w-prose text-lg text-slate-700">
-          „Ein System was auf die breite Masse ausgelegt ist, führt schnnell dazu,
+          „Ein System, das auf die breite Masse ausgelegt ist, führt schnell dazu,
           dass man mit einem langsameren Fortschritt schneller vom Stoff abgehängt wird, als andere. Wichtig ist, solche Lücken früh zu
           erkennen und ihnen entgegenzuwirken.
           <br />
@@ -91,9 +91,9 @@ export default async function UeberMichPage() {
       <div className="mt-12 max-w-prose text-slate-600">
         <h2 className="text-xl font-semibold text-slate-900">Warum Nachhilfe von mir?</h2>
         <p className="mt-3">
-          Ich unterrichte selbst seit mittlerweile zwei Jahre lang.  Ich weiß noch aus erster Hand,
-          wie die Pruefengen aufgebaut sind und biete deswegen Nachhilfe, die wirklich
-          Qualitaet traegt. In Villingen-Schwenningen biete ich Einzelunterricht bei mir, bei dir zuhause
+          Ich unterrichte selbst seit mittlerweile zwei Jahren. Ich weiß noch aus erster Hand,
+          wie die Prüfungen aufgebaut sind und biete deswegen Nachhilfe, die wirklich
+          Qualität trägt. In Villingen-Schwenningen biete ich Einzelunterricht bei mir, bei dir zuhause
           oder online an – in Mathematik, Physik, Biologie und Wirtschaft, ab Klasse 8 bis zum
           Abitur.
         </p>

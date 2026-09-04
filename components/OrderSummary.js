@@ -31,6 +31,12 @@ export default function OrderSummary({ offer, subject, kleinunternehmer }) {
             <dd className="inline">{offer.validityText}</dd>
           </div>
         ) : null}
+        {offer.minClass ? (
+          <div>
+            <dt className="inline font-semibold">Ab Klasse: </dt>
+            <dd className="inline">{offer.minClass}</dd>
+          </div>
+        ) : null}
       </dl>
       <p className="mt-3 text-lg font-semibold text-slate-900">
         Gesamtpreis: {formatPrice(offer.priceCents)}

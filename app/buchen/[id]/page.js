@@ -42,6 +42,11 @@ export default async function BuchenPage({ params }) {
         <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
           {MODE_LABEL[offer.mode] || MODE_LABEL.both}
         </span>
+        {offer.minClass ? (
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+            ab Klasse {offer.minClass}
+          </span>
+        ) : null}
       </div>
 
       {offer.description ? (

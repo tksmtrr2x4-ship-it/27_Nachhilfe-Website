@@ -26,6 +26,11 @@ function OfferCard({ offer, settings, shopClosed }) {
         <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
           {MODE_LABEL[offer.mode] || MODE_LABEL.both}
         </span>
+        {offer.minClass ? (
+          <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            ab Klasse {offer.minClass}
+          </span>
+        ) : null}
       </div>
 
       <h2 className="mt-3 text-lg font-semibold text-slate-900">{offer.title}</h2>

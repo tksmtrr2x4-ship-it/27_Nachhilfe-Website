@@ -68,7 +68,7 @@ export default async function UeberMichPage() {
           Es ist kein Geheimnis, dass man als Schüler nicht in jedem Fach gleich gut ist. Ich möchte Schülern dabei helfen, ihre Schwächen zu erkennen und zu verringern, damit sie in der Schule mit weniger Frustration und mehr Selbsvertrauen lernen können.
           <br />
           <br />
-          Mit 16 Jahren war ich das erste Mal Nachhilfeschülers unseren schuleigenen Nachhilfeprogramms "Buddy-Club - Schüler lehren Schüler"
+          Mit 16 Jahren war ich das erste Mal Nachhilfeschülers unseren schuleigenen Nachhilfeprogramms &quot;Buddy-Club - Schüler lehren Schüler&quot;
           Das Überraschende: Das System geht auf. Das Herausragende: Die Stoffnähe und gleichzeitig die Realitätsnähe, die man als Schüler oder Abiturient mit sich bringt ist unvergleichbar. 
           Das System erwies sich als sehr effektiv, da man sich so besser in die Lage der Schüler hineinversetzen kann und so den Stoff verständlicher vermitteln kann.
           <br />

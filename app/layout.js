@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -51,6 +52,10 @@ export async function generateMetadata() {
 export default async function RootLayout({ children }) {
   const settings = await getSettings();
   const logoSrc = getLogoSrc();
+  // Von proxy.js pro Request gesetzt – nötig, damit dieses Inline-Skript
+  // trotz strikter Content-Security-Policy (script-src ohne unsafe-inline)
+  // ausgeführt werden darf.
+  const nonce = (await headers()).get("x-nonce");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -80,6 +85,7 @@ export default async function RootLayout({ children }) {
       <body className="flex min-h-full flex-col bg-white text-slate-900">
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Header siteName={settings.siteName} logoSrc={logoSrc} />

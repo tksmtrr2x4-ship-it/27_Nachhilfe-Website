@@ -194,6 +194,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 p-6" noValidate>
       <h2 className="text-lg font-semibold text-slate-900">Angaben zur Schülerin / zum Schüler</h2>
+      <p className="mt-1 text-xs text-slate-500">
+        Mit * gekennzeichnete Angaben sind für den Vertragsschluss erforderlich. Ohne sie
+        kann ich die Buchung nicht bearbeiten.
+      </p>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -258,6 +262,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             rows={3}
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
+          <p className="mt-1.5 text-xs text-slate-500">
+            Bitte hier keine Angaben zu Gesundheit, Diagnosen (z.B. LRS, Dyskalkulie, ADHS)
+            oder Nachteilsausgleichen machen — solche Themen besprechen wir gerne persönlich.
+          </p>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOffer, getSettings } from "@/lib/db";
-import { buildDurationSummary, MODE_LABEL } from "@/lib/pricing";
+import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricing";
 import { getShopStatus } from "@/lib/shopStatus";
 import OfferPriceBlock from "@/components/OfferPriceBlock";
 import BookingFlow from "@/components/BookingFlow";
@@ -42,9 +42,9 @@ export default async function BuchenPage({ params }) {
         <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
           {MODE_LABEL[offer.mode] || MODE_LABEL.both}
         </span>
-        {offer.minClass ? (
+        {formatClassRange(offer) ? (
           <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
-            ab Klasse {offer.minClass}
+            {formatClassRange(offer)}
           </span>
         ) : null}
       </div>

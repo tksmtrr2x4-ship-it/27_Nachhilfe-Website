@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatPrice, formatDate, locationLabel } from "@/lib/format";
-import { computeSavings, computeTotalHours } from "@/lib/pricing";
+import { computeSavings, computeTotalHours, formatClassRange } from "@/lib/pricing";
 
 const EMPTY_OFFER = {
   type: "package",
@@ -24,6 +24,7 @@ const EMPTY_OFFER = {
   active: true,
   earlyStartPossible: false,
   minClass: "",
+  maxClass: "",
 };
 
 const EMPTY_TESTIMONIAL = {
@@ -155,6 +156,7 @@ export default function AdminPage() {
       active: offerForm.active,
       earlyStartPossible: offerForm.earlyStartPossible,
       minClass: offerForm.minClass ? Number(offerForm.minClass) : null,
+      maxClass: offerForm.maxClass ? Number(offerForm.maxClass) : null,
     };
 
     if (isSession) {
@@ -425,7 +427,7 @@ export default function AdminPage() {
                       </p>
                       <p className="text-sm text-slate-500">
                         {offer.subject} · {offer.durationLabel} · {formatPrice(offer.priceCents)}
-                        {offer.minClass ? ` · ab Klasse ${offer.minClass}` : ""}
+                        {formatClassRange(offer) ? ` · ${formatClassRange(offer)}` : ""}
                       </p>
                     </div>
                     <div className="flex gap-3 text-sm">
@@ -450,6 +452,7 @@ export default function AdminPage() {
                             featuresText: (offer.features || []).join("\n"),
                             earlyStartPossible: Boolean(offer.earlyStartPossible),
                             minClass: offer.minClass ? String(offer.minClass) : "",
+                            maxClass: offer.maxClass ? String(offer.maxClass) : "",
                           })
                         }
                         className="text-slate-500 hover:text-indigo-600"
@@ -713,19 +716,38 @@ function OfferForm({ initial, onCancel, onSave }) {
           />
         </div>
         <div>
-          <label htmlFor="offer-min-class" className="text-sm font-semibold text-slate-700">
-            Ab welcher Klasse buchbar (optional)
+          <label className="text-sm font-semibold text-slate-700">
+            Klassenstufe (optional, steuert die Klassenwahl auf /angebote)
           </label>
-          <input
-            id="offer-min-class"
-            type="number"
-            min={1}
-            max={13}
-            value={form.minClass}
-            onChange={(e) => update("minClass", e.target.value)}
-            placeholder="z.B. 8"
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-          />
+          <div className="mt-1.5 flex items-center gap-2">
+            <input
+              id="offer-min-class"
+              aria-label="Von Klasse"
+              type="number"
+              min={1}
+              max={13}
+              value={form.minClass}
+              onChange={(e) => update("minClass", e.target.value)}
+              placeholder="von"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+            <span className="text-slate-400">–</span>
+            <input
+              id="offer-max-class"
+              aria-label="Bis Klasse"
+              type="number"
+              min={1}
+              max={13}
+              value={form.maxClass}
+              onChange={(e) => update("maxClass", e.target.value)}
+              placeholder="bis"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            />
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Nur &quot;von&quot; ausfüllen = ab dieser Klasse ohne Obergrenze. Beide leer lassen =
+            Angebot gilt für jede Klasse.
+          </p>
         </div>
 
         {isSession ? (

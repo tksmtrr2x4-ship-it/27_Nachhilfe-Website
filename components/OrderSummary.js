@@ -1,5 +1,5 @@
 import { formatPrice } from "@/lib/format";
-import { buildDurationSummary, MODE_LABEL } from "@/lib/pricing";
+import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricing";
 
 // Pflichtangaben unmittelbar über dem Bestell-Button (§ 312j Abs. 2 BGB):
 // Bezeichnung + wesentliche Merkmale, Gültigkeit/Laufzeit, Gesamtpreis,
@@ -31,10 +31,10 @@ export default function OrderSummary({ offer, subject, kleinunternehmer }) {
             <dd className="inline">{offer.validityText}</dd>
           </div>
         ) : null}
-        {offer.minClass ? (
+        {formatClassRange(offer) ? (
           <div>
-            <dt className="inline font-semibold">Ab Klasse: </dt>
-            <dd className="inline">{offer.minClass}</dd>
+            <dt className="inline font-semibold">Klassenstufe: </dt>
+            <dd className="inline">{formatClassRange(offer)}</dd>
           </div>
         ) : null}
       </dl>

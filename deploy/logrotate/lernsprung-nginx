@@ -1,0 +1,16 @@
+# Nach /etc/logrotate.d/lernsprung-nginx kopieren (siehe docs/logging.md).
+# 7 Tage Gesamt-Aufbewahrung (aktuelle, noch nicht rotierte Datei + 6
+# rotierte = 7 Tage), danach ECHTES Löschen durch logrotate selbst.
+/var/log/nginx/lernsprung-access.log {
+    daily
+    rotate 6
+    missingok
+    notifempty
+    compress
+    delaycompress
+    dateext
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid)
+    endscript
+}

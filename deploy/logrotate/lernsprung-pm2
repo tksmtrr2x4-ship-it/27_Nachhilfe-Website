@@ -1,0 +1,12 @@
+# Nach /etc/logrotate.d/lernsprung-pm2 kopieren (siehe docs/logging.md).
+# Gleiche 7-Tage-Regel wie für die nginx-Logs.
+/var/log/lernsprung/*.log {
+    daily
+    rotate 6
+    missingok
+    notifempty
+    compress
+    delaycompress
+    dateext
+    copytruncate
+}

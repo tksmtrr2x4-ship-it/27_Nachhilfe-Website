@@ -275,6 +275,17 @@ export default function AdminPage() {
     }
   }
 
+  async function deleteBookingItem(id) {
+    if (!confirm("Buchung wirklich unwiderruflich löschen?")) return;
+    try {
+      await adminFetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+      setNotice("Buchung gelöscht.");
+      refreshAll();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
   async function saveSettings(patch) {
     try {
       const data = await adminFetch("/api/admin/settings", { method: "PATCH", body: JSON.stringify(patch) });
@@ -550,6 +561,12 @@ export default function AdminPage() {
                             Stornieren
                           </button>
                         )}
+                        <button
+                          onClick={() => deleteBookingItem(b._id)}
+                          className="text-red-700 hover:text-red-800"
+                        >
+                          Löschen
+                        </button>
                       </div>
                     </td>
                   </tr>

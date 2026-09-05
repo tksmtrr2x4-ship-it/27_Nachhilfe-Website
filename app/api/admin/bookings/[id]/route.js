@@ -1,4 +1,4 @@
-import { updateBooking, getBooking } from "@/lib/db";
+import { updateBooking, getBooking, deleteBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 
@@ -40,5 +40,13 @@ export async function POST(request, { params }) {
   if (result.error) {
     return Response.json({ error: "Mailversand fehlgeschlagen." }, { status: 502 });
   }
+  return Response.json({ ok: true });
+}
+
+export async function DELETE(request, { params }) {
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  const { id } = await params;
+  const ok = await deleteBooking(id);
+  if (!ok) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
   return Response.json({ ok: true });
 }

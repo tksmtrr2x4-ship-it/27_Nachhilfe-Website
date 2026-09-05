@@ -19,8 +19,11 @@ source /etc/lernsprung/.env.production
 set +a
 npm run build
 
+# --update-env ist Pflicht: ohne dieses Flag liest `pm2 reload` env_file
+# NICHT neu ein, sondern behält die Umgebung vom allerersten `pm2 start`
+# bei (auch nach Änderungen an /etc/lernsprung/.env.production).
 echo "→ pm2 reload (zero-downtime)"
-pm2 reload ecosystem.config.js
+pm2 reload ecosystem.config.js --update-env
 
 echo "→ fertig. Status:"
 pm2 status lernsprung-website

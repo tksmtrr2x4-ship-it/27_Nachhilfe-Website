@@ -33,7 +33,11 @@ export default async function MeetingPage({ params }) {
     );
   }
 
-  const jitsiUrl = `https://${JITSI_DOMAIN}/${encodeURIComponent(booking.meetingToken)}#config.prejoinConfig.enabled=true`;
+  // Ohne eigenen "subject" zeigt Jitsi den rohen Zufallstoken als Raumtitel
+  // an (unleserlich). JSON.stringify liefert das nötige gequotete Literal
+  // für die Config-Syntax im URL-Hash, encodeURIComponent macht es URL-sicher.
+  const subject = JSON.stringify(`Nachhilfe: ${booking.subject} mit ${booking.studentName}`);
+  const jitsiUrl = `https://${JITSI_DOMAIN}/${encodeURIComponent(booking.meetingToken)}#config.prejoinConfig.enabled=true&config.subject=${encodeURIComponent(subject)}`;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">

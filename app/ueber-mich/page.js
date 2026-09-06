@@ -1,5 +1,5 @@
-import { getSettings, listTestimonials } from "@/lib/db";
-import { getPortraitSrc, getLogoSrc } from "@/lib/logo";
+import { listTestimonials } from "@/lib/db";
+import { getPortraitSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +17,8 @@ const FACTS = [
 ];
 
 export default async function UeberMichPage() {
-  const [settings, testimonials] = await Promise.all([
-    getSettings(),
-    listTestimonials({ onlyActive: true }),
-  ]);
+  const testimonials = await listTestimonials({ onlyActive: true });
   const portraitSrc = getPortraitSrc();
-  const logoSrc = getLogoSrc();
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -63,26 +59,49 @@ export default async function UeberMichPage() {
       </div>
 
       <figure className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8">
-        <blockquote className="max-w-prose text-lg text-slate-700">
-          „Jeder hat seine Stärken und Schwächen, ziel ist es seine Stärken zu fördern und seine Schwächen zu verringern.
-          Es ist kein Geheimnis, dass man als Schüler nicht in jedem Fach gleich gut ist. Ich möchte Schülern dabei helfen, ihre Schwächen zu erkennen und zu verringern, damit sie in der Schule mit weniger Frustration und mehr Selbsvertrauen lernen können.
-          <br />
-          <br />
-          Mit 16 Jahren war ich das erste Mal Nachhilfeschülers unseren schuleigenen Nachhilfeprogramms &quot;Buddy-Club - Schüler lehren Schüler&quot;
-          Das Überraschende: Das System geht auf. Das Herausragende: Die Stoffnähe und gleichzeitig die Realitätsnähe, die man als Schüler oder Abiturient mit sich bringt ist unvergleichbar. 
-          Das System erwies sich als sehr effektiv, da man sich so besser in die Lage der Schüler hineinversetzen kann und so den Stoff verständlicher vermitteln kann.
-          <br />
-          <br />
-          Nicht jeder ist für ein System gemacht, das auf Durchschnitt zielt – aber alle
-          müssen da durch. Genau da möchte ich ansetzen.&quot;
-        </blockquote>
-        <figcaption className="mt-6 flex items-center gap-3 text-sm font-semibold text-slate-900">
-          {logoSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoSrc} alt="" aria-hidden="true" className="h-6 w-auto" />
-          ) : null}
-          Jill Manuel Hils – {settings.siteName}
-        </figcaption>
+        <div className="max-w-prose space-y-4 text-slate-700">
+          <p className="text-lg font-semibold text-slate-900">
+            Bereit für einen echten Lernsprung? Dann bist Du hier genau richtig!
+          </p>
+          <p>
+            Mein Name ist Jill, ich habe dieses Jahr mein Abitur an den St. Ursula Schulen mit
+            1,8 absolviert. Während meiner Zeit an St. Ursula durfte ich bereits in einem
+            interessanten System Nachhilfe geben – Schüler lehren Schüler. Dieses System bringt
+            den Vorteil mit sich, dass man als Schüler oder Absolvent sich noch ziemlich präzise
+            daran erinnern kann, wo die Probleme damals vielleicht bei einem selber lagen. So
+            hat man genau die richtigen Mittel zur Hand, um möglichst auf Augenhöhe zu
+            unterrichten.
+          </p>
+          <p>
+            Nach drei Nachhilfeschülern hatte ich mich dann 2025 dazu entschieden, meine
+            Nachhilfe außerhalb von Schule anzubieten, wobei man durchweg auf positive Resonanz
+            stieß. Ich selber habe großen Gefallen daran gefunden und möchte das nun zunächst
+            ein Jahr bis zu meinem Studienbeginn über{" "}
+            <a
+              href="https://www.lernsprung-vs.de"
+              className="text-indigo-600 underline underline-offset-2"
+            >
+              www.lernsprung-vs.de
+            </a>{" "}
+            anbieten.
+          </p>
+          <p>
+            Ich biete Nachhilfe für die Fächer Mathe, Biologie, Wirtschaft und Physik bis zum
+            Abitur an. Da diese meine stärksten Fächer waren, kann ich an diesen Punkten
+            unterstützen, denn wie jeder weiß, haben wir unsere unterschiedlichen Schwächen und
+            Stärken. Ziel wird es sein, die Schwächen abzubauen und die Stärken auszubauen.
+          </p>
+          <p>
+            Der Link zur Website ist in der Biografie zu finden. Ich freue mich auf jeden
+            Kontakt, jeden Austausch und jede Stunde, in der ich Wissen an die nächste
+            Generation vermitteln darf.
+          </p>
+          <p>
+            Herzliche Grüße,
+            <br />
+            Jill M. Hils von Lernsprung
+          </p>
+        </div>
       </figure>
 
       <div className="mt-12 max-w-prose text-slate-600">

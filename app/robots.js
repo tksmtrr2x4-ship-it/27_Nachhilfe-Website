@@ -6,9 +6,10 @@ export default function robots() {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Admin-Bereich und der transaktionale Buchungsflow bringen für die
-      // Google-Suche nichts und sollen nicht indexiert werden.
-      disallow: ["/admin", "/buchen/"],
+      // Admin-Bereich, der transaktionale Buchungsflow und die personalisierten
+      // Meeting-Links bringen für die Google-Suche nichts und sollen nicht
+      // indexiert werden (Meeting-Seite setzt zusätzlich "noindex" selbst).
+      disallow: ["/admin", "/buchen/", "/meeting/"],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };

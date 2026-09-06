@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { updateBooking, getBooking, deleteBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
@@ -13,8 +14,24 @@ export async function PATCH(request, { params }) {
     return Response.json({ error: "Ungültiger Status." }, { status: 400 });
   }
 
+  const existing = await getBooking(id);
+  if (!existing) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
+
   const patch = { status };
-  if (status === "confirmed") patch.confirmedAt = new Date().toISOString();
+  if (status === "confirmed") {
+    patch.confirmedAt = new Date().toISOString();
+    // Bei Zusage für eine Online-Einzelstunde einmalig einen Meeting-Token
+    // erzeugen (nur falls noch keiner existiert, z.B. bei erneutem
+    // Bestätigen nach einem Statuswechsel). Dient sowohl als URL-Slug für
+    // /meeting/<token> als auch als Jitsi-Raumname – siehe lib/db.js.
+    if (
+      existing.offerSnapshot?.type === "session" &&
+      existing.locationType === "online" &&
+      !existing.meetingToken
+    ) {
+      patch.meetingToken = crypto.randomBytes(16).toString("hex");
+    }
+  }
 
   const booking = await updateBooking(id, patch);
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });

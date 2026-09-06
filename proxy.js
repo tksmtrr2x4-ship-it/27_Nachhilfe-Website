@@ -23,6 +23,7 @@ export function proxy(request) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'self';
+    frame-src 'self' https://meet.lernsprung-vs.de;
   `;
   const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, " ").trim();
 

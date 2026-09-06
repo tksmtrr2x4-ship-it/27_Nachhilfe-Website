@@ -514,6 +514,19 @@ export default function AdminPage() {
                           {formatDate(b.requestedDate)} · {b.requestedTime} Uhr
                           <br />
                           <span className="text-slate-500">{locationLabel(b)}</span>
+                          {b.meetingToken && (
+                            <>
+                              <br />
+                              <a
+                                href={`/meeting/${b.meetingToken}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-indigo-600 hover:underline"
+                              >
+                                Meeting-Link öffnen
+                              </a>
+                            </>
+                          )}
                         </>
                       ) : (
                         <span className="text-slate-400">–</span>

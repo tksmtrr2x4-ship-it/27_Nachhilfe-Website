@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getBookingByMeetingToken } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import MeetingEmbed from "@/components/MeetingEmbed";
 
 // Öffentliche, aber nicht erratbare Seite (kein Login) für den
 // Online-Unterricht: der lange Zufallstoken in der URL ist zugleich der
@@ -49,13 +50,8 @@ export default async function MeetingPage({ params }) {
         Erlaubnis im Browser aktiviert.
       </p>
 
-      <div className="mt-5 aspect-video w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-sm">
-        <iframe
-          src={jitsiUrl}
-          title="Video-Unterricht"
-          allow="camera; microphone; fullscreen; display-capture; autoplay"
-          className="h-full w-full"
-        />
+      <div className="mt-5">
+        <MeetingEmbed src={jitsiUrl} />
       </div>
 
       <p className="mt-4 text-xs text-slate-400">

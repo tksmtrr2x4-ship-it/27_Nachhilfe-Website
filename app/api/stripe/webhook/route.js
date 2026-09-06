@@ -1,6 +1,7 @@
 import { getStripe } from "@/lib/stripe";
 import { getBooking, updateBooking } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
+import { notifyAdminOfBooking } from "@/lib/adminNotify";
 
 // Stripe braucht den unveränderten Rohtext des Requests für die
 // Signaturprüfung – deshalb hier request.text() statt request.json().
@@ -55,5 +56,14 @@ async function markBookingPaid(session) {
     await sendOrderConfirmationEmail(paid);
   } catch (err) {
     console.error("Bestellbestätigung fehlgeschlagen:", err);
+  }
+
+  // Admin-Benachrichtigung über jeden tatsächlich bezahlten Kauf (Pakete
+  // laufen ohne manuelle Bestätigung direkt über Stripe durch, sonst würde
+  // die Lehrkraft davon nie erfahren). Ebenfalls best-effort.
+  try {
+    await notifyAdminOfBooking(paid, "purchased");
+  } catch (err) {
+    console.error("Admin-Benachrichtigung fehlgeschlagen:", err);
   }
 }

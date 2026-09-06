@@ -1,8 +1,7 @@
 import { createBooking, getOffer, getSettings } from "@/lib/db";
-import { sendMail } from "@/lib/mail";
-import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 import { getShopStatus } from "@/lib/shopStatus";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
+import { notifyAdminOfBooking } from "@/lib/adminNotify";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -165,34 +164,12 @@ export async function POST(request) {
   });
 
   if (isSession) {
-    await notifyAdminOfSessionRequest(booking, settings);
+    // Pakete werden hier nur als "pending" angelegt (Zahlung steht noch aus)
+    // – die Admin-Mail dafür löst erst der Stripe-Webhook bei tatsächlicher
+    // Zahlung aus (siehe app/api/stripe/webhook/route.js), sonst würde bei
+    // jedem abgebrochenen Checkout fälschlich "gebucht" gemeldet.
+    await notifyAdminOfBooking(booking, "requested");
   }
 
   return Response.json({ booking });
-}
-
-async function notifyAdminOfSessionRequest(booking, settings) {
-  if (!settings.contactEmail) return;
-
-  await sendMail({
-    to: settings.contactEmail,
-    subject: `Neue Terminanfrage: ${booking.offerSnapshot.title}`,
-    text: [
-      `Neue Terminanfrage über die Website:`,
-      ``,
-      `Angebot: ${booking.offerSnapshot.title} (${formatPrice(booking.offerSnapshot.priceCents)})`,
-      `Termin-Wunsch: ${formatDate(booking.requestedDate)} um ${booking.requestedTime} Uhr`,
-      `Ort: ${locationLabel(booking)}`,
-      ``,
-      `Schüler:in: ${booking.studentName}, Klasse ${booking.studentClass}, Fach: ${booking.subject}`,
-      `Erziehungsberechtigte:r: ${booking.parentName}`,
-      `E-Mail: ${booking.parentEmail}`,
-      `Telefon: ${booking.parentPhone || "–"}`,
-      booking.notes ? `Anmerkungen: ${booking.notes}` : null,
-      ``,
-      `Im Admin-Bereich unter "Buchungen" bestätigen oder Kontakt aufnehmen.`,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  });
 }

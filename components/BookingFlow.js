@@ -41,7 +41,6 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     parentEmail: "",
     parentPhone: "",
     notes: "",
-    agreeTerms: false,
     agbWiderrufConsent: false,
     guardianConsent: false,
     earlyStartConsent: false,
@@ -67,10 +66,6 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     e.preventDefault();
     setError("");
 
-    if (!form.agreeTerms) {
-      setError("Bitte bestätige die Datenschutzhinweise.");
-      return;
-    }
     if (!form.agbWiderrufConsent) {
       setError("Bitte bestätige, dass du die AGB und die Widerrufsbelehrung gelesen hast.");
       return;
@@ -427,21 +422,24 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
       </div>
 
-      <div className="mt-6 space-y-3">
-        <label className="flex items-start gap-2.5 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={form.agreeTerms}
-            onChange={(e) => update("agreeTerms", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Ich habe die{" "}
-          <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2">
-            Datenschutzhinweise
-          </a>{" "}
-          gelesen und stimme der Verarbeitung der Angaben zur Buchungsabwicklung zu. *
-        </label>
-        <label className="flex items-start gap-2.5 text-sm text-slate-600">
+      {/* Datenschutz ist bewusst keine Checkbox: die Verarbeitung der Angaben
+          zur Buchungsabwicklung ist zur Vertragserfüllung erforderlich
+          (Art. 6 Abs. 1 lit. b DSGVO) und braucht keine separate Opt-in-
+          Einwilligung – nur einen klaren Hinweis (siehe lib/legal/consents.js). */}
+      <p className="mt-6 text-xs text-slate-500">
+        Mit dem Absenden dieser Buchung werden die angegebenen Daten zur Bearbeitung der
+        Buchung verarbeitet. Details dazu in den{" "}
+        <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2">
+          Datenschutzhinweisen
+        </a>
+        .
+      </p>
+
+      <fieldset className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Einwilligungen
+        </legend>
+        <label className="flex items-start gap-2.5 text-sm text-slate-700">
           <input
             type="checkbox"
             checked={form.agbWiderrufConsent}
@@ -458,7 +456,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           </a>{" "}
           gelesen und stimme ihnen zu. *
         </label>
-        <label className="flex items-start gap-2.5 text-sm text-slate-600">
+        <label className="flex items-start gap-2.5 text-sm text-slate-700">
           <input
             type="checkbox"
             checked={form.guardianConsent}
@@ -467,18 +465,19 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           />
           {CONSENT_TEXT.guardian} *
         </label>
-        {showEarlyStartCheckbox ? (
-          <label className="flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-            <input
-              type="checkbox"
-              checked={form.earlyStartConsent}
-              onChange={(e) => update("earlyStartConsent", e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-amber-400 text-indigo-600 focus:ring-indigo-500"
-            />
-            {CONSENT_TEXT.earlyStart} *
-          </label>
-        ) : null}
-      </div>
+      </fieldset>
+
+      {showEarlyStartCheckbox ? (
+        <label className="mt-3 flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          <input
+            type="checkbox"
+            checked={form.earlyStartConsent}
+            onChange={(e) => update("earlyStartConsent", e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-indigo-600 focus:ring-indigo-500"
+          />
+          {CONSENT_TEXT.earlyStart} *
+        </label>
+      ) : null}
 
       {error ? (
         <p role="alert" aria-live="polite" className="mt-4 text-sm text-red-600">

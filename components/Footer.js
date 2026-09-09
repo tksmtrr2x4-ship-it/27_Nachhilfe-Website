@@ -19,7 +19,7 @@ export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }
           <div>
             <p className="text-sm font-semibold text-slate-900 dark:text-white">Kontakt</p>
             <ul className="mt-2 space-y-1 text-sm text-slate-500 dark:text-slate-400">
-              <li>{contactEmail || "jill@hils-vs.de"}</li>
+              <li>{contactEmail || "j.hils@lernsprung-vs.de"}</li>
               <li>{contactPhone || "+49 179 4328302"}</li>
             </ul>
           </div>

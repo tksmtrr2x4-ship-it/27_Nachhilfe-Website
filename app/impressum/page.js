@@ -27,7 +27,7 @@ export default async function ImpressumPage() {
           <p className="mt-2">
             Telefon: +49 179 4328302
             <br />
-            E-Mail: jill@hils-vs.de
+            E-Mail: j.hils@lernsprung-vs.de
           </p>
         </section>
 

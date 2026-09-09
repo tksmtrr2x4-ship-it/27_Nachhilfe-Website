@@ -18,8 +18,7 @@ export async function POST(request) {
     parentEmail,
     parentPhone,
     notes,
-    agbWiderrufConsent,
-    guardianConsent,
+    contractConsent,
     earlyStartConsent,
     requestedDate,
     requestedTime,
@@ -61,17 +60,11 @@ export async function POST(request) {
     );
   }
 
-  if (!agbWiderrufConsent) {
-    return Response.json(
-      { error: "Bitte AGB und Widerrufsbelehrung bestätigen." },
-      { status: 400 }
-    );
-  }
-  if (!guardianConsent) {
+  if (!contractConsent) {
     return Response.json(
       {
         error:
-          "Bitte bestätigen, dass Sie erziehungsberechtigt sind und diesen Vertrag abschließen.",
+          "Bitte bestätigen, dass Sie erziehungsberechtigt sind und die AGB/Widerrufsbelehrung akzeptieren.",
       },
       { status: 400 }
     );
@@ -122,8 +115,7 @@ export async function POST(request) {
   const consentTimestamp = new Date().toISOString();
   const consents = {
     privacy: { text: CONSENT_TEXT.privacy, checkedAt: consentTimestamp },
-    agbWiderruf: { text: CONSENT_TEXT.agbWiderruf, checkedAt: consentTimestamp },
-    guardian: { text: CONSENT_TEXT.guardian, checkedAt: consentTimestamp },
+    contract: { text: CONSENT_TEXT.contract, checkedAt: consentTimestamp },
     ...(earlyStartRequired
       ? { earlyStart: { text: CONSENT_TEXT.earlyStart, checkedAt: consentTimestamp } }
       : {}),

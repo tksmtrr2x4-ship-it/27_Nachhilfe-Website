@@ -15,7 +15,7 @@ export default function DatenschutzPage() {
           wenige Firmen (z.B. mein E-Mail- und Server-Anbieter Strato) technisch mit den
           Daten zu tun, niemand nutzt sie für Werbung. Ich hebe die Daten so lange auf, wie
           es gesetzlich vorgeschrieben oder für die Abwicklung nötig ist, danach lösche ich
-          sie. Fragen dazu beantworte ich dir jederzeit unter jill@hils-vs.de. Die
+          sie. Fragen dazu beantworte ich dir jederzeit unter j.hils@lernsprung-vs.de. Die
           ausführliche, rechtlich vollständige Fassung steht direkt darunter.
         </p>
       </div>
@@ -32,7 +32,7 @@ export default function DatenschutzPage() {
             <br />
             Telefon: +49 179 4328302
             <br />
-            E-Mail: jill@hils-vs.de
+            E-Mail: j.hils@lernsprung-vs.de
           </p>
         </section>
 

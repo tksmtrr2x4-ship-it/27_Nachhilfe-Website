@@ -11,6 +11,12 @@ const stripeConfigured = Boolean(
 
 const DEFAULT_SUBJECTS = ["Mathematik", "Physik", "Biologie", "Wirtschaft"];
 
+// Einmal definiert statt in jedem Feld wiederholt (waren vorher ~7 fast
+// identische Klassen-Strings) – jetzt auch mit Dark-Mode-Varianten.
+const inputClass =
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-indigo-500/20";
+const labelClass = "text-sm font-semibold text-slate-700 dark:text-slate-300";
+
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -41,8 +47,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     parentEmail: "",
     parentPhone: "",
     notes: "",
-    agbWiderrufConsent: false,
-    guardianConsent: false,
+    // Ehemals zwei getrennte Checkboxen (AGB/Widerruf + Erziehungs-
+    // berechtigung), jetzt zu einer zusammengefasst – siehe Begründung in
+    // lib/legal/consents.js.
+    contractConsent: false,
     earlyStartConsent: false,
     requestedDate: "",
     requestedTime: "",
@@ -50,10 +58,10 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     locationAddress: "",
   });
 
-  // Checkbox 3 (§ 356 Abs. 4 BGB) nur zeigen, wenn der Leistungsbeginn
-  // innerhalb der 14-tägigen Widerrufsfrist liegen kann – bei Einzelstunden
-  // aus dem gewählten Termin, bei Paketen aus dem Angebot selbst (z.B.
-  // "Last-Minute-Boarding"). Der Server prüft das unabhängig noch einmal.
+  // Nur zeigen, wenn der Leistungsbeginn innerhalb der 14-tägigen
+  // Widerrufsfrist liegen kann – bei Einzelstunden aus dem gewählten
+  // Termin, bei Paketen aus dem Angebot selbst (z.B. "Last-Minute-
+  // Boarding"). Der Server prüft das unabhängig noch einmal.
   const showEarlyStartCheckbox = isSession
     ? requiresEarlyStartConsent(offer, form.requestedDate)
     : requiresEarlyStartConsent(offer, null);
@@ -66,12 +74,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     e.preventDefault();
     setError("");
 
-    if (!form.agbWiderrufConsent) {
-      setError("Bitte bestätige, dass du die AGB und die Widerrufsbelehrung gelesen hast.");
-      return;
-    }
-    if (!form.guardianConsent) {
-      setError("Bitte bestätigen Sie, dass Sie erziehungsberechtigt sind und diesen Vertrag abschließen.");
+    if (!form.contractConsent) {
+      setError("Bitte bestätige die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung.");
       return;
     }
     if (isSession) {
@@ -142,9 +146,9 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
   if (step === "payment" && booking) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900">
-        <h2 className="text-lg font-semibold text-slate-900">Bestellung abschließen</h2>
-        <p className="mt-2 max-w-prose text-sm text-slate-600">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Bestellung abschließen</h2>
+        <p className="mt-2 max-w-prose text-sm text-slate-600 dark:text-slate-300">
           Buchung für {form.studentName} – {offer.title}.
         </p>
 
@@ -153,7 +157,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
 
         {!stripeConfigured ? (
-          <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
             Stripe ist auf dieser Seite noch nicht konfiguriert
             (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY fehlt). Siehe README für die
             Einrichtung.
@@ -170,7 +174,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         )}
 
         {error ? (
-          <p role="alert" className="mt-4 text-sm text-red-600">
+          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         ) : null}
@@ -178,7 +182,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         <button
           type="button"
           onClick={() => setStep("form")}
-          className="mt-6 text-sm text-slate-500 underline underline-offset-2"
+          className="mt-6 text-sm text-slate-500 underline underline-offset-2 dark:text-slate-400"
         >
           Zurück zum Formular
         </button>
@@ -189,18 +193,18 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900"
+      className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
       noValidate
     >
-      <h2 className="text-lg font-semibold text-slate-900">Angaben zur Schülerin / zum Schüler</h2>
-      <p className="mt-1 text-xs text-slate-500">
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Angaben zur Schülerin / zum Schüler</h2>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
         Mit * gekennzeichnete Angaben sind für den Vertragsschluss erforderlich. Ohne sie
         kann ich die Buchung nicht bearbeiten.
       </p>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label htmlFor="studentName" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="studentName" className={labelClass}>
             Wie heißt du? *
           </label>
           <input
@@ -208,12 +212,12 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             required
             value={form.studentName}
             onChange={(e) => update("studentName", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor="studentClass" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="studentClass" className={labelClass}>
             In welche Klasse gehst du? *
           </label>
           <select
@@ -221,7 +225,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             required
             value={form.studentClass}
             onChange={(e) => update("studentClass", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className={inputClass}
           >
             {classOptions.map((c) => (
               <option key={c} value={c}>
@@ -232,7 +236,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
 
         <div>
-          <label htmlFor="subject" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="subject" className={labelClass}>
             Welches Fach brauchst du? *
           </label>
           <select
@@ -240,7 +244,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             required
             value={form.subject}
             onChange={(e) => update("subject", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className={inputClass}
           >
             {subjectOptions.map((s) => (
               <option key={s} value={s}>
@@ -251,7 +255,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="notes" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="notes" className={labelClass}>
             Worauf soll ich besonders eingehen? (optional)
           </label>
           <textarea
@@ -259,20 +263,20 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
             rows={3}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className={inputClass}
           />
-          <p className="mt-1.5 text-xs text-slate-500">
+          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
             Bitte hier keine Angaben zu Gesundheit, Diagnosen (z.B. LRS, Dyskalkulie, ADHS)
             oder Nachteilsausgleichen machen — solche Themen besprechen wir gerne persönlich.
           </p>
         </div>
       </div>
 
-      <div className="mt-8 border-t border-slate-200 pt-6">
-        <h2 className="text-lg font-semibold text-slate-900">Ihre Angaben (Erziehungsberechtigte:r)</h2>
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Ihre Angaben (Erziehungsberechtigte:r)</h2>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="parentName" className="text-sm font-semibold text-slate-700">
+            <label htmlFor="parentName" className={labelClass}>
               Ihr Name *
             </label>
             <input
@@ -280,12 +284,12 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
               required
               value={form.parentName}
               onChange={(e) => update("parentName", e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label htmlFor="parentEmail" className="text-sm font-semibold text-slate-700">
+            <label htmlFor="parentEmail" className={labelClass}>
               Ihre E-Mail-Adresse *
             </label>
             <input
@@ -294,30 +298,30 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
               type="email"
               value={form.parentEmail}
               onChange={(e) => update("parentEmail", e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label htmlFor="parentPhone" className="text-sm font-semibold text-slate-700">
+            <label htmlFor="parentPhone" className={labelClass}>
               Ihre Telefonnummer (optional)
             </label>
             <input
               id="parentPhone"
               value={form.parentPhone}
               onChange={(e) => update("parentPhone", e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className={inputClass}
             />
           </div>
         </div>
       </div>
 
       {isSession ? (
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="text-lg font-semibold text-slate-900">Terminwunsch</h2>
+        <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Terminwunsch</h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="requestedDate" className="text-sm font-semibold text-slate-700">
+              <label htmlFor="requestedDate" className={labelClass}>
                 Datum *
               </label>
               <input
@@ -327,11 +331,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                 min={todayIso()}
                 value={form.requestedDate}
                 onChange={(e) => update("requestedDate", e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                className={inputClass}
               />
             </div>
             <div>
-              <label htmlFor="requestedTime" className="text-sm font-semibold text-slate-700">
+              <label htmlFor="requestedTime" className={labelClass}>
                 Uhrzeit *
               </label>
               <input
@@ -340,23 +344,21 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                 type="time"
                 value={form.requestedTime}
                 onChange={(e) => update("requestedTime", e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                className={inputClass}
               />
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Das ist ein Terminwunsch, keine feste Buchung – die Verfügbarkeit wird geprüft und der
             Termin anschließend per E-Mail bestätigt.
             {bookingSettings.openingHoursText ? ` Meine Öffnungszeiten: ${bookingSettings.openingHoursText}` : ""}
           </p>
 
           <fieldset className="mt-5">
-            <legend className="text-sm font-semibold text-slate-700">
-              Wo soll der Unterricht stattfinden? *
-            </legend>
+            <legend className={labelClass}>Wo soll der Unterricht stattfinden? *</legend>
             <div className="mt-2 space-y-2">
               {allowedLocations.includes("tutor") && (
-                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700 dark:text-slate-300">
                   <input
                     type="radio"
                     name="locationType"
@@ -367,15 +369,15 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                   <span>
                     Bei der Nachhilfelehrkraft
                     {bookingSettings.tutorAddress ? (
-                      <span className="block text-slate-500">{bookingSettings.tutorAddress}</span>
+                      <span className="block text-slate-500 dark:text-slate-400">{bookingSettings.tutorAddress}</span>
                     ) : (
-                      <span className="block text-slate-500">Adresse wird nach Bestätigung mitgeteilt.</span>
+                      <span className="block text-slate-500 dark:text-slate-400">Adresse wird nach Bestätigung mitgeteilt.</span>
                     )}
                   </span>
                 </label>
               )}
               {allowedLocations.includes("student") && (
-                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700 dark:text-slate-300">
                   <input
                     type="radio"
                     name="locationType"
@@ -387,7 +389,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                 </label>
               )}
               {allowedLocations.includes("online") && (
-                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700">
+                <label className="flex items-start gap-2.5 rounded-lg py-1 text-sm text-slate-700 dark:text-slate-300">
                   <input
                     type="radio"
                     name="locationType"
@@ -410,7 +412,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
                   value={form.locationAddress}
                   onChange={(e) => update("locationAddress", e.target.value)}
                   placeholder="Straße Hausnummer, PLZ Ort"
-                  className="mt-3 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  className={`mt-3 ${inputClass.replace("mt-1.5 ", "")}`}
                 />
               </>
             ) : null}
@@ -418,7 +420,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </div>
       ) : null}
 
-      <div className="mt-8 border-t border-slate-200 pt-6">
+      <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
         <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
       </div>
 
@@ -426,61 +428,56 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           zur Buchungsabwicklung ist zur Vertragserfüllung erforderlich
           (Art. 6 Abs. 1 lit. b DSGVO) und braucht keine separate Opt-in-
           Einwilligung – nur einen klaren Hinweis (siehe lib/legal/consents.js). */}
-      <p className="mt-6 text-xs text-slate-500">
+      <p className="mt-6 text-xs text-slate-500 dark:text-slate-400">
         Mit dem Absenden dieser Buchung werden die angegebenen Daten zur Bearbeitung der
         Buchung verarbeitet. Details dazu in den{" "}
-        <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2">
+        <a href="/datenschutz" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
           Datenschutzhinweisen
         </a>
         .
       </p>
 
-      <fieldset className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Einwilligungen
-        </legend>
-        <label className="flex items-start gap-2.5 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.agbWiderrufConsent}
-            onChange={(e) => update("agbWiderrufConsent", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          Ich habe die{" "}
-          <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2">
+      {/* Eine einzige Checkbox statt vorher zwei (siehe lib/legal/consents.js).
+          Der gesamte Text steckt in EINEM <span>, nicht als lose Geschwister-
+          Knoten direkt im flex-label: bei mehreren Kindern (Text, <a>, Text,
+          <a>, Text) behandelt ein nicht umbrechendes Flex-Layout jedes davon
+          als eigenes, nicht umbrechendes Element – das lief vorher rechts aus
+          der Box heraus, statt als normaler Fließtext zu umbrechen. */}
+      <label className="mt-4 flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={form.contractConsent}
+          onChange={(e) => update("contractConsent", e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600"
+        />
+        <span>
+          Ich bin erziehungsberechtigt für die angemeldete Schülerin / den angemeldeten Schüler,
+          schließe diesen Vertrag im eigenen Namen ab und habe die{" "}
+          <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
             AGB
           </a>{" "}
-          und die{" "}
-          <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2">
+          sowie die{" "}
+          <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
             Widerrufsbelehrung
           </a>{" "}
           gelesen und stimme ihnen zu. *
-        </label>
-        <label className="flex items-start gap-2.5 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.guardianConsent}
-            onChange={(e) => update("guardianConsent", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          {CONSENT_TEXT.guardian} *
-        </label>
-      </fieldset>
+        </span>
+      </label>
 
       {showEarlyStartCheckbox ? (
-        <label className="mt-3 flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+        <label className="mt-3 flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
           <input
             type="checkbox"
             checked={form.earlyStartConsent}
             onChange={(e) => update("earlyStartConsent", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-amber-400 text-indigo-600 focus:ring-indigo-500"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-400 text-indigo-600 focus:ring-indigo-500"
           />
-          {CONSENT_TEXT.earlyStart} *
+          <span>{CONSENT_TEXT.earlyStart} *</span>
         </label>
       ) : null}
 
       {error ? (
-        <p role="alert" aria-live="polite" className="mt-4 text-sm text-red-600">
+        <p role="alert" aria-live="polite" className="mt-4 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : null}

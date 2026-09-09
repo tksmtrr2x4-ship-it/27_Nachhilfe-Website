@@ -311,7 +311,8 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-6">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6 text-slate-900">
+        <div className="w-full max-w-sm">
         <h1 className="text-xl font-semibold text-slate-900">Admin-Login</h1>
         <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <label htmlFor="admin-pin" className="sr-only">
@@ -338,12 +339,14 @@ export default function AdminPage() {
             Anmelden
           </button>
         </form>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
+    <div className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-5xl px-6 py-12">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Admin-Bereich</h1>
         <button onClick={logout} className="text-sm text-slate-500 underline underline-offset-2">
@@ -670,6 +673,7 @@ export default function AdminPage() {
       {tab === "settings" && settings && (
         <SettingsForm settings={settings} onSave={saveSettings} />
       )}
+      </div>
     </div>
   );
 }

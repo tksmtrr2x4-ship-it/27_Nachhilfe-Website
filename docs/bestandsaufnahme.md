@@ -103,7 +103,9 @@ und sendet sie per `fetch` als JSON an `POST /api/bookings`
 Erhobene Formularfelder (siehe `form`-State in `BookingFlow.js`): `studentName`,
 `studentClass`, `subject`, `parentName`, `parentEmail`, `parentPhone`, `notes` (offenes
 Freitextfeld, aktuell **ohne** Warnhinweis zu Gesundheitsdaten – siehe Phase 1),
-`agreeTerms`, `agbWiderrufConsent`, `guardianConsent`, `earlyStartConsent`, `requestedDate`,
+`agbWiderrufConsent`, `guardianConsent`, `earlyStartConsent` (Datenschutz ist seit 09/2026
+keine Checkbox mehr, sondern ein reiner Hinweis ohne Opt-in – siehe `lib/legal/consents.js`),
+`requestedDate`,
 `requestedTime`, `locationType`, `locationAddress` (**bereits jetzt** nur sichtbar/abgefragt,
 wenn `locationType === "student"`, also Unterricht beim Kunden zuhause — Datensparsamkeits-
 Anforderung aus Phase 1.2 ist hier schon erfüllt).

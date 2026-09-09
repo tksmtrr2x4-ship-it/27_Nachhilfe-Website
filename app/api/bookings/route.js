@@ -18,7 +18,6 @@ export async function POST(request) {
     parentEmail,
     parentPhone,
     notes,
-    agreeTerms,
     agbWiderrufConsent,
     guardianConsent,
     earlyStartConsent,
@@ -62,12 +61,6 @@ export async function POST(request) {
     );
   }
 
-  if (!agreeTerms) {
-    return Response.json(
-      { error: "Bitte die Datenschutzhinweise bestätigen." },
-      { status: 400 }
-    );
-  }
   if (!agbWiderrufConsent) {
     return Response.json(
       { error: "Bitte AGB und Widerrufsbelehrung bestätigen." },
@@ -121,7 +114,11 @@ export async function POST(request) {
   }
 
   // Beweisbares Protokoll: exakt angezeigter Wortlaut + Server-Zeitstempel
-  // je Checkbox (nicht vom Client übernommen).
+  // je Einwilligung/Hinweis (nicht vom Client übernommen). "privacy" ist
+  // seit dem Wegfall der Datenschutz-Checkbox (siehe lib/legal/consents.js)
+  // kein Opt-in mehr, sondern die Bestätigung, dass der Hinweis beim
+  // Absenden angezeigt wurde – checkedAt bleibt als Feldname bestehen,
+  // damit ältere Buchungen im selben Format lesbar bleiben.
   const consentTimestamp = new Date().toISOString();
   const consents = {
     privacy: { text: CONSENT_TEXT.privacy, checkedAt: consentTimestamp },

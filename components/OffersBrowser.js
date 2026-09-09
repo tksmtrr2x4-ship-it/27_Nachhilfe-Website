@@ -7,39 +7,39 @@ import OfferPriceBlock, { DiscountBadge } from "@/components/OfferPriceBlock";
 
 function OfferCard({ offer, settings, shopClosed }) {
   return (
-    <div className="relative flex h-full flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:shadow-md">
+    <div className="relative flex h-full flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:hover:border-slate-700">
       <DiscountBadge offer={offer} />
 
       <div className="flex flex-wrap items-center gap-2">
         {offer.subject ? (
-          <span className="inline-flex w-fit items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+          <span className="inline-flex w-fit items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
             {offer.subject}
           </span>
         ) : null}
-        <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {MODE_LABEL[offer.mode] || MODE_LABEL.both}
         </span>
         {formatClassRange(offer) ? (
-          <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          <span className="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             {formatClassRange(offer)}
           </span>
         ) : null}
       </div>
 
-      <h2 className="mt-3 text-lg font-semibold text-slate-900">{offer.title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{buildDurationSummary(offer)}</p>
+      <h2 className="mt-3 text-lg font-semibold text-slate-900 dark:text-white">{offer.title}</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{buildDurationSummary(offer)}</p>
       {offer.description ? (
-        <p className="mt-3 max-w-prose text-sm text-slate-600">{offer.description}</p>
+        <p className="mt-3 max-w-prose text-sm text-slate-600 dark:text-slate-300">{offer.description}</p>
       ) : null}
 
       {offer.features?.length > 0 ? (
-        <ul className="mt-4 space-y-2 text-sm text-slate-600">
+        <ul className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           {offer.features.map((feature, i) => (
             <li key={i} className="flex items-start gap-2">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
-                className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600"
+                className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400"
                 stroke="currentColor"
                 strokeWidth="2.5"
                 aria-hidden="true"
@@ -54,14 +54,14 @@ function OfferCard({ offer, settings, shopClosed }) {
 
       <div className="mt-6 flex flex-1 flex-col justify-end gap-4 pt-4">
         {(offer.cancellationText || offer.validityText) && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {[offer.cancellationText, offer.validityText].filter(Boolean).join(" · ")}
           </p>
         )}
         <div className="flex items-end justify-between gap-4">
           <OfferPriceBlock offer={offer} settings={settings} />
           {shopClosed ? (
-            <span className="shrink-0 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-400">
+            <span className="shrink-0 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-400 dark:bg-slate-800 dark:text-slate-500">
               Aktuell geschlossen
             </span>
           ) : (
@@ -90,11 +90,11 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
 
   if (selectedClass === null) {
     return (
-      <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
-        <h2 className="text-lg font-semibold text-slate-900">
+      <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Für welche Klasse suchst du Nachhilfe?
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Dann zeige ich dir direkt die passenden Angebote.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -103,7 +103,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
               key={c}
               type="button"
               onClick={() => setSelectedClass(c)}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600"
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
             >
               Klasse {c}
             </button>
@@ -112,7 +112,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
         <button
           type="button"
           onClick={() => setSelectedClass("all")}
-          className="mt-5 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+          className="mt-5 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           Ich bin mir nicht sicher – alle Angebote anzeigen
         </button>
@@ -128,11 +128,11 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
 
   return (
     <div className="mt-8">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
         <span>
           {activeClass ? (
             <>
-              Angebote für <strong className="text-slate-900">Klasse {activeClass}</strong>
+              Angebote für <strong className="text-slate-900 dark:text-white">Klasse {activeClass}</strong>
             </>
           ) : (
             "Alle Angebote"
@@ -141,16 +141,16 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
         <button
           type="button"
           onClick={() => setSelectedClass(null)}
-          className="font-semibold text-indigo-600 hover:text-indigo-500"
+          className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           Andere Klasse wählen
         </button>
       </div>
 
       {noMatches ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-slate-300 p-12 text-center text-slate-500">
+        <div className="mt-8 rounded-2xl border border-dashed border-slate-300 p-12 text-center text-slate-500 dark:border-slate-700 dark:text-slate-400">
           Für Klasse {activeClass} habe ich aktuell kein passendes Angebot. Schreib mir gerne über
-          die <Link href="/faq" className="text-indigo-600 hover:text-indigo-500">Kontaktmöglichkeiten</Link>, dann
+          die <Link href="/faq" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">Kontaktmöglichkeiten</Link>, dann
           finden wir eine Lösung.
         </div>
       ) : (
@@ -158,7 +158,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
           {filteredPackages.length > 0 && (
             <section>
               {showGroups && (
-                <h2 className="mb-6 text-xl font-semibold text-slate-900">Pakete</h2>
+                <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-white">Pakete</h2>
               )}
               <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredPackages.map((offer) => (
@@ -171,7 +171,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
           {filteredSessions.length > 0 && (
             <section>
               {showGroups && (
-                <h2 className="mb-6 text-xl font-semibold text-slate-900">Einzelstunden</h2>
+                <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-white">Einzelstunden</h2>
               )}
               <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredSessions.map((offer) => (

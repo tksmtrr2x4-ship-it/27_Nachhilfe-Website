@@ -1,5 +1,6 @@
 import { listTestimonials } from "@/lib/db";
 import { getPortraitSrc } from "@/lib/logo";
+import CollapsibleText from "@/components/CollapsibleText";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +23,8 @@ export default async function UeberMichPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <p className="text-sm font-semibold text-indigo-600">Über mich</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+      <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Über mich</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
         Jill Manuel Hils
       </h1>
 
@@ -38,7 +39,7 @@ export default async function UeberMichPage() {
             />
           ) : (
             <div
-              className="flex h-40 w-40 items-center justify-center rounded-2xl bg-indigo-50 text-4xl font-semibold text-indigo-600"
+              className="flex h-40 w-40 items-center justify-center rounded-2xl bg-indigo-50 text-4xl font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
               aria-hidden="true"
             >
               JH
@@ -49,18 +50,18 @@ export default async function UeberMichPage() {
         <dl className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
           {FACTS.map((fact) => (
             <div key={fact.label}>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {fact.label}
               </dt>
-              <dd className="mt-1 text-sm text-slate-700">{fact.value}</dd>
+              <dd className="mt-1 text-sm text-slate-700 dark:text-slate-300">{fact.value}</dd>
             </div>
           ))}
         </dl>
       </div>
 
-      <figure className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8">
-        <div className="max-w-prose space-y-4 text-slate-700">
-          <p className="text-lg font-semibold text-slate-900">
+      <figure className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8 dark:border-slate-800 dark:bg-slate-900">
+        <div className="max-w-prose space-y-4 text-slate-700 dark:text-slate-300">
+          <p className="text-lg font-semibold text-slate-900 dark:text-white">
             Bereit für einen echten Lernsprung? Dann bist Du hier genau richtig!
           </p>
           <p>
@@ -79,7 +80,7 @@ export default async function UeberMichPage() {
             ein Jahr bis zu meinem Studienbeginn über{" "}
             <a
               href="https://www.lernsprung-vs.de"
-              className="text-indigo-600 underline underline-offset-2"
+              className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400"
             >
               www.lernsprung-vs.de
             </a>{" "}
@@ -104,8 +105,8 @@ export default async function UeberMichPage() {
         </div>
       </figure>
 
-      <div className="mt-12 max-w-prose text-slate-600">
-        <h2 className="text-xl font-semibold text-slate-900">Warum Nachhilfe von mir?</h2>
+      <div className="mt-12 max-w-prose text-slate-600 dark:text-slate-300">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Warum Nachhilfe von mir?</h2>
         <p className="mt-3">
           Ich unterrichte selbst seit mittlerweile zwei Jahren. Ich weiß noch aus erster Hand,
           wie die Prüfungen aufgebaut sind und biete deswegen Nachhilfe, die wirklich
@@ -116,17 +117,17 @@ export default async function UeberMichPage() {
       </div>
 
       <div className="mt-12">
-        <h2 className="text-xl font-semibold text-slate-900">Rückmeldungen</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Rückmeldungen</h2>
         {testimonials.length === 0 ? (
           <>
-            <p className="mt-2 max-w-prose text-sm text-slate-500">
+            <p className="mt-2 max-w-prose text-sm text-slate-500 dark:text-slate-400">
               Hier stehen bald echte Rückmeldungen von Schüler:innen und Eltern.
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500"
+                  className="flex h-28 items-center justify-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-500"
                 >
                   Rückmeldung folgt
                 </div>
@@ -134,13 +135,29 @@ export default async function UeberMichPage() {
             </div>
           </>
         ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
             {testimonials.map((t) => (
-              <figure key={t._id} className="flex h-full flex-col rounded-2xl border border-slate-200 p-5">
-                <blockquote className="flex-1 text-sm text-slate-700">„{t.text}&quot;</blockquote>
-                <figcaption className="mt-3 text-xs font-semibold text-slate-500">
+              <figure
+                key={t._id}
+                className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-6 w-6 text-indigo-200 dark:text-indigo-500/40"
+                  aria-hidden="true"
+                >
+                  <path d="M7.17 6C4.87 8.14 3.5 10.9 3.5 14c0 2.49 1.44 4.5 3.5 4.5 1.93 0 3.4-1.57 3.4-3.5 0-1.93-1.32-3.24-2.9-3.24-.2 0-.4.02-.58.06.28-1.86 1.55-3.6 3.08-4.66L7.17 6Zm9 0C13.87 8.14 12.5 10.9 12.5 14c0 2.49 1.44 4.5 3.5 4.5 1.93 0 3.4-1.57 3.4-3.5 0-1.93-1.32-3.24-2.9-3.24-.2 0-.4.02-.58.06.28-1.86 1.55-3.6 3.08-4.66L16.17 6Z" />
+                </svg>
+                <blockquote className="mt-2 flex-1">
+                  <CollapsibleText
+                    text={t.text}
+                    className="text-sm text-slate-700 dark:text-slate-300"
+                  />
+                </blockquote>
+                <figcaption className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {t.name}
-                  {t.role ? <span className="font-normal text-slate-400"> · {t.role}</span> : null}
+                  {t.role ? <span className="font-normal text-slate-400 dark:text-slate-500"> · {t.role}</span> : null}
                 </figcaption>
               </figure>
             ))}

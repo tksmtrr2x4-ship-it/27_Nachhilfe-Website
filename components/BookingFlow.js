@@ -147,7 +147,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
   if (step === "payment" && booking) {
     return (
-      <div className="rounded-2xl border border-slate-200 p-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900">
         <h2 className="text-lg font-semibold text-slate-900">Bestellung abschließen</h2>
         <p className="mt-2 max-w-prose text-sm text-slate-600">
           Buchung für {form.studentName} – {offer.title}.
@@ -192,7 +192,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 p-6" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900"
+      noValidate
+    >
       <h2 className="text-lg font-semibold text-slate-900">Angaben zur Schülerin / zum Schüler</h2>
       <p className="mt-1 text-xs text-slate-500">
         Mit * gekennzeichnete Angaben sind für den Vertragsschluss erforderlich. Ohne sie

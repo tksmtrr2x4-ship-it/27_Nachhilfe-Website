@@ -7,6 +7,20 @@
 
 html {
   scroll-behavior: smooth;
+  /* Lässt native Formularelemente (Datum/Zeit-Picker, Scrollbars) automatisch
+     im jeweiligen Modus rendern, passend zum automatischen Tag/Nacht-Wechsel
+     über die dark:-Utilities (folgt in Tailwind v4 ohne weitere Konfiguration
+     automatisch prefers-color-scheme). */
+  color-scheme: light dark;
+}
+
+/* Sanfter Übergang beim Wechsel zwischen Tag/Nacht (z.B. wenn das Betriebs-
+   system automatisch zur Sonnenuntergangszeit umschaltet), ohne jede
+   Farb-Transition einzeln zu deklarieren. */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
 }
 
 body {

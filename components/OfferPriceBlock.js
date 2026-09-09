@@ -11,10 +11,10 @@ export default function OfferPriceBlock({ offer, settings, size = "md" }) {
 
   return (
     <div>
-      <span className={`${priceClass} font-semibold text-slate-900`}>
+      <span className={`${priceClass} font-semibold text-slate-900 dark:text-white`}>
         {formatPrice(offer.priceCents)}
       </span>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
         {settings.kleinunternehmer
           ? "Kleinunternehmer nach § 19 UStG, keine USt. ausgewiesen"
           : "inkl. USt."}

@@ -41,38 +41,38 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+      <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
         Häufige Fragen
       </h1>
-      <p className="mt-4 max-w-prose text-slate-600">
+      <p className="mt-4 max-w-prose text-slate-600 dark:text-slate-300">
         Die wichtigsten Antworten rund um Ablauf, Online-Unterricht, Absagen und Bezahlung. Wenn
         etwas fehlt, schreib mir einfach direkt.
       </p>
 
-      <div className="mt-10 divide-y divide-slate-200 rounded-2xl border border-slate-200">
+      <div className="mt-10 divide-y divide-slate-200 rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
         {FAQS.map((item) => (
-          <details key={item.q} className="group p-6 open:bg-slate-50">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900">
+          <details key={item.q} className="group p-6 open:bg-slate-50 dark:open:bg-slate-900">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 dark:text-white">
               {item.q}
               <span
-                className="shrink-0 text-xl leading-none text-slate-400 transition group-open:rotate-45"
+                className="shrink-0 text-xl leading-none text-slate-400 transition group-open:rotate-45 dark:text-slate-500"
                 aria-hidden="true"
               >
                 +
               </span>
             </summary>
-            <p className="mt-3 max-w-prose text-sm text-slate-600">{item.a}</p>
+            <p className="mt-3 max-w-prose text-sm text-slate-600 dark:text-slate-300">{item.a}</p>
           </details>
         ))}
       </div>
 
-      <p className="mt-10 text-sm text-slate-500">
+      <p className="mt-10 text-sm text-slate-500 dark:text-slate-400">
         Noch Fragen?{" "}
-        <a href={`mailto:${settings.contactEmail}`} className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <a href={`mailto:${settings.contactEmail}`} className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
           {settings.contactEmail}
         </a>{" "}
         oder direkt{" "}
-        <Link href="/angebote" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link href="/angebote" className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
           ein Angebot ansehen
         </Link>
         .

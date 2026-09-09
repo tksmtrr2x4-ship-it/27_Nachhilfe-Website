@@ -69,8 +69,8 @@ export default async function DankePage({ searchParams }) {
 
       {view === "paid" && (
         <>
-          <h1 className="mt-6 text-2xl font-semibold text-slate-900">Buchung bestätigt!</h1>
-          <p className="mx-auto mt-3 max-w-prose text-slate-600">
+          <h1 className="mt-6 text-2xl font-semibold text-slate-900 dark:text-white">Buchung bestätigt!</h1>
+          <p className="mx-auto mt-3 max-w-prose text-slate-600 dark:text-slate-300">
             Vielen Dank, {booking.parentName}. Die Buchung „{booking.offerSnapshot?.title}&quot; für{" "}
             {booking.studentName} ({booking.subject}) über{" "}
             {formatPrice(booking.offerSnapshot?.priceCents || 0)} wurde erfolgreich bezahlt. Ich
@@ -81,8 +81,8 @@ export default async function DankePage({ searchParams }) {
 
       {view === "confirmed" && (
         <>
-          <h1 className="mt-6 text-2xl font-semibold text-slate-900">Termin bestätigt!</h1>
-          <p className="mx-auto mt-3 max-w-prose text-slate-600">
+          <h1 className="mt-6 text-2xl font-semibold text-slate-900 dark:text-white">Termin bestätigt!</h1>
+          <p className="mx-auto mt-3 max-w-prose text-slate-600 dark:text-slate-300">
             Vielen Dank, {booking.parentName}. Der Termin für {booking.studentName} (
             {booking.offerSnapshot?.title}) am {formatDate(booking.requestedDate)} um{" "}
             {booking.requestedTime} Uhr ({locationLabelForCustomer(booking)}) ist bestätigt. Eine
@@ -93,8 +93,8 @@ export default async function DankePage({ searchParams }) {
 
       {view === "requested" && (
         <>
-          <h1 className="text-2xl font-semibold text-slate-900">Terminanfrage gesendet!</h1>
-          <p className="mx-auto mt-3 max-w-prose text-slate-600">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Terminanfrage gesendet!</h1>
+          <p className="mx-auto mt-3 max-w-prose text-slate-600 dark:text-slate-300">
             Vielen Dank, {booking.parentName}. Der Terminwunsch für {booking.studentName} (
             {booking.offerSnapshot?.title}) am {formatDate(booking.requestedDate)} um{" "}
             {booking.requestedTime} Uhr ({locationLabelForCustomer(booking)}) ist bei mir
@@ -105,8 +105,8 @@ export default async function DankePage({ searchParams }) {
 
       {view === "payment_incomplete" && (
         <>
-          <h1 className="text-2xl font-semibold text-slate-900">Buchung noch nicht bestätigt</h1>
-          <p className="mx-auto mt-3 max-w-prose text-slate-600">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Buchung noch nicht bestätigt</h1>
+          <p className="mx-auto mt-3 max-w-prose text-slate-600 dark:text-slate-300">
             Ich konnte für diese Buchung keine abgeschlossene Zahlung finden. Falls Sie bereits
             bezahlt haben, melden Sie sich bitte kurz bei mir – ansonsten können Sie die Buchung
             erneut starten.
@@ -116,8 +116,8 @@ export default async function DankePage({ searchParams }) {
 
       {view === "not_found" && (
         <>
-          <h1 className="text-2xl font-semibold text-slate-900">Buchung nicht gefunden</h1>
-          <p className="mx-auto mt-3 max-w-prose text-slate-600">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Buchung nicht gefunden</h1>
+          <p className="mx-auto mt-3 max-w-prose text-slate-600 dark:text-slate-300">
             Für diesen Link konnte ich keine Buchung finden. Bitte starte die Buchung erneut.
           </p>
         </>

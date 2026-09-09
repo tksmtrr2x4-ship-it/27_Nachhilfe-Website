@@ -26,8 +26,8 @@ export default async function MeetingPage({ params }) {
   if (booking.status === "cancelled") {
     return (
       <div className="mx-auto max-w-xl px-6 py-20 text-center">
-        <h1 className="text-xl font-semibold text-slate-900">Termin storniert</h1>
-        <p className="mt-3 text-sm text-slate-600">
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Termin storniert</h1>
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
           Dieser Termin wurde storniert. Bei Fragen melde dich gerne per E-Mail oder Telefon.
         </p>
       </div>
@@ -42,10 +42,10 @@ export default async function MeetingPage({ params }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="text-lg font-semibold text-slate-900">
+      <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
         Dein Online-Termin{booking.requestedDate ? ` – ${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : ""}
       </h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {booking.subject} mit {booking.studentName}. Kamera und Mikrofon werden erst nach
         Erlaubnis im Browser aktiviert.
       </p>
@@ -54,7 +54,7 @@ export default async function MeetingPage({ params }) {
         <MeetingEmbed src={jitsiUrl} />
       </div>
 
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
         Dieser Link ist persönlich für deinen Termin und sollte nicht weitergegeben werden.
       </p>
     </div>

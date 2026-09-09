@@ -31,48 +31,48 @@ export default async function BuchenPage({ params }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <p className="text-sm font-semibold text-indigo-600">Buchung</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{offer.title}</h1>
+      <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Buchung</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">{offer.title}</h1>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
         {offer.subject ? (
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-600">{offer.subject}</span>
+          <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">{offer.subject}</span>
         ) : null}
         <span>{buildDurationSummary(offer)}</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {MODE_LABEL[offer.mode] || MODE_LABEL.both}
         </span>
         {formatClassRange(offer) ? (
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             {formatClassRange(offer)}
           </span>
         ) : null}
       </div>
 
       {offer.description ? (
-        <p className="mt-4 max-w-prose text-slate-600">{offer.description}</p>
+        <p className="mt-4 max-w-prose text-slate-600 dark:text-slate-300">{offer.description}</p>
       ) : null}
 
       <div className="mt-4">
         <OfferPriceBlock offer={offer} settings={settings} size="lg" />
       </div>
 
-      <dl className="mt-6 grid gap-x-6 gap-y-2 text-sm text-slate-500 sm:grid-cols-2">
+      <dl className="mt-6 grid gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400 sm:grid-cols-2">
         {offer.catchmentAreaText && offer.mode !== "online" ? (
           <div>
-            <dt className="inline font-semibold text-slate-600">Einzugsgebiet: </dt>
+            <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Einzugsgebiet: </dt>
             <dd className="inline">{offer.catchmentAreaText}</dd>
           </div>
         ) : null}
         {offer.cancellationText ? (
           <div>
-            <dt className="inline font-semibold text-slate-600">Stornierung: </dt>
+            <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Stornierung: </dt>
             <dd className="inline">{offer.cancellationText}</dd>
           </div>
         ) : null}
         {offer.validityText ? (
           <div>
-            <dt className="inline font-semibold text-slate-600">Gültigkeit: </dt>
+            <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Gültigkeit: </dt>
             <dd className="inline">{offer.validityText}</dd>
           </div>
         ) : null}
@@ -80,7 +80,7 @@ export default async function BuchenPage({ params }) {
 
       <div className="mt-10">
         {shopStatus.closed ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
             <p className="font-semibold">Aktuell keine neuen Buchungen möglich</p>
             <p className="mt-2">{shopStatus.message}</p>
             <Link

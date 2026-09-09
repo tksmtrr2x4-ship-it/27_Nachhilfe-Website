@@ -8,11 +8,11 @@ export default async function ImpressumPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold text-slate-900">Impressum</h1>
+      <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Impressum</h1>
 
-      <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700">
+      <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700 dark:text-slate-300">
         <section>
-          <h2 className="font-semibold text-slate-900">Angaben gemäß § 5 DDG</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">Angaben gemäß § 5 DDG</h2>
           <p className="mt-2">
             Jill Manuel Hils / {settings.siteName}
             <br />
@@ -23,7 +23,7 @@ export default async function ImpressumPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Kontakt</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">Kontakt</h2>
           <p className="mt-2">
             Telefon: +49 179 4328302
             <br />
@@ -32,7 +32,7 @@ export default async function ImpressumPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Umsatzsteuer</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">Umsatzsteuer</h2>
           <p className="mt-2">
             {settings.kleinunternehmer ? (
               <>
@@ -46,14 +46,14 @@ export default async function ImpressumPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
           <p className="mt-2">
             Jill Manuel Hils, Aixheimer Straße 2, 78056 Villingen-Schwenningen
           </p>
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">Verbraucherstreitbeilegung</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">Verbraucherstreitbeilegung</h2>
           <p className="mt-2">
             Ich bin nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer
             Verbraucherschlichtungsstelle teilzunehmen.

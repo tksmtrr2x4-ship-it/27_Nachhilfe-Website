@@ -3,10 +3,10 @@ export const metadata = { title: "Datenschutz" };
 export default function DatenschutzPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold text-slate-900">Datenschutzerklärung</h1>
+      <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Datenschutzerklärung</h1>
 
-      <div className="mt-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 p-6 text-sm text-slate-700">
-        <h2 className="font-semibold text-slate-900">Kurz erklärt, für dich</h2>
+      <div className="mt-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 p-6 text-sm text-slate-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-slate-300">
+        <h2 className="font-semibold text-slate-900 dark:text-white">Kurz erklärt, für dich</h2>
         <p className="mt-2">
           Wenn du oder deine Eltern eine Nachhilfestunde bei mir buchen, speichere ich Name,
           Klasse, Fach und Kontaktdaten, damit ich die Buchung organisieren und dir Bescheid
@@ -20,9 +20,9 @@ export default function DatenschutzPage() {
         </p>
       </div>
 
-      <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700">
+      <div className="mt-8 max-w-prose space-y-6 text-sm text-slate-700 dark:text-slate-300">
         <section>
-          <h2 className="font-semibold text-slate-900">1. Verantwortlicher</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">1. Verantwortlicher</h2>
           <p className="mt-2">
             Jill Manuel Hils / Lernsprung
             <br />
@@ -37,7 +37,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">2. Buchungsformular</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">2. Buchungsformular</h2>
           <p className="mt-2">
             Bei einer Buchung erhebe ich Name, Klassenstufe und Fach der Schülerin/des Schülers
             sowie Name, E-Mail-Adresse und optional Telefonnummer der Erziehungsberechtigten, um
@@ -64,7 +64,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">3. Zahlungsabwicklung über Stripe</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">3. Zahlungsabwicklung über Stripe</h2>
           <p className="mt-2">
             Zahlungen für Pakete werden über den Zahlungsdienstleister Stripe abgewickelt.
             Vertragspartner ist Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand
@@ -89,7 +89,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">4. E-Mail-Versand</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">4. E-Mail-Versand</h2>
           <p className="mt-2">
             Terminbestätigungen und Rückfragen versende ich über ein eigenes Postfach beim
             E-Mail-/Hosting-Anbieter Strato AG, Pascalstraße 10, 10587 Berlin, als
@@ -102,7 +102,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">5. Online-Unterricht</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">5. Online-Unterricht</h2>
           <p className="mt-2">
             Für online stattfindenden Unterricht nutze ich eine selbst betriebene Instanz der
             Videokonferenz-Software Jitsi Meet unter einer eigenen Adresse
@@ -118,7 +118,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">6. Hosting und Server-Logfiles</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">6. Hosting und Server-Logfiles</h2>
           <p className="mt-2">
             Diese Website wird auf einem Server der Strato AG, Pascalstraße 10, 10587 Berlin,
             als Auftragsverarbeiter nach Art. 28 DSGVO betrieben, mit Serverstandort
@@ -141,7 +141,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">7. Cookies und lokale Speicherung</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">7. Cookies und lokale Speicherung</h2>
           <p className="mt-2">
             Für Besucher:innen der öffentlichen Seite werden{" "}
             <strong>keine Cookies</strong> gesetzt und
@@ -157,7 +157,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">8. Speicherdauer</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">8. Speicherdauer</h2>
           <p className="mt-2">
             Buchungsdaten ohne steuerliche Relevanz (z.B. Name, Kontaktdaten, Termin- und
             Fachangaben) speichere ich für die Dauer der Geschäftsbeziehung und danach für
@@ -179,7 +179,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">
+          <h2 className="font-semibold text-slate-900 dark:text-white">
             9. Keine automatisierte Entscheidungsfindung
           </h2>
           <p className="mt-2">
@@ -188,8 +188,8 @@ export default function DatenschutzPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5">
-          <h2 className="font-semibold text-slate-900">10. Widerspruchsrecht (Art. 21 DSGVO)</h2>
+        <section className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 dark:border-amber-500/40 dark:bg-amber-500/10">
+          <h2 className="font-semibold text-slate-900 dark:text-white">10. Widerspruchsrecht (Art. 21 DSGVO)</h2>
           <p className="mt-2">
             Soweit die Verarbeitung Ihrer personenbezogenen Daten auf Art. 6 Abs. 1 lit. f
             DSGVO (berechtigtes Interesse) gestützt wird — das betrifft insbesondere die
@@ -205,7 +205,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900">11. Weitere Rechte der Betroffenen</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">11. Weitere Rechte der Betroffenen</h2>
           <p className="mt-2">
             Zusätzlich zum Widerspruchsrecht aus Abschnitt 10 besteht das Recht auf Auskunft
             (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO),

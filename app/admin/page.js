@@ -160,9 +160,10 @@ export default function AdminPage() {
     };
 
     if (isSession) {
-      payload.durationMinutes = Number(offerForm.durationMinutes) || 45;
+      const minutes = Number(offerForm.durationMinutes) || 45;
+      payload.durationMinutes = minutes;
       payload.durationLabel =
-        offerForm.durationMinutes === "90" ? "90 Minuten (Doppelstunde)" : "45 Minuten";
+        minutes === 90 ? "90 Minuten (Doppelstunde)" : `${minutes} Minuten`;
       payload.sessionCount = null;
       payload.sessionMinutes = null;
       payload.weeks = null;
@@ -787,17 +788,22 @@ function OfferForm({ initial, onCancel, onSave }) {
         {isSession ? (
           <div>
             <label htmlFor="offer-duration-minutes" className="text-sm font-semibold text-slate-700">
-              Dauer
+              Dauer in Minuten *
             </label>
-            <select
+            <input
               id="offer-duration-minutes"
-              value={form.durationMinutes || "45"}
+              type="number"
+              min={15}
+              step={5}
+              required
+              value={form.durationMinutes || ""}
               onChange={(e) => update("durationMinutes", e.target.value)}
+              placeholder="z.B. 45, 60 oder 90"
               className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
-            >
-              <option value="45">45 Minuten</option>
-              <option value="90">90 Minuten (Doppelstunde)</option>
-            </select>
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Frei wählbar. 90 Minuten werden als „Doppelstunde&quot; angezeigt.
+            </p>
           </div>
         ) : (
           <>

@@ -119,15 +119,26 @@ als PDF im Dateisystem, Metadaten + Hash in `invoices`).
   Zahlungsbedingung BT-20 = der vorgegebene Satz.
 * **Schriften:** PDF/A verbietet nicht eingebettete Standard-14-Fonts
   (Helvetica). Eingebettet wird Inter (OFL, `assets/fonts/`).
-* **Ergebnis der Prüfung** (Dummy-Daten, 2 Positionen):
+* **Notizen:** genau **eine** `cbc:Note`. Mehrere Einträge rendert die
+  Bibliothek als ein `ram:IncludedNote` mit mehreren `ram:Content`-Kindern –
+  XSD-Fehler (so bei der ersten Storno-Prüfung passiert). Der § 19-Satz und
+  der Storno-Hinweis stehen deshalb in einer gemeinsamen Notiz; der Storno-
+  Verweis ist zusätzlich strukturiert in BT-25/26 enthalten.
+* **Ergebnis der Prüfung** (Dummy-Daten, 2 Positionen, jeweils Rechnung
+  *und* Stornorechnung aus `npm run invoice:sample`):
   * XML gegen **ecosio Peppol/XML-Validator**, Regelwerk „Factur-X 1.0.9
-    (EN 16931)“: XSD 0 Fehler, Schematron 0 Fehler, 0 Warnungen.
-  * PDF gegen **veraPDF 1.30.2** (offizielle Demo), Profil PDF/A-3b:
-    *Compliance: Passed*, 0 von 3160 Checks fehlgeschlagen.
+    (EN 16931)“: XSD 0 Fehler, Schematron 0 Fehler, 0 Warnungen – für
+    beide Dokumente.
+  * PDF gegen **veraPDF 1.30.2**, Profil PDF/A-3b: *compliant* für beide
+    Dokumente (REST-Endpunkt der offiziellen Demo:
+    `curl -F file=@…pdf https://demo.verapdf.org/api/validate/3b`).
   * Lokal ist kein Java/Homebrew vorhanden, deshalb keine Mustang/KoSIT-CLI.
     `npm run invoice:sample` erzeugt die Musterdateien und ruft Mustang/
     veraPDF automatisch auf, wenn `MUSTANG_JAR` bzw. `VERAPDF_BIN` gesetzt
     sind (z.B. in CI); sonst nennt es die Online-Prüfstellen.
+  * `tests/einvoice.test.mjs` friert die kritische Feldbelegung ein
+    (Profil-URN, FC-Schema, Satz 0, eine Notiz, 381 + Verweis, keine
+    Zahlungsdaten im Storno).
 
 ## 6. Sicherheit und Unveränderbarkeit
 
@@ -197,7 +208,7 @@ als PDF im Dateisystem, Metadaten + Hash in `invoices`).
 ## 9. Tests und Musterdateien
 
 ```bash
-npm test                 # 25 Unit-Tests (node --test), lokal mit Node ≥ 22 (nvm use 24)
+npm test                 # 28 Unit-Tests (node --test), lokal mit Node ≥ 22 (nvm use 24)
 npm run invoice:sample   # scripts/out/rechnung-beispiel.pdf|xml, stornorechnung-beispiel.*, entwurf-vorschau.pdf
 ```
 

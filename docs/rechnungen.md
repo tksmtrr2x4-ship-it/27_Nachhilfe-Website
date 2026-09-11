@@ -49,6 +49,18 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
   gelten automatisch als abgehalten; „Stunde abgehalten“ markiert vorab,
   „Ausgefallen“ schließt aus. Über Stripe bezahlte Online-Stunden (`status:
   paid`) werden nicht erneut abgerechnet.
+* **„Per Rechnung zahlen“ auf der Meeting-Seite:** Das Zahlungs-Gate vor dem
+  Video (`components/MeetingPayGate.js`) bietet neben Stripe die Rechnungs-
+  zahlung an. Ablauf: Rechnungsadresse + E-Rechnungs-Einwilligung
+  (`POST /api/meeting/[token]/invoice`, step `address` → speichert
+  `booking.billingAddress`, `paymentMethod: "invoice"`, legt/ergänzt den
+  Kundendatensatz) → Bestätigungsdialog „Adresse angekommen“ mit der
+  Zahlungsverpflichtung (`INVOICE_COMMITMENT_TEXT`) → „Verstanden“ (step
+  `commit` → `invoiceCommitmentAt` + `consents.invoiceCommitment`). Erst
+  danach zeigt die Seite das Video; die Stripe-Route lehnt dann eine
+  Kartenzahlung ab. Die Stunde bleibt `confirmed` und erscheint nach dem
+  Termin unter „abrechenbar“ – die Rechnung wird wie gewohnt manuell im
+  Admin ausgestellt (Anschrift ist vorausgefüllt).
 * **Kund:in** = Vertragspartner:in (Elternteil), Schlüssel ist die E-Mail der
   Buchung. Anschrift wird im Entwurf ergänzt („Adresse im Kundendatensatz
   speichern“).

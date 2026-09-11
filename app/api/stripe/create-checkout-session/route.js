@@ -11,6 +11,15 @@ export async function POST(request) {
   if (booking.status === "paid") {
     return Response.json({ error: "Buchung ist bereits bezahlt." }, { status: 409 });
   }
+  // Auf der Meeting-Seite bereits „Per Rechnung zahlen“ gewählt und die
+  // Zahlungsverpflichtung bestätigt → keine zusätzliche Kartenzahlung mehr
+  // (sonst doppelte Zahlung; die Rechnung stellt die Lehrkraft nach der Stunde).
+  if (booking.paymentMethod === "invoice" && booking.invoiceCommitmentAt) {
+    return Response.json(
+      { error: "Für diese Stunde wurde bereits Zahlung per Rechnung gewählt." },
+      { status: 409 }
+    );
+  }
   if ((booking.offerSnapshot.priceCents || 0) <= 0) {
     return Response.json({ error: "Für dieses Angebot ist keine Zahlung nötig." }, { status: 400 });
   }

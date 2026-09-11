@@ -46,13 +46,20 @@ export default async function MeetingPage({ params, searchParams }) {
   }
 
   const priceCents = booking.offerSnapshot?.priceCents || 0;
-  // Kostenpflichtige Online-Einzelstunden: Video erst nach Zahlung freigeben.
-  // 0,00-€-Angebote (z.B. erste Stunde gratis) sind davon ausgenommen.
+  // Zahlung per Rechnung gewählt UND die Zahlungsverpflichtung im
+  // Bestätigungsdialog quittiert (zweiter Schritt der Rechnungs-Route) –
+  // erst dann gilt das Gate als passiert. Die Rechnung selbst stellt die
+  // Lehrkraft nach der Stunde im Admin-Bereich aus.
+  const invoiceUnlocked = booking.paymentMethod === "invoice" && Boolean(booking.invoiceCommitmentAt);
+  // Kostenpflichtige Online-Einzelstunden: Video erst nach Zahlung (Stripe)
+  // oder nach Wahl der Rechnungszahlung freigeben. 0,00-€-Angebote (z.B.
+  // erste Stunde gratis) sind davon ausgenommen.
   const needsPayment =
     booking.offerSnapshot?.type === "session" &&
     booking.locationType === "online" &&
     priceCents > 0 &&
-    booking.status !== "paid";
+    booking.status !== "paid" &&
+    !invoiceUnlocked;
 
   const heading = `Dein Online-Termin${
     booking.requestedDate ? ` – ${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : ""
@@ -67,9 +74,12 @@ export default async function MeetingPage({ params, searchParams }) {
         </p>
         <div className="mt-5">
           <MeetingPayGate
+            token={booking.meetingToken}
             bookingId={booking._id}
             priceLabel={formatPrice(priceCents)}
             stripeConfigured={stripeConfigured}
+            defaultName={booking.parentName}
+            email={booking.parentEmail}
           />
         </div>
       </div>
@@ -93,6 +103,13 @@ export default async function MeetingPage({ params, searchParams }) {
       <div className="mt-5">
         <MeetingEmbed src={jitsiUrl} />
       </div>
+
+      {invoiceUnlocked ? (
+        <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          Zahlung per Rechnung: Du erhältst nach der Stunde eine Rechnung über {formatPrice(priceCents)} als
+          PDF per E-Mail an {booking.parentEmail}, zahlbar innerhalb von 14 Tagen.
+        </p>
+      ) : null}
 
       <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
         Dieser Link ist persönlich für deinen Termin und sollte nicht weitergegeben werden.

@@ -560,6 +560,16 @@ export default function AdminPage() {
                           {formatDate(b.requestedDate)} · {b.requestedTime} Uhr
                           <br />
                           <span className="text-slate-500">{locationLabel(b)}</span>
+                          {b.paymentMethod === "invoice" && (
+                            <>
+                              <br />
+                              <span className="text-xs font-semibold text-amber-700">
+                                {b.invoiceCommitmentAt
+                                  ? "Zahlung per Rechnung gewählt (Adresse erfasst)"
+                                  : "Rechnungsadresse erfasst – Freischaltung noch offen"}
+                              </span>
+                            </>
+                          )}
                           {b.meetingToken && (
                             <>
                               <br />

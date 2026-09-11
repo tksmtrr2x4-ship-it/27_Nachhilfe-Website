@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Rechnungs-Spike: generierte Testdateien, nicht Teil des Codes
+/scripts/invoice-spike/out.pdf
+/scripts/invoice-spike/factur-x.xml

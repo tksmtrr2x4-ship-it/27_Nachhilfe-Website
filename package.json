@@ -13,10 +13,12 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs"
   },
   "dependencies": {
+    "@e-invoice-eu/core": "^3.3.0",
     "mongodb": "^7.6.0",
     "next": "^16.3.4",
     "nodemailer": "^9.1.0",
     "pdfkit": "^0.20.2",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "stripe": "^22.5.0"

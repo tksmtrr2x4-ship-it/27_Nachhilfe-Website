@@ -1,19 +1,14 @@
-// Die Content-Security-Policy wird NICHT hier gesetzt, sondern in
-// proxy.js – sie braucht einen pro Request frischen Nonce für Inline-
-// Skripte (siehe dort und docs/bestandsaufnahme.md Phase 1.4), das geht
-// nur in Proxy, nicht in dieser statischen Konfiguration.
+// Content-Security-Policy UND Permissions-Policy werden NICHT hier gesetzt,
+// sondern in proxy.js:
+// - CSP braucht einen pro Request frischen Nonce für Inline-Skripte.
+// - Permissions-Policy muss pro Route unterschiedlich sein (Kamera/Mikro nur
+//   auf /meeting/* erlaubt, sonst gesperrt) – mehrere überlappende
+//   Permissions-Policy-Header würde der Browser sonst restriktiv mit UND
+//   verknüpfen. Im Proxy ist es genau ein Header pro Request.
 const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
-  // Restriktive Defaults; camera/microphone müssen erweitert werden,
-  // sobald das selbst gehostete Jitsi tatsächlich in eine Seite
-  // eingebettet wird (aktuell noch keine Video-Einbindung im Code).
-  {
-    key: "Permissions-Policy",
-    value:
-      "camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()",
-  },
   // Strict-Transport-Security ABSICHTLICH NICHT aktiv: erst einschalten,
   // wenn TLS auf dem neuen Strato-Server nachweislich stabil läuft
   // (siehe docs/deployment-strato.md) – ein verfrühtes HSTS kann Besucher
@@ -24,12 +19,7 @@ const SECURITY_HEADERS = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: SECURITY_HEADERS,
-      },
-    ];
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },
 };
 

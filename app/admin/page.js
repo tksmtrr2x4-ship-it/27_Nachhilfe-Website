@@ -522,12 +522,21 @@ export default function AdminPage() {
                             <>
                               <br />
                               <a
+                                href={`https://meet.lernsprung-vs.de/${b.meetingToken}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-semibold text-indigo-600 hover:underline"
+                              >
+                                Als Host beitreten
+                              </a>
+                              <br />
+                              <a
                                 href={`/meeting/${b.meetingToken}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-indigo-600 hover:underline"
+                                className="text-slate-500 hover:underline"
                               >
-                                Meeting-Link öffnen
+                                Kunden-Ansicht öffnen
                               </a>
                             </>
                           )}

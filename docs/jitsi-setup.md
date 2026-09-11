@@ -62,6 +62,47 @@ Erzeugt/verändert dabei:
 - DNS: A-Record `meet` → `87.106.37.103`, manuell im Strato-DNS-Panel
   gesetzt (gleiche Stelle wie `www`/`nachhilfe`).
 
+## Moderator-Rollen (Secure Domain, Passwort-Login)
+
+Damit Schüler:innen NICHT automatisch Moderator werden (wer zuerst kommt,
+ist sonst Moderator) und Kamera-/Mikro-Kontrolle bei der Lehrkraft bleibt,
+läuft der Server im „Secure Domain"-Modus:
+
+- `/etc/prosody/conf.d/meet.lernsprung-vs.de.cfg.lua`:
+  Haupt-VirtualHost `authentication = "internal_hashed"` (statt
+  `"jitsi-anonymous"`), zusätzlich ein Gast-VirtualHost
+  `guest.meet.lernsprung-vs.de` mit `authentication = "anonymous"`.
+- `/etc/jitsi/meet/meet.lernsprung-vs.de-config.js`:
+  `hosts.anonymousdomain: 'guest.meet.lernsprung-vs.de'`.
+- `/etc/jitsi/jicofo/jicofo.conf`: `jicofo.authentication { enabled = true,
+  type = XMPP, login-url = "meet.lernsprung-vs.de" }`.
+- Danach `systemctl restart prosody jicofo jitsi-videobridge2`.
+- Backup der Original-Configs unter `/root/jitsi-config-backup-<datum>/`.
+
+Verhalten: Gäste (Schüler:innen über `/meeting/<token>`) sehen „Warten auf
+den Beginn der Konferenz …", bis ein Moderator da ist. Die Lehrkraft öffnet
+im Admin **„Als Host beitreten"** → Jitsi-Dialog „Ich leite die Konferenz"
+→ Login mit dem Moderator-Konto.
+
+Moderator-Konto anlegen (einmalig, Passwort selbst wählen):
+
+```bash
+sudo prosodyctl register <benutzername> meet.lernsprung-vs.de <passwort>
+```
+
+Passwort ändern: `sudo prosodyctl passwd <benutzername>@meet.lernsprung-vs.de`.
+
+## Kamera/Mikrofon im eingebetteten iFrame
+
+`next.config.mjs` setzt seitenweit `Permissions-Policy: camera=(),
+microphone=()` (Kamera/Mikro komplett gesperrt). Für `/meeting/*` gibt es
+eine eigene, gelockerte Regel:
+`camera=(self "https://meet.lernsprung-vs.de"), microphone=(...)`. Ohne die
+kann das iFrame trotz erteilter Browser-Berechtigung nicht auf Kamera/Mikro
+zugreifen. Die beiden Regeln dürfen sich nicht überlappen (Browser
+verknüpft mehrere Permissions-Policy-Header restriktiv mit UND) – die
+allgemeine Regel schließt `/meeting/` per Negative-Lookahead aus.
+
 ## Website-seitige Integration
 
 - `proxy.js`: CSP-Direktive `frame-src 'self' https://meet.lernsprung-vs.de;`
@@ -79,6 +120,15 @@ verschickt jetzt bei **jeder** neuen Terminanfrage (Einzelstunde, Status
 "pending") und bei **jedem** tatsächlich bezahlten Paketkauf (Stripe-Webhook,
 Status "paid") eine Mail an `settings.contactEmail`. Vorher liefen
 Paketkäufe komplett ohne Admin-Benachrichtigung durch.
+
+## Zahlungs-Gate für kostenpflichtige Online-Einzelstunden
+
+`app/meeting/[token]/page.js`: Ist die Buchung eine Online-Einzelstunde mit
+`priceCents > 0` und noch nicht `status === "paid"`, zeigt die Seite statt
+des Videos die Komponente `MeetingPayGate` (Stripe-Checkout). Nach Zahlung
+(Webhook oder Rücksprung-Fallback `lib/paymentSync.js`) wird das Video
+freigeschaltet. **0,00-€-Angebote sind ausgenommen** – dort erscheint das
+Video direkt nach der Terminbestätigung.
 
 ## Offene Punkte / mögliche spätere Erweiterungen
 

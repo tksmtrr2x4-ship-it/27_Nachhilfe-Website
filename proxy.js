@@ -9,9 +9,19 @@ import { NextResponse } from "next/server";
 // Bewusst noch als "Content-Security-Policy-Report-Only" (siehe
 // docs/bestandsaufnahme.md Phase 1.4) – blockiert nichts, meldet Verstöße
 // nur in der Browser-Konsole, bis das auf der neuen Umgebung getestet ist.
+// Kamera/Mikrofon sind seitenweit gesperrt – nur die Video-Unterricht-Seite
+// (/meeting/*) darf sie nutzen, und zwar für die eigene Origin und das dort
+// eingebettete Jitsi. Ohne diese Lockerung kann das iFrame trotz erteilter
+// Browser-Berechtigung nicht auf Kamera/Mikro zugreifen.
+const JITSI = "https://meet.lernsprung-vs.de";
+const RESTRICTIVE_PERMISSIONS =
+  "camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()";
+const MEETING_PERMISSIONS = `camera=(self "${JITSI}"), microphone=(self "${JITSI}"), display-capture=(self "${JITSI}"), fullscreen=(self "${JITSI}"), geolocation=(), interest-cohort=(), browsing-topics=()`;
+
 export function proxy(request) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
+  const isMeeting = request.nextUrl.pathname.startsWith("/meeting/");
 
   const cspHeader = `
     default-src 'self';
@@ -33,6 +43,10 @@ export function proxy(request) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy-Report-Only", contentSecurityPolicyHeaderValue);
+  response.headers.set(
+    "Permissions-Policy",
+    isMeeting ? MEETING_PERMISSIONS : RESTRICTIVE_PERMISSIONS
+  );
   return response;
 }
 

@@ -11,11 +11,27 @@ export async function POST(request) {
   if (booking.status === "paid") {
     return Response.json({ error: "Buchung ist bereits bezahlt." }, { status: 409 });
   }
+  if ((booking.offerSnapshot.priceCents || 0) <= 0) {
+    return Response.json({ error: "Für dieses Angebot ist keine Zahlung nötig." }, { status: 400 });
+  }
 
   const origin =
     request.headers.get("origin") ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000";
+
+  // Bezahlte Online-Einzelstunden werden über die Meeting-Seite bezahlt
+  // (Zahlungs-Gate vor dem Video, siehe app/meeting/[token]/page.js). Dann
+  // führen Erfolg und Abbruch zurück auf genau diese Seite statt auf den
+  // Paket-Danke-Flow.
+  const meetingReturn = booking.meetingToken
+    ? `${origin}/meeting/${booking.meetingToken}`
+    : null;
+  // session_id anhängen, damit die Meeting-Seite die Zahlung notfalls auch
+  // ohne (verzögerten) Webhook direkt bei Stripe verifizieren kann.
+  const meetingSuccess = meetingReturn
+    ? `${meetingReturn}?session_id={CHECKOUT_SESSION_ID}`
+    : null;
 
   try {
     const stripe = getStripe();
@@ -51,8 +67,10 @@ export async function POST(request) {
       client_reference_id: booking._id,
       customer_email: booking.parentEmail || undefined,
       metadata: { bookingId: booking._id },
-      success_url: `${origin}/buchen/danke?bookingId=${booking._id}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/buchen/${booking.offerId}`,
+      success_url:
+        meetingSuccess ||
+        `${origin}/buchen/danke?bookingId=${booking._id}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: meetingReturn || `${origin}/buchen/${booking.offerId}`,
     });
 
     return Response.json({ url: session.url });

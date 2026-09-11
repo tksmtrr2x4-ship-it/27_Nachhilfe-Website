@@ -52,6 +52,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     // lib/legal/consents.js.
     contractConsent: false,
     earlyStartConsent: false,
+    // Freiwillig (keine Pflicht für die Buchung), siehe lib/legal/consents.js.
+    eInvoiceConsent: false,
     requestedDate: "",
     requestedTime: "",
     locationType: allowedLocations[0],
@@ -475,6 +477,25 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           <span>{CONSENT_TEXT.earlyStart} *</span>
         </label>
       ) : null}
+
+      {/* Freiwillige Zustimmung zu E-Rechnungen (§ 14 Abs. 1 UStG) – bewusst
+          nicht als Pflichtfeld: Ohne Häkchen ist die Buchung trotzdem möglich,
+          die Rechnung würde dann nach Rücksprache anders zugestellt. */}
+      <label className="mt-3 flex items-start gap-2.5 rounded-lg border border-slate-200 p-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={form.eInvoiceConsent}
+          onChange={(e) => update("eInvoiceConsent", e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600"
+        />
+        <span>
+          {CONSENT_TEXT.eInvoice}
+          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+            Freiwillig. Die Rechnung kommt dann als PDF-Anhang per E-Mail – bequem zum Bezahlen per
+            QR-Code mit der Banking-App.
+          </span>
+        </span>
+      </label>
 
       {error ? (
         <p role="alert" aria-live="polite" className="mt-4 text-sm text-red-600 dark:text-red-400">

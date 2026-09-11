@@ -2,14 +2,30 @@ import crypto from "crypto";
 import { updateBooking, getBooking, deleteBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
+import { setBookingHeldStatus } from "@/lib/invoicing/db";
 
 const ALLOWED_STATUSES = ["pending", "confirmed", "paid", "cancelled"];
+const ALLOWED_HELD = ["held", "missed", null];
 
 export async function PATCH(request, { params }) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
-  const { status } = await request.json();
+  const body = await request.json();
 
+  // Abgehalten/ausgefallen-Markierung für die Rechnungsstellung (unabhängig
+  // vom Buchungsstatus): "held" = abgerechnet werden kann, "missed" =
+  // ausgefallen, nie abrechnen, null = automatisch (Termin in der
+  // Vergangenheit gilt als abgehalten).
+  if ("heldStatus" in body) {
+    if (!ALLOWED_HELD.includes(body.heldStatus)) {
+      return Response.json({ error: "Ungültiger Wert für heldStatus." }, { status: 400 });
+    }
+    const booking = await setBookingHeldStatus(id, body.heldStatus);
+    if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
+    return Response.json({ booking });
+  }
+
+  const { status } = body;
   if (!ALLOWED_STATUSES.includes(status)) {
     return Response.json({ error: "Ungültiger Status." }, { status: 400 });
   }
@@ -63,6 +79,17 @@ export async function POST(request, { params }) {
 export async function DELETE(request, { params }) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
+  // Aufbewahrungs-Sperre: Eine Buchung, die in einer ausgestellten Rechnung
+  // abgerechnet wurde, gehört zum Buchungsnachweis (§ 147 AO, 8 Jahre) und
+  // wird nicht gelöscht. Die Rechnung selbst hält ohnehin eigene Kopien
+  // (Positionen/Empfänger) und ist nie löschbar – siehe docs/rechnungen.md.
+  const existing = await getBooking(id);
+  if (existing?.invoiceId) {
+    return Response.json(
+      { error: "Diese Buchung ist in einer ausgestellten Rechnung abgerechnet und bleibt wegen der Aufbewahrungspflicht erhalten." },
+      { status: 409 }
+    );
+  }
   const ok = await deleteBooking(id);
   if (!ok) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
   return Response.json({ ok: true });

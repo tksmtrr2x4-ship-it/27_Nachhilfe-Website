@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node --env-file=.env.local scripts/seed.mjs"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/register-alias.mjs --test \"tests/**/*.test.mjs\"",
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "invoice:sample": "node --import ./tests/register-alias.mjs scripts/invoice-sample.mjs"
   },
   "dependencies": {
     "@e-invoice-eu/core": "^3.3.0",

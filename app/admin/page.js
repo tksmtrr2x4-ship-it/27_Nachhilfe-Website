@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { formatPrice, formatDate, locationLabel } from "@/lib/format";
 import { computeSavings, computeTotalHours, formatClassRange } from "@/lib/pricing";
+import InvoicesPanel from "@/components/admin/InvoicesPanel";
 
 const EMPTY_OFFER = {
   type: "package",
@@ -68,29 +69,69 @@ export default function AdminPage() {
   const [editingOffer, setEditingOffer] = useState(null);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [notice, setNotice] = useState("");
+  // Aus der Buchungsliste angelegter Rechnungsentwurf, der im Tab
+  // "Rechnungen" direkt geöffnet werden soll.
+  const [openInvoiceId, setOpenInvoiceId] = useState(null);
 
   useEffect(() => {
     if (authed) refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
 
-  async function adminFetch(path, options = {}) {
-    const res = await fetch(path, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-pin": pin,
-        ...(options.headers || {}),
-      },
-    });
-    if (res.status === 403) {
-      setAuthed(false);
-      sessionStorage.removeItem("admin_pin");
-      throw new Error("Sitzung abgelaufen, bitte erneut anmelden.");
+  // useCallback, damit InvoicesPanel die Funktion stabil in Effekt-
+  // Abhängigkeiten nutzen kann, ohne bei jedem Render neu zu laden.
+  const adminFetch = useCallback(
+    async (path, options = {}) => {
+      const res = await fetch(path, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-pin": pin,
+          ...(options.headers || {}),
+        },
+      });
+      if (res.status === 403) {
+        setAuthed(false);
+        sessionStorage.removeItem("admin_pin");
+        throw new Error("Sitzung abgelaufen, bitte erneut anmelden.");
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        const err = new Error(data.error || "Fehler");
+        err.problems = data.problems;
+        throw err;
+      }
+      return data;
+    },
+    [pin]
+  );
+
+  // Abgehalten/ausgefallen-Markierung einer Einzelstunde (Grundlage der
+  // Rechnungsstellung – vergangene Termine gelten ohne Markierung als
+  // abgehalten, "ausgefallen" schließt sie aus).
+  async function setHeldStatus(id, heldStatus) {
+    try {
+      await adminFetch(`/api/admin/bookings/${id}`, { method: "PATCH", body: JSON.stringify({ heldStatus }) });
+      refreshAll();
+    } catch (err) {
+      setNotice(err.message);
     }
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Fehler");
-    return data;
+  }
+
+  // Legt (falls nötig) den Kundendatensatz an und einen Rechnungsentwurf mit
+  // dieser Stunde als erster Position; weitere offene Stunden derselben
+  // Kundin/desselben Kunden lassen sich im Entwurf hinzufügen.
+  async function createInvoiceFromBooking(b) {
+    try {
+      const data = await adminFetch("/api/admin/invoices", {
+        method: "POST",
+        body: JSON.stringify({ bookingId: b._id, bookingIds: [b._id] }),
+      });
+      setOpenInvoiceId(data.invoice._id);
+      setTab("invoices");
+    } catch (err) {
+      setNotice(err.message);
+    }
   }
 
   async function refreshAll() {
@@ -391,6 +432,7 @@ export default function AdminPage() {
         {[
           ["offers", "Angebote"],
           ["bookings", "Buchungen"],
+          ["invoices", "Rechnungen"],
           ["testimonials", "Rückmeldungen"],
           ["settings", "Einstellungen"],
         ].map(([key, label]) => (
@@ -550,9 +592,45 @@ export default function AdminPage() {
                       <br />
                       <span className="text-slate-500">{b.parentEmail}</span>
                     </td>
-                    <td className="py-2.5 pr-4">{STATUS_LABEL[b.status] || b.status}</td>
+                    <td className="py-2.5 pr-4">
+                      {STATUS_LABEL[b.status] || b.status}
+                      {isSession && b.status === "confirmed" && (
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {b.invoiceId
+                            ? "abgerechnet"
+                            : b.heldStatus === "held"
+                              ? "abgehalten"
+                              : b.heldStatus === "missed"
+                                ? "ausgefallen"
+                                : "offen"}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-2.5 pr-4">
                       <div className="flex flex-col items-start gap-1">
+                        {isSession && b.status === "confirmed" && !b.invoiceId && (
+                          <>
+                            {b.heldStatus !== "held" ? (
+                              <button onClick={() => setHeldStatus(b._id, "held")} className="text-emerald-600 hover:text-emerald-700">
+                                Stunde abgehalten
+                              </button>
+                            ) : (
+                              <button onClick={() => setHeldStatus(b._id, null)} className="text-slate-500 hover:text-indigo-600">
+                                Markierung zurücknehmen
+                              </button>
+                            )}
+                            {b.heldStatus !== "missed" && (
+                              <button onClick={() => setHeldStatus(b._id, "missed")} className="text-slate-500 hover:text-indigo-600">
+                                Ausgefallen
+                              </button>
+                            )}
+                            {b.heldStatus !== "missed" && (
+                              <button onClick={() => createInvoiceFromBooking(b)} className="font-semibold text-indigo-600 hover:underline">
+                                Rechnung
+                              </button>
+                            )}
+                          </>
+                        )}
                         {isSession && b.status === "pending" && (
                           <button
                             onClick={() => setBookingStatus(b._id, "confirmed")}
@@ -608,6 +686,17 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {tab === "invoices" && (
+        <InvoicesPanel
+          adminFetch={adminFetch}
+          pin={pin}
+          setNotice={setNotice}
+          openInvoiceId={openInvoiceId}
+          onOpened={() => setOpenInvoiceId(null)}
+          onBookingsChanged={refreshAll}
+        />
       )}
 
       {tab === "testimonials" && (

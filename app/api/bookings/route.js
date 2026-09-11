@@ -20,6 +20,7 @@ export async function POST(request) {
     notes,
     contractConsent,
     earlyStartConsent,
+    eInvoiceConsent,
     requestedDate,
     requestedTime,
     locationType,
@@ -118,6 +119,10 @@ export async function POST(request) {
     contract: { text: CONSENT_TEXT.contract, checkedAt: consentTimestamp },
     ...(earlyStartRequired
       ? { earlyStart: { text: CONSENT_TEXT.earlyStart, checkedAt: consentTimestamp } }
+      : {}),
+    // Freiwillig: nur protokollieren, wenn tatsächlich angehakt.
+    ...(eInvoiceConsent === true
+      ? { eInvoice: { text: CONSENT_TEXT.eInvoice, checkedAt: consentTimestamp } }
       : {}),
   };
 

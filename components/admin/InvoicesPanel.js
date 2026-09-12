@@ -900,6 +900,26 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
     }
   }
 
+  async function remove(c) {
+    if (
+      !confirm(
+        `${c.name || c.email} wirklich löschen? Offene Rechnungsentwürfe dieser Person werden mitgelöscht. Ausgestellte Rechnungen bleiben erhalten – solange eine davon in der 8-jährigen Aufbewahrung liegt, ist das Löschen gesperrt.`
+      )
+    )
+      return;
+    try {
+      const res = await adminFetch(`/api/admin/customers/${c._id}`, { method: "DELETE" });
+      setNotice(
+        res.draftsDeleted > 0
+          ? `Kund:in gelöscht (${res.draftsDeleted} Entwurf/Entwürfe mit entfernt).`
+          : "Kund:in gelöscht."
+      );
+      onChanged();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
+
   async function markConsent(c, given) {
     const note = given ? prompt("Wie wurde die Einwilligung erteilt? (z.B. „telefonisch am 12.09.2026“)", "") : null;
     if (given && note === null) return;
@@ -979,6 +999,9 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
                   Einwilligung dokumentieren
                 </button>
               )}
+              <button onClick={() => remove(c)} className="text-sm text-red-600 hover:text-red-700">
+                Löschen
+              </button>
             </div>
           </div>
         ))}

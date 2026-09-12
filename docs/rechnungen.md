@@ -179,6 +179,12 @@ als PDF im Dateisystem, Metadaten + Hash in `invoices`).
   `invoicesBlockingDeletion(customerId)` (in `lib/invoicing/db.js`) prüfen und
   sich bei Treffern auf Anonymisierung/Sperrung der übrigen Daten beschränken.
 * Buchungen mit `invoiceId` lassen sich im Admin nicht löschen (409).
+* **Kund:in löschen** (Admin → Rechnungen → Kund:innen → „Löschen“,
+  `DELETE /api/admin/customers/[id]`): genau diese Sperre ist eingebaut –
+  gibt es ausgestellte Rechnungen mit laufender Frist, antwortet die Route
+  mit 409 und nennt Nummern und Enddatum; sonst wird der Datensatz samt
+  seiner Rechnungs*entwürfe* gelöscht. Ausgestellte Rechnungen bleiben immer
+  bestehen (eigene Empfänger-Kopie, `customerId` zeigt dann ins Leere).
 
 **Vorschlag Datenschutzerklärung (bitte prüfen/übernehmen):**
 

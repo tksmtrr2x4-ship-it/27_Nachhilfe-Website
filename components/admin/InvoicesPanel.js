@@ -103,6 +103,21 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     [adminFetch, setNotice]
   );
 
+  // Versanddialog für eine ausgestellte Rechnung öffnen (Vorschau, dann
+  // „Jetzt senden“).
+  const openSend = useCallback(
+    async (id) => {
+      try {
+        const data = await adminFetch(`/api/admin/invoices/${id}`);
+        setCurrent(data);
+        setView("send");
+      } catch (err) {
+        setNotice(err.message);
+      }
+    },
+    [adminFetch, setNotice]
+  );
+
   // Aus der Buchungsliste heraus geöffneter Entwurf.
   useEffect(() => {
     if (openInvoiceId) {
@@ -150,10 +165,13 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     setBusy(true);
     try {
       const data = await adminFetch(`/api/admin/invoices/${id}/issue`, { method: "POST" });
-      setNotice(`Rechnung ${data.invoice.number} ausgestellt.`);
+      setNotice(`Rechnung ${data.invoice.number} ausgestellt – bitte jetzt Mailtext prüfen und versenden.`);
       await refresh();
       onBookingsChanged?.();
-      openEditor(id);
+      // Direkt in den Versanddialog: Ausstellen allein verschickt nichts
+      // (bewusst getrennt, damit die Mail vorher geprüft werden kann) – der
+      // nächste Schritt soll aber nicht übersehen werden können.
+      await openSend(id);
     } catch (err) {
       setNotice(err.problems?.length ? `${err.message} ${err.problems.join(" ")}` : err.message);
     } finally {
@@ -191,10 +209,10 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     setBusy(true);
     try {
       const data = await adminFetch(`/api/admin/invoices/${inv._id}/cancel`, { method: "POST" });
-      setNotice(`Stornorechnung ${data.storno.number} ausgestellt. Sie kann jetzt versendet werden.`);
+      setNotice(`Stornorechnung ${data.storno.number} ausgestellt – bitte jetzt versenden.`);
       await refresh();
       onBookingsChanged?.();
-      openEditor(data.storno._id);
+      await openSend(data.storno._id);
     } catch (err) {
       setNotice(err.message);
     } finally {
@@ -284,7 +302,11 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadge(inv)}`}>
                         {inv.overdue ? "Überfällig" : STATUS_LABEL[inv.status] || inv.status}
                       </span>
-                      {inv.sentCount > 0 && <span className="ml-1 text-xs text-slate-500">{inv.sentCount}× gesendet</span>}
+                      {inv.sentCount > 0 ? (
+                        <span className="ml-1 text-xs text-slate-500">{inv.sentCount}× gesendet</span>
+                      ) : inv.status === "issued" ? (
+                        <span className="mt-1 block text-xs font-semibold text-amber-700">noch nicht versendet</span>
+                      ) : null}
                     </td>
                     <td className="py-2.5 pr-4">
                       <div className="flex flex-col items-start gap-1">
@@ -298,14 +320,10 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                         )}
                         {["issued", "sent", "paid", "cancelled"].includes(inv.status) && (
                           <button
-                            onClick={async () => {
-                              const data = await adminFetch(`/api/admin/invoices/${inv._id}`);
-                              setCurrent(data);
-                              setView("send");
-                            }}
-                            className={link}
+                            onClick={() => openSend(inv._id)}
+                            className={inv.sentCount > 0 ? link : "text-sm font-semibold text-amber-700 hover:text-amber-800"}
                           >
-                            {inv.sentCount > 0 ? "Erneut senden" : "Versenden"}
+                            {inv.sentCount > 0 ? "Erneut senden" : "Jetzt versenden"}
                           </button>
                         )}
                         {["issued", "sent"].includes(inv.status) && inv.type !== "storno" && (
@@ -648,6 +666,18 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
         </div>
       </div>
 
+      {!isDraft && invoice.status === "issued" && !invoice.sentCount && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p>
+            <span className="font-semibold">Noch nicht versendet.</span> Das Ausstellen vergibt Nummer und PDF – die
+            Mail an {invoice.recipient?.email || "die Kundin/den Kunden"} geht erst mit „Versenden“ raus.
+          </p>
+          <button onClick={onSend} className={btnPrimary}>
+            Jetzt versenden
+          </button>
+        </div>
+      )}
+
       {isDraft && problems.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <p className="font-semibold">Vor dem Ausstellen fehlt noch:</p>
@@ -885,6 +915,12 @@ function SendDialog({ invoice, adminFetch, setNotice, fetchPdfBlobUrl, onDone, o
       <h2 className="text-xl font-semibold text-slate-900">
         {invoice.type === "storno" ? "Stornorechnung" : "Rechnung"} {invoice.number} versenden
       </h2>
+      {!invoice.sentCount && (
+        <p className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900">
+          Die Rechnung ist ausgestellt, aber noch nicht verschickt. Text bei Bedarf anpassen und unten auf
+          <span className="font-semibold"> „Jetzt senden“</span> klicken – erst dann geht die Mail mit dem PDF raus.
+        </p>
+      )}
       {form.warnings?.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <ul className="list-disc pl-5">

@@ -72,6 +72,10 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
 * **Versenden:** Mail mit exakt der im Admin bearbeiteten Vorschau; Anhang ist
   die archivierte Datei (Hash wird vor dem Versand geprüft). Versand-Sperre
   gegen Doppelklick, Protokoll in `sendLog`, Zähler `sentCount`.
+  **Ausstellen verschickt nichts** – nach erfolgreichem Ausstellen (auch
+  Storno) öffnet sich deshalb automatisch der Versanddialog, und
+  ausgestellte, noch nicht versendete Rechnungen sind in Liste und Detail-
+  ansicht mit „noch nicht versendet / Jetzt versenden“ markiert.
 * **Storno:** eigene Nummer aus demselben Nummernkreis, `InvoiceTypeCode 381`,
   Verweis auf Original (BT-25/26), Original wird `cancelled`, verknüpfte
   Stunden werden wieder abrechenbar.

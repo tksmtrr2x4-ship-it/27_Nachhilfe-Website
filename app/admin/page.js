@@ -428,7 +428,10 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <div className="mt-6 flex gap-2 border-b border-slate-200">
+      {/* flex-wrap: fünf Tabs passen nicht in eine Handy-Breite – ohne
+          Umbruch ragte die Leiste rechts aus dem Bildschirm und die ganze
+          Seite ließ sich horizontal scrollen. */}
+      <div className="mt-6 flex flex-wrap gap-x-1 gap-y-1 border-b border-slate-200 sm:gap-x-2">
         {[
           ["offers", "Angebote"],
           ["bookings", "Buchungen"],
@@ -439,7 +442,7 @@ export default function AdminPage() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${
+            className={`-mb-px border-b-2 px-3 py-2.5 text-sm font-semibold sm:px-4 ${
               tab === key ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-500"
             }`}
           >
@@ -468,9 +471,9 @@ export default function AdminPage() {
                 {offers.map((offer) => (
                   <div
                     key={offer._id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 p-4"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-4"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-semibold text-slate-900">
                         {offer.title}{" "}
                         <span className="ml-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600">
@@ -531,7 +534,10 @@ export default function AdminPage() {
 
       {tab === "bookings" && (
         <div className="mt-8 overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          {/* Mindestbreite: auf dem Handy wurde die 7-spaltige Tabelle sonst
+              auf Bildschirmbreite zusammengequetscht (jedes Wort eine Zeile);
+              so behält sie lesbare Spalten und scrollt im Container seitlich. */}
+          <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="text-slate-500">
               <tr className="border-b border-slate-200">
                 <th className="py-2 pr-4">Schüler:in</th>
@@ -731,9 +737,9 @@ export default function AdminPage() {
                 {testimonials.map((t) => (
                   <div
                     key={t._id}
-                    className="flex items-start justify-between gap-4 rounded-xl border border-slate-200 p-4"
+                    className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-slate-200 p-4"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-semibold text-slate-900">
                         {t.name}
                         {t.role ? <span className="font-normal text-slate-500"> · {t.role}</span> : null}{" "}

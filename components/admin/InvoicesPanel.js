@@ -514,10 +514,36 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
     setLines((ls) => ls.filter((_, i) => i !== index));
   }
 
-  const total = lines.reduce((sum, l) => {
+  function lineTotalCents(l) {
     const cents = Math.round(parseFloat(String(l.unitPrice || "0").replace(/\./g, "").replace(",", ".")) * 100) || 0;
-    return sum + (Number(l.quantity) || 0) * cents;
-  }, 0);
+    return (Number(l.quantity) || 0) * cents;
+  }
+  const total = lines.reduce((sum, l) => sum + lineTotalCents(l), 0);
+
+  // Eingabefelder einer Position – identisch in Tabellen- (ab sm) und
+  // Karten-Darstellung (Handy), nur mit anderer Breite.
+  function lineInput(i, field, widthClass) {
+    const l = lines[i];
+    const value = field === "quantity" ? l.quantity ?? 1 : l[field] ?? "";
+    return (
+      <input
+        type={field === "date" ? "date" : "text"}
+        inputMode={field === "minutes" || field === "quantity" ? "numeric" : field === "unitPrice" ? "decimal" : undefined}
+        value={value}
+        disabled={!isDraft}
+        onChange={(e) => updateLine(i, field, e.target.value)}
+        className={`${input} mt-0 ${widthClass}`}
+      />
+    );
+  }
+  function removeButton(i) {
+    if (!isDraft) return null;
+    return (
+      <button onClick={() => removeLine(i)} className="text-xs text-red-600" title="Position entfernen">
+        ✕ entfernen
+      </button>
+    );
+  }
 
   async function save() {
     try {
@@ -639,8 +665,12 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
         </div>
       )}
 
+      {/* min-w-0 auf den Grid-Kindern ist entscheidend: Grid-Spuren sind
+          minmax(auto, 1fr), ein Kind kann also nicht schmaler als sein
+          Inhalt werden – die Positionstabelle dehnte dadurch auf dem Handy
+          den ganzen Rahmen über das Display, statt intern zu scrollen. */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <fieldset className="rounded-2xl border border-slate-200 p-4 lg:col-span-1" disabled={!isDraft}>
+        <fieldset className="min-w-0 rounded-2xl border border-slate-200 p-4 lg:col-span-1" disabled={!isDraft}>
           <legend className="px-1 text-sm font-semibold text-slate-800">Rechnungsempfänger:in</legend>
           {[
             ["name", "Name (Vertragspartner:in, i.d.R. Elternteil)"],
@@ -678,13 +708,13 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
           </label>
         </fieldset>
 
-        <div className="space-y-4 lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           {isDraft && unbilled.length > 0 && (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-sm font-semibold text-emerald-900">Abgehaltene, noch nicht abgerechnete Stunden</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {unbilled.map((s) => (
-                  <li key={s._id} className="flex items-center justify-between gap-3">
+                  <li key={s._id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <span>
                       {formatDate(s.requestedDate)} {s.requestedTime} Uhr · {s.subject} · {s.offerSnapshot?.durationLabel} · {formatPrice(s.offerSnapshot?.priceCents || 0)}
                       {s.heldStatus !== "held" && <span className="ml-1 text-xs text-emerald-700">(automatisch: Termin vergangen)</span>}
@@ -698,59 +728,82 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
             </div>
           )}
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 p-4">
+          <div className="min-w-0 rounded-2xl border border-slate-200 p-4">
             <p className="text-sm font-semibold text-slate-800">Positionen</p>
-            <table className="mt-2 w-full text-sm">
-              <thead className="text-left text-xs text-slate-500">
-                <tr>
-                  <th className="py-1 pr-2">Datum</th>
-                  <th className="py-1 pr-2">Leistung</th>
-                  <th className="py-1 pr-2">Min.</th>
-                  <th className="py-1 pr-2">Menge</th>
-                  <th className="py-1 pr-2">Einzelpreis €</th>
-                  <th className="py-1 pr-2 text-right">Gesamt</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l, i) => {
-                  const cents = Math.round(parseFloat(String(l.unitPrice || "0").replace(/\./g, "").replace(",", ".")) * 100) || 0;
-                  return (
+
+            {/* ab sm: kompakte Tabelle (scrollt bei Bedarf innerhalb des Rahmens) */}
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="mt-2 w-full text-sm">
+                <thead className="text-left text-xs text-slate-500">
+                  <tr>
+                    <th className="py-1 pr-2">Datum</th>
+                    <th className="py-1 pr-2">Leistung</th>
+                    <th className="py-1 pr-2">Min.</th>
+                    <th className="py-1 pr-2">Menge</th>
+                    <th className="py-1 pr-2">Einzelpreis €</th>
+                    <th className="py-1 pr-2 text-right">Gesamt</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {lines.map((l, i) => (
                     <tr key={i} className="align-top">
-                      <td className="py-1 pr-2">
-                        <input type="date" value={l.date || ""} disabled={!isDraft} onChange={(e) => updateLine(i, "date", e.target.value)} className={`${input} mt-0 w-36`} />
-                      </td>
-                      <td className="py-1 pr-2">
-                        <input value={l.description || ""} disabled={!isDraft} onChange={(e) => updateLine(i, "description", e.target.value)} className={`${input} mt-0 min-w-44`} />
-                      </td>
-                      <td className="py-1 pr-2">
-                        <input value={l.minutes ?? ""} disabled={!isDraft} onChange={(e) => updateLine(i, "minutes", e.target.value)} className={`${input} mt-0 w-16`} />
-                      </td>
-                      <td className="py-1 pr-2">
-                        <input value={l.quantity ?? 1} disabled={!isDraft} onChange={(e) => updateLine(i, "quantity", e.target.value)} className={`${input} mt-0 w-16`} />
-                      </td>
-                      <td className="py-1 pr-2">
-                        <input value={l.unitPrice ?? ""} disabled={!isDraft} onChange={(e) => updateLine(i, "unitPrice", e.target.value)} className={`${input} mt-0 w-24`} />
-                      </td>
-                      <td className="py-2 pr-2 text-right whitespace-nowrap">{formatPrice((Number(l.quantity) || 0) * cents)}</td>
-                      <td className="py-2">
-                        {isDraft && (
-                          <button onClick={() => removeLine(i)} className="text-xs text-red-600" title="Position entfernen">
-                            ✕
-                          </button>
-                        )}
-                      </td>
+                      <td className="py-1 pr-2">{lineInput(i, "date", "w-36")}</td>
+                      <td className="py-1 pr-2">{lineInput(i, "description", "min-w-44")}</td>
+                      <td className="py-1 pr-2">{lineInput(i, "minutes", "w-16")}</td>
+                      <td className="py-1 pr-2">{lineInput(i, "quantity", "w-16")}</td>
+                      <td className="py-1 pr-2">{lineInput(i, "unitPrice", "w-24")}</td>
+                      <td className="py-2 pr-2 text-right whitespace-nowrap">{formatPrice(lineTotalCents(l))}</td>
+                      <td className="py-2">{removeButton(i)}</td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* unter sm: eine Karte je Position – auf dem Handy ist eine
+                7-spaltige Eingabetabelle nicht bedienbar */}
+            <div className="mt-2 space-y-3 sm:hidden">
+              {lines.map((l, i) => (
+                <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                    <span>Position {i + 1}</span>
+                    {removeButton(i)}
+                  </div>
+                  <label className="mt-2 block">
+                    <span className={label}>Leistung</span>
+                    {lineInput(i, "description", "w-full")}
+                  </label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <label className="block">
+                      <span className={label}>Datum</span>
+                      {lineInput(i, "date", "w-full")}
+                    </label>
+                    <label className="block">
+                      <span className={label}>Minuten</span>
+                      {lineInput(i, "minutes", "w-full")}
+                    </label>
+                    <label className="block">
+                      <span className={label}>Menge</span>
+                      {lineInput(i, "quantity", "w-full")}
+                    </label>
+                    <label className="block">
+                      <span className={label}>Einzelpreis €</span>
+                      {lineInput(i, "unitPrice", "w-full")}
+                    </label>
+                  </div>
+                  <p className="mt-2 text-right text-sm font-semibold text-slate-900">Gesamt {formatPrice(lineTotalCents(l))}</p>
+                </div>
+              ))}
+              {lines.length === 0 && <p className="text-sm text-slate-500">Noch keine Positionen.</p>}
+            </div>
+
             {isDraft && (
               <button onClick={() => addLine(null)} className="mt-2 text-sm font-semibold text-indigo-600">
                 + Freie Position
               </button>
             )}
-            <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3">
               <span className="text-xs text-slate-500">Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</span>
               <span className="text-base font-semibold text-slate-900">Gesamt {formatPrice(isDraft ? total : invoice.totalCents || 0)}</span>
             </div>

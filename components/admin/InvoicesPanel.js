@@ -414,6 +414,15 @@ function ConfigBanner({ config }) {
     ...(config.missingEnv.length ? [`Fehlende Konfiguration (Server-Umgebungsvariablen): ${config.missingEnv.join(", ")}.`] : []),
     ...(config.storage?.ok ? [] : [`Speicherpfad nicht beschreibbar: ${config.storage?.path} (${config.storage?.error || ""}).`]),
     ...(config.mailConfigured ? [] : ["SMTP nicht konfiguriert – Rechnungen können ausgestellt, aber nicht per Mail versendet werden."]),
+    // Sachstand, kein Konfigurationsfehler: Rechnungen lassen sich ausstellen
+    // und versenden. Das eingebettete ZUGFeRD-XML erfüllt aber BR-E-02
+    // (Steuerkategorie „Exempt" verlangt BT-31 oder BT-32) erst, sobald eine
+    // echte Steuernummer hinterlegt ist.
+    ...(config.hasTaxRegistration
+      ? []
+      : [
+          "Keine Steuernummer hinterlegt (INVOICE_TAX_NUMBER). Rechnungen funktionieren, das eingebettete E-Rechnungs-XML erfüllt die EN16931-Regel BR-E-02 aber erst mit einer vom Finanzamt vergebenen Steuernummer. Niemals die persönliche Steuer-Identifikationsnummer (11 Ziffern) eintragen.",
+        ]),
   ];
   if (problems.length === 0) {
     return (

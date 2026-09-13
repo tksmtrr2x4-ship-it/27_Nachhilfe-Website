@@ -31,19 +31,25 @@ export default async function ImpressumPage() {
           </p>
         </section>
 
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">Umsatzsteuer</h2>
-          <p className="mt-2">
-            {settings.kleinunternehmer ? (
-              <>
-                Als Kleinunternehmer im Sinne von § 19 Abs. 1 UStG wird keine Umsatzsteuer
-                berechnet.
-              </>
-            ) : (
-              <>Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: {settings.ustId || "–"}</>
-            )}
-          </p>
-        </section>
+        {/*
+          § 5 Abs. 1 Nr. 6 DDG verlangt eine Umsatzsteuer-Identifikationsnummer
+          nur, soweit eine vorhanden ist. Ist keine vergeben, bleibt der
+          Abschnitt ohne Nummer – ein Platzhalter wie "–" oder "folgt" wäre
+          eine unzutreffende Angabe. Die persönliche Steuer-Identifikations-
+          nummer nach § 139b AO gehört hier unter keinen Umständen hin.
+        */}
+        {settings.kleinunternehmer || settings.ustId ? (
+          <section>
+            <h2 className="font-semibold text-slate-900 dark:text-white">Umsatzsteuer</h2>
+            <p className="mt-2">
+              {settings.kleinunternehmer ? (
+                <>Umsatzsteuer wird nach § 19 UStG (Kleinunternehmerregelung) nicht ausgewiesen.</>
+              ) : (
+                <>Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: {settings.ustId}</>
+              )}
+            </p>
+          </section>
+        ) : null}
 
         <section>
           <h2 className="font-semibold text-slate-900 dark:text-white">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>

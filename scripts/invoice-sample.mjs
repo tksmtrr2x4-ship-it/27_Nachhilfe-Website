@@ -27,7 +27,9 @@ const seller = {
   country: "DE",
   email: process.env.INVOICE_SELLER_EMAIL || "j.hils@lernsprung-vs.de",
   phone: process.env.INVOICE_SELLER_PHONE || "+49 179 4328302",
-  taxNumber: process.env.INVOICE_TAX_NUMBER || "12/345/67890",
+  // Leer wie im Betrieb (Kleinunternehmerregelung, § 19 UStG) – kein Dummy,
+  // der in einem Beispiel-PDF wie eine echte Angabe aussähe.
+  taxNumber: process.env.INVOICE_TAX_NUMBER || "",
   vatId: process.env.INVOICE_VAT_ID || "",
 };
 const bank = {

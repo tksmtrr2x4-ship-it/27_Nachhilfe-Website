@@ -88,10 +88,19 @@ Alle Werte ausschließlich über Umgebungsvariablen (siehe `.env.example`; keine
 
 Pflicht: `INVOICE_SELLER_NAME`, `INVOICE_SELLER_STREET`, `INVOICE_SELLER_ZIP`,
 `INVOICE_SELLER_CITY`, `INVOICE_SELLER_EMAIL`, `INVOICE_SELLER_PHONE`,
-`INVOICE_TAX_NUMBER`, `INVOICE_IBAN`, `INVOICE_ACCOUNT_HOLDER`.
-Optional: `INVOICE_VAT_ID`, `INVOICE_BIC`, `INVOICE_NUMBER_FORMAT`
-(Standard `LS-{YYYY}-{NNNN}`), `INVOICE_PAYMENT_TERM_DAYS` (14),
-`INVOICE_STORAGE_PATH` (`data/invoices`).
+`INVOICE_IBAN`, `INVOICE_ACCOUNT_HOLDER`.
+Optional: `INVOICE_TAX_NUMBER`, `INVOICE_VAT_ID`, `INVOICE_BIC`,
+`INVOICE_NUMBER_FORMAT` (Standard `LS-{YYYY}-{NNNN}`),
+`INVOICE_PAYMENT_TERM_DAYS` (14), `INVOICE_STORAGE_PATH` (`data/invoices`).
+
+> **Steuerangaben:** `INVOICE_TAX_NUMBER` und `INVOICE_VAT_ID` sind bewusst
+> optional und im Betrieb leer. Die persönliche **Steuer-Identifikationsnummer
+> nach § 139b AO (11 Ziffern)** darf in keiner dieser Variablen stehen – sie
+> ist ein lebenslanges Personenkennzeichen ausschließlich für den Verkehr mit
+> Finanzbehörden, ist nach § 14 Abs. 4 UStG kein zulässiger Rechnungsbestand-
+> teil und gehört nach § 5 Abs. 1 Nr. 6 DDG auch nicht ins Impressum. Sind
+> beide Variablen leer, entfällt die Steuerzeile in der PDF-Fußzeile und die
+> Gruppe `cac:PartyTaxScheme` im XML vollständig.
 
 Fehlt etwas, zeigt der Tab „Rechnungen“ einen Banner mit genau den fehlenden
 Namen; Ausstellen ist dann serverseitig blockiert.
@@ -122,11 +131,16 @@ als PDF im Dateisystem, Metadaten + Hash in `invoices`).
   durchfallen.
 * **Kleinunternehmer im XML:** Steuerkategorie `E`, Satz explizit `0`
   (BR-48, BR-E-05 verlangen den Satz auch bei Befreiung), BT-120 =
-  „Steuerbefreiung für Kleinunternehmer gemäß § 19 UStG“. Steuernummer als
-  BT-32 mit `schemeID="FC"` (TaxScheme-ID **nicht** „VAT“, sonst würde die
-  Bibliothek fälschlich BT-31/`VA` = USt-IdNr daraus machen). BR-CO-26
-  verlangt zusätzlich eine Verkäuferkennung (BT-29) – ohne USt-IdNr und
-  Handelsregister wird die Steuernummer dort wiederholt.
+  „Steuerbefreiung für Kleinunternehmer gemäß § 19 UStG“. Eine – falls
+  vorhanden – konfigurierte Steuernummer geht als BT-32 mit `schemeID="FC"`
+  hinein (TaxScheme-ID **nicht** „VAT“, sonst würde die Bibliothek fälschlich
+  BT-31/`VA` = USt-IdNr daraus machen); ohne Steuerangaben entfällt
+  `cac:PartyTaxScheme` komplett.
+* **Verkäuferkennung (BT-29):** BR-CO-26 verlangt mindestens eine von BT-29,
+  BT-30 oder BT-31. Ohne USt-IdNr, ohne Handelsregistereintrag und ohne
+  Steuernummer dient die geschäftliche E-Mail-Adresse als BT-29. Sie ist über
+  das Impressum ohnehin öffentlich; die persönliche Steuer-Identifikations-
+  nummer wäre hier ein schwerer Datenschutzfehler und wird nie verwendet.
 * **Leistungsdatum:** BT-72 (Kopf, Pflichtelement `ApplicableHeaderTrade-
   Delivery` im CII-XSD, auch bei Dienstleistungen) + BT-73/74 Zeitraum +
   BT-134/135 je Position.
@@ -238,9 +252,10 @@ Die Tests laden die App-Module über den `@/`-Alias (`tests/register-alias.mjs`)
 
 ## 10. Abnahme-Checkliste / offene Punkte für die Betreiberin
 
-- [ ] `INVOICE_*` in `/etc/lernsprung/.env.production` eintragen (echte
-      Steuernummer, IBAN, Kontoinhaberin, ggf. BIC), Speicherpfad anlegen
-      (Abschnitt 4), `pm2 reload … --update-env`.
+- [ ] `INVOICE_*` in `/etc/lernsprung/.env.production` eintragen (IBAN,
+      Kontoinhaber:in, ggf. BIC; Steuernummer/USt-IdNr nur, falls vom Finanzamt
+      vergeben – niemals die persönliche Steuer-Identifikationsnummer),
+      Speicherpfad anlegen (Abschnitt 4), `pm2 reload … --update-env`.
 - [ ] Im Admin unter „Rechnungen“ prüfen, dass der Konfigurations-Banner
       verschwindet.
 - [ ] Eine Testrechnung an die eigene Adresse ausstellen und versenden; das

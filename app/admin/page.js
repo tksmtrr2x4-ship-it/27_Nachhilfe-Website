@@ -1397,6 +1397,12 @@ function SettingsForm({ settings, onSave }) {
             <label htmlFor="s-ustId" className="text-sm font-semibold text-slate-700">
               USt-IdNr.
             </label>
+            <p className="text-xs text-slate-500">
+              Nur eine echte Umsatzsteuer-Identifikationsnummer mit Länderpräfix (z. B.
+              DE123456789). Niemals die persönliche Steuer-Identifikationsnummer (11 Ziffern) –
+              die gehört nicht ins Impressum und wird beim Speichern abgewiesen. Ohne USt-IdNr.
+              bleibt das Feld leer.
+            </p>
             <input
               id="s-ustId"
               value={form.ustId}

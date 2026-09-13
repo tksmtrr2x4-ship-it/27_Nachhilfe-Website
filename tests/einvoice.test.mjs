@@ -14,7 +14,10 @@ const seller = {
   country: "DE",
   email: "j.hils@lernsprung-vs.de",
   phone: "+49 179 4328302",
-  taxNumber: "12/345/67890",
+  // Realer Betriebszustand: Kleinunternehmerregelung nach § 19 UStG, also
+  // weder Steuernummer noch USt-IdNr. Die persönliche Steuer-Identifikations-
+  // nummer nach § 139b AO darf hier nie stehen.
+  taxNumber: "",
   vatId: "",
 };
 const bank = { iban: "DE02120300000000202051", bic: "", accountHolder: "Jill Manuel Hils" };
@@ -37,8 +40,8 @@ test("Rechnung: EN16931-Profil, Typ 380, Kleinunternehmer-Kodierung, SEPA", () =
   assert.equal(d["cbc:InvoiceTypeCode"], "380");
   assert.equal(d["cbc:Note"].length, 1, "genau eine Notiz (XSD erlaubt nur ein Content je IncludedNote)");
   const seller_ = d["cac:AccountingSupplierParty"]["cac:Party"];
-  assert.deepEqual(seller_["cac:PartyTaxScheme"], [{ "cbc:CompanyID": "12/345/67890", "cac:TaxScheme": { "cbc:ID": "FC" } }]);
-  assert.deepEqual(seller_["cac:PartyIdentification"], [{ "cbc:ID": "12/345/67890" }]);
+  assert.ok(!("cac:PartyTaxScheme" in seller_), "ohne Steuernummer/USt-IdNr entfällt die Gruppe komplett");
+  assert.deepEqual(seller_["cac:PartyIdentification"], [{ "cbc:ID": "j.hils@lernsprung-vs.de" }], "BT-29 fällt auf die E-Mail zurück (BR-CO-26)");
   const cat = d["cac:TaxTotal"][0]["cac:TaxSubtotal"][0]["cac:TaxCategory"];
   assert.equal(cat["cbc:ID"], "E");
   assert.equal(cat["cbc:Percent"], "0");
@@ -73,11 +76,31 @@ test("Stornorechnung: Typ 381 mit Verweis, ohne Zahlungsdaten, eine Notiz", () =
   assert.ok(!/gutschrift/i.test(JSON.stringify(d)));
 });
 
-test("Optionale USt-IdNr. wird als zusätzliches BT-31 (TaxScheme VAT) ergänzt", () => {
+test("Optionale USt-IdNr. wird als BT-31 (TaxScheme VAT) ergänzt", () => {
   const d = buildInvoiceData({ invoice, seller: { ...seller, vatId: "DE123456789" }, bank: { ...bank, bic: "BYLADEM1001" } })["ubl:Invoice"];
   const schemes = d["cac:AccountingSupplierParty"]["cac:Party"]["cac:PartyTaxScheme"];
-  assert.equal(schemes.length, 2);
+  assert.equal(schemes.length, 1);
   assert.deepEqual(schemes[0], { "cbc:CompanyID": "DE123456789", "cac:TaxScheme": { "cbc:ID": "VAT" } });
-  assert.deepEqual(schemes[1]["cac:TaxScheme"], { "cbc:ID": "FC" });
   assert.equal(d["cac:PaymentMeans"][0]["cac:PayeeFinancialAccount"]["cac:FinancialInstitutionBranch"]["cbc:ID"], "BYLADEM1001");
+});
+
+test("Optionale Steuernummer wird als BT-32 (TaxScheme FC) ergänzt und trägt BT-29", () => {
+  const d = buildInvoiceData({ invoice, seller: { ...seller, taxNumber: "12/345/67890" }, bank })["ubl:Invoice"];
+  const party = d["cac:AccountingSupplierParty"]["cac:Party"];
+  assert.deepEqual(party["cac:PartyTaxScheme"], [
+    { "cbc:CompanyID": "12/345/67890", "cac:TaxScheme": { "cbc:ID": "FC" } },
+  ]);
+  assert.deepEqual(party["cac:PartyIdentification"], [{ "cbc:ID": "12/345/67890" }]);
+});
+
+test("Keine 11-stellige Steuer-Identifikationsnummer im XML", () => {
+  // Regressionsschutz: Die persönliche Steuer-ID nach § 139b AO darf unter
+  // keinen Umständen in ein an Dritte übermitteltes E-Rechnungs-XML geraten.
+  // Selbst wenn sie fälschlich als Steuernummer konfiguriert würde, muss das
+  // hier auffallen – der Test prüft das Muster, nicht einen konkreten Wert.
+  const json = JSON.stringify(buildInvoiceData({ invoice, seller, bank }));
+  assert.ok(
+    !/\b\d{2}[\s/.-]?\d{3}[\s/.-]?\d{3}[\s/.-]?\d{3}\b/.test(json),
+    "freistehende 11-stellige Ziffernfolge im Rechnungs-XML gefunden"
+  );
 });

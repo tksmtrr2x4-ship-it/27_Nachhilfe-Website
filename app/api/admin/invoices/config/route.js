@@ -17,5 +17,9 @@ export async function GET(request) {
     storage,
     mailConfigured: isMailConfigured(),
     sellerName: config.seller.name,
+    // Nur ob eine Steuerregistrierung hinterlegt ist – nie der Wert selbst.
+    // Ohne Steuernummer/USt-IdNr verletzt das ZUGFeRD-XML bei Steuerkategorie
+    // "E" die EN16931-Regel BR-E-02 (geprüft gegen ecosio, Factur-X 1.0.9).
+    hasTaxRegistration: Boolean(config.seller.taxNumber || config.seller.vatId),
   });
 }

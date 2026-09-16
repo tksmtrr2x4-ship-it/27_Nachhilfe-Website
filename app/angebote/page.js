@@ -4,6 +4,8 @@ import Link from "next/link";
 import OffersBrowser from "@/components/OffersBrowser";
 import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,7 @@ export default async function AngebotePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 pb-28 sm:pb-16">
+      <JsonLd nodes={[breadcrumbSchema([{ name: "Angebote", path: "/angebote" }])]} />
       <div className="max-w-prose">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
           Nachhilfe-Angebote in Villingen-Schwenningen

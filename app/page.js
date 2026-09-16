@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { getSettings } from "@/lib/db";
+import { getSettings, listOffers } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
 import { pageMetadata, parseSearchConsoleToken } from "@/lib/seo";
 import { SUBJECTS } from "@/lib/subjects";
+import JsonLd from "@/components/JsonLd";
+import { organizationSchema, priceRangeFromOffers } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +42,7 @@ const STEPS = [
 ];
 
 export default async function HomePage() {
-  const settings = await getSettings();
+  const [settings, offers] = await Promise.all([getSettings(), listOffers({ onlyActive: true })]);
   const logoSrc = getLogoSrc();
   const aboutBullets = settings.aboutBullets?.length
     ? settings.aboutBullets
@@ -54,6 +56,14 @@ export default async function HomePage() {
 
   return (
     <div>
+      <JsonLd
+        nodes={[
+          organizationSchema({
+            priceRange: priceRangeFromOffers(offers),
+            googleProfileUrl: process.env.GOOGLE_PROFIL_URL,
+          }),
+        ]}
+      />
       <section className="relative overflow-hidden bg-slate-950">
         <div
           className="pointer-events-none absolute inset-0 opacity-60"

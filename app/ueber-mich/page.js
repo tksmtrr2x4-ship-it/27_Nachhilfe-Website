@@ -2,6 +2,8 @@ import { listTestimonials } from "@/lib/db";
 import { getPortraitSrc } from "@/lib/logo";
 import CollapsibleText from "@/components/CollapsibleText";
 import { pageMetadata } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,7 @@ export default async function UeberMichPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <JsonLd nodes={[breadcrumbSchema([{ name: "Über mich", path: "/ueber-mich" }])]} />
       <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Über mich</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
         Jill Manuel Hils

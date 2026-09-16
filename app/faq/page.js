@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
 import { pageMetadata } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,7 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <JsonLd nodes={[breadcrumbSchema([{ name: "Häufige Fragen", path: "/faq" }])]} />
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
         Häufige Fragen zur Nachhilfe
       </h1>

@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -19,8 +18,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export async function generateMetadata() {
   const settings = await getSettings();
@@ -53,42 +50,12 @@ export async function generateMetadata() {
 export default async function RootLayout({ children }) {
   const settings = await getSettings();
   const logoSrc = getLogoSrc();
-  // Von proxy.js pro Request gesetzt – nötig, damit dieses Inline-Skript
-  // trotz strikter Content-Security-Policy (script-src ohne unsafe-inline)
-  // ausgeführt werden darf.
-  const nonce = (await headers()).get("x-nonce");
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    name: settings.siteName,
-    founder: "Jill Manuel Hils",
-    description: settings.subline,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Aixheimer Straße 2",
-      postalCode: "78056",
-      addressLocality: "Villingen-Schwenningen",
-      addressCountry: "DE",
-    },
-    areaServed: "Villingen-Schwenningen",
-    telephone: settings.contactPhone || undefined,
-    email: settings.contactEmail || undefined,
-    url: siteUrl,
-    priceRange: "€€",
-  };
-
   return (
     <html
       lang="de"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <script
-          type="application/ld+json"
-          nonce={nonce}
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
         <Header siteName={settings.siteName} logoSrc={logoSrc} />
         <ShopStatusBanner settings={settings} />
         <main className="flex-1">{children}</main>

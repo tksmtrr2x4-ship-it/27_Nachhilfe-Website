@@ -1,6 +1,8 @@
 import { listOffers, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
+import Link from "next/link";
 import OffersBrowser from "@/components/OffersBrowser";
+import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,20 @@ export default async function AngebotePage() {
         <p className="mt-4 text-slate-600 dark:text-slate-300">
           Kursabo oder einzelne Stunde – such dir aus, was zu dir passt. Pakete zahlst du
           direkt online, eine Einzelstunde fragst du unverbindlich mit deinem Wunschtermin an.
+        </p>
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+          Mehr zu den Fächern:{" "}
+          {SUBJECTS.map((subject, i) => (
+            <span key={subject.key}>
+              {i > 0 ? " · " : ""}
+              <Link
+                href={subject.path}
+                className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              >
+                {subject.label}
+              </Link>
+            </span>
+          ))}
         </p>
       </div>
 

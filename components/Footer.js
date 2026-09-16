@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { SUBJECTS } from "@/lib/subjects";
 
 export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }) {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="grid gap-8 sm:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             {logoSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -21,6 +22,18 @@ export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }
             <ul className="mt-2 space-y-1 text-sm text-slate-500 dark:text-slate-400">
               <li>{contactEmail || "j.hils@lernsprung-vs.de"}</li>
               <li>{contactPhone || "+49 179 4328302"}</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Nachhilfe</p>
+            <ul className="mt-2 space-y-1 text-sm text-slate-500 dark:text-slate-400">
+              {SUBJECTS.map((subject) => (
+                <li key={subject.key}>
+                  <Link href={subject.path} className="transition hover:text-indigo-600 dark:hover:text-indigo-400">
+                    {subject.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           <div>

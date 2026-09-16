@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
 import { pageMetadata, parseSearchConsoleToken } from "@/lib/seo";
+import { SUBJECTS } from "@/lib/subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +151,34 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16 sm:pb-20">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+          Nachhilfe nach Fach
+        </h2>
+        <p className="mt-3 max-w-prose text-slate-600 dark:text-slate-300">
+          Einzelunterricht in Mathe, Physik, Biologie und Wirtschaft – vor Ort in
+          Villingen-Schwenningen oder online.
+        </p>
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SUBJECTS.map((subject) => (
+            <li key={subject.key}>
+              <Link
+                href={subject.path}
+                className="group block h-full rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:border-indigo-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                  {subject.label}
+                </h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{subject.teaser}</p>
+                <span className="mt-4 inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                  Mehr erfahren →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <MascotDivider logoSrc={logoSrc} />

@@ -1,16 +1,20 @@
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 // Next.js generiert daraus automatisch /robots.txt.
+//
+// Gesperrt werden nur Bereiche, die Suchmaschinen gar nicht erst abrufen
+// sollen: Admin und API. Die Buchungsstrecke (/buchen/…) und die
+// Meeting-Links bleiben bewusst ABRUFBAR – sie tragen selbst ein
+// "noindex". Eine robots.txt-Sperre würde verhindern, dass Google dieses
+// noindex überhaupt liest; gesperrte URLs können dann trotzdem (ohne
+// Inhalt) im Index auftauchen, sobald sie irgendwo verlinkt sind.
 export default function robots() {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Admin-Bereich, der transaktionale Buchungsflow und die personalisierten
-      // Meeting-Links bringen für die Google-Suche nichts und sollen nicht
-      // indexiert werden (Meeting-Seite setzt zusätzlich "noindex" selbst).
-      disallow: ["/admin", "/buchen/", "/meeting/"],
+      disallow: ["/admin", "/api/"],
     },
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: `${SITE_ORIGIN}/sitemap.xml`,
   };
 }

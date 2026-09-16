@@ -1,10 +1,12 @@
 import { listOffers, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
 import OffersBrowser from "@/components/OffersBrowser";
+import { canonical } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
+  alternates: canonical("/angebote"),
   title: "Nachhilfe-Angebote & Preise in Villingen-Schwenningen",
   description:
     "Kursabos und Einzelstunden für Nachhilfe in Villingen-Schwenningen, Klasse 8 bis Abitur. Transparente Preise, direkt online buchen oder Termin anfragen.",

@@ -1,4 +1,12 @@
-export const metadata = { title: "Datenschutz" };
+import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
+
+// Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
+// gewünscht – daher "noindex, follow" und nicht in der Sitemap.
+export const metadata = {
+  title: "Datenschutz",
+  alternates: canonical("/datenschutz"),
+  robots: NOINDEX_FOLLOW,
+};
 
 export default function DatenschutzPage() {
   return (

@@ -2,9 +2,10 @@ import Link from "next/link";
 import { getBooking } from "@/lib/db";
 import { syncPaymentFromStripe } from "@/lib/paymentSync";
 import { formatPrice, formatDate, locationLabelForCustomer } from "@/lib/format";
+import { NOINDEX_FOLLOW } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Rückmeldung zu deiner Buchung" };
+export const metadata = { title: "Rückmeldung zu deiner Buchung", robots: NOINDEX_FOLLOW };
 
 export default async function DankePage({ searchParams }) {
   const { bookingId, session_id: sessionId } = await searchParams;

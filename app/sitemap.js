@@ -1,21 +1,13 @@
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+import { INDEXABLE_PAGES, absoluteUrl } from "@/lib/seo";
 
-const STATIC_PAGES = [
-  { path: "", priority: 1 },
-  { path: "/angebote", priority: 0.9 },
-  { path: "/ueber-mich", priority: 0.7 },
-  { path: "/faq", priority: 0.6 },
-  { path: "/impressum", priority: 0.2 },
-  { path: "/datenschutz", priority: 0.2 },
-  { path: "/agb", priority: 0.2 },
-  { path: "/widerruf", priority: 0.2 },
-];
-
-// Next.js generiert daraus automatisch /sitemap.xml.
+// Next.js generiert daraus automatisch /sitemap.xml. Enthält ausschließlich
+// indexierbare Seiten – Rechtstexte und Buchungsstrecke tragen "noindex" und
+// gehören deshalb nicht hinein (widersprüchliche Signale an Google).
 export default function sitemap() {
-  return STATIC_PAGES.map(({ path, priority }) => ({
-    url: `${siteUrl}${path}`,
-    lastModified: new Date(),
+  return INDEXABLE_PAGES.map(({ path, lastModified, changeFrequency, priority }) => ({
+    url: absoluteUrl(path),
+    lastModified,
+    changeFrequency,
     priority,
   }));
 }

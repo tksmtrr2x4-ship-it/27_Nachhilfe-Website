@@ -1,7 +1,15 @@
 import { getSettings } from "@/lib/db";
+import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Impressum" };
+
+// Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
+// gewünscht – daher "noindex, follow" und nicht in der Sitemap.
+export const metadata = {
+  title: "Impressum",
+  alternates: canonical("/impressum"),
+  robots: NOINDEX_FOLLOW,
+};
 
 export default async function ImpressumPage() {
   const settings = await getSettings();

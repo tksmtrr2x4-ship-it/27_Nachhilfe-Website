@@ -1,8 +1,19 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
+import { canonical, parseSearchConsoleToken } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  // Nur gesetzt, wenn SEARCH_CONSOLE_META_TAG in der Server-Umgebung steht
+  // (Alternative zur DNS-/HTML-Datei-Bestätigung der Search Console).
+  const google = parseSearchConsoleToken(process.env.SEARCH_CONSOLE_META_TAG);
+  return {
+    alternates: canonical("/"),
+    ...(google ? { verification: { google } } : {}),
+  };
+}
 
 const STEPS = [
   {

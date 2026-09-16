@@ -1,10 +1,12 @@
 import { listTestimonials } from "@/lib/db";
 import { getPortraitSrc } from "@/lib/logo";
 import CollapsibleText from "@/components/CollapsibleText";
+import { canonical } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
+  alternates: canonical("/ueber-mich"),
   title: "Über mich – Jill Manuel Hils",
   description:
     "Abitur 2026 mit 1,8, Leistungsfächer Mathematik, Biologie und Wirtschaft: Warum ich in Villingen-Schwenningen Nachhilfe ab Klasse 8 gebe – persönlich, auf Augenhöhe.",

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
+import { canonical } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
+  alternates: canonical("/faq"),
   title: "Häufige Fragen (FAQ)",
   description:
     "Antworten zu Ablauf, Online-Unterricht, Absagen, Bezahlung und Einzugsgebiet der Nachhilfe von Lernsprung in Villingen-Schwenningen.",

@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { AGB_SECTIONS, WIDERRUF_LINK_MARKER } from "@/lib/legal/agb";
+import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
 
-export const metadata = { title: "AGB" };
+// Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
+// gewünscht – daher "noindex, follow" und nicht in der Sitemap.
+export const metadata = {
+  title: "AGB",
+  alternates: canonical("/agb"),
+  robots: NOINDEX_FOLLOW,
+};
 
 // Rendert einen Absatz; enthält er den WIDERRUF_LINK_MARKER, wird dieser
 // Teilstring als Link auf /widerruf dargestellt (einzige Ausnahme mit

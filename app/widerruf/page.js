@@ -1,6 +1,13 @@
 import { WIDERRUF_SECTIONS, WIDERRUF_MUSTER } from "@/lib/legal/widerruf";
+import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
 
-export const metadata = { title: "Widerrufsbelehrung" };
+// Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
+// gewünscht – daher "noindex, follow" und nicht in der Sitemap.
+export const metadata = {
+  title: "Widerrufsbelehrung",
+  alternates: canonical("/widerruf"),
+  robots: NOINDEX_FOLLOW,
+};
 
 export default function WiderrufPage() {
   return (

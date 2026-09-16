@@ -5,14 +5,18 @@ import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricin
 import { getShopStatus } from "@/lib/shopStatus";
 import OfferPriceBlock from "@/components/OfferPriceBlock";
 import BookingFlow from "@/components/BookingFlow";
+import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const offer = await getOffer(id);
-  if (!offer) return { title: "Buchung" };
+  // Transaktionale Seite: erreichbar, aber kein Suchtreffer.
+  if (!offer) return { title: "Buchung", robots: NOINDEX_FOLLOW };
   return {
+    alternates: canonical(`/buchen/${id}`),
+    robots: NOINDEX_FOLLOW,
     title: `${offer.title} buchen`,
     description: `${offer.title} bei Lernsprung Nachhilfe Villingen-Schwenningen – jetzt Termin anfragen oder Paket buchen.`,
   };

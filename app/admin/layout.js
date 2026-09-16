@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Admin",
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 export default function AdminLayout({ children }) {

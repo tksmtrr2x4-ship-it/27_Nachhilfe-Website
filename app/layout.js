@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ShopStatusBanner from "@/components/ShopStatusBanner";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
+import { SITE_ORIGIN } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,8 @@ export async function generateMetadata() {
   const settings = await getSettings();
   const description = `${settings.subline} Nachhilfe Villingen-Schwenningen von Jill Manuel Hils.`;
   return {
-    metadataBase: new URL(siteUrl),
+    // Basis für relative Canonical-/OG-URLs – immer die Hauptdomain.
+    metadataBase: new URL(SITE_ORIGIN),
     title: {
       default: `${settings.siteName} – ${settings.slogan}`,
       template: `%s – ${settings.siteName}`,

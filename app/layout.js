@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import ShopStatusBanner from "@/components/ShopStatusBanner";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
-import { SITE_ORIGIN } from "@/lib/seo";
+import { SITE_ORIGIN, OG_IMAGE } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +36,10 @@ export async function generateMetadata() {
     openGraph: {
       title: `${settings.siteName} – ${settings.slogan}`,
       description,
-      url: siteUrl,
       siteName: settings.siteName,
       locale: "de_DE",
       type: "website",
-      images: ["/logo.png"],
+      images: [OG_IMAGE],
     },
     twitter: {
       card: "summary",

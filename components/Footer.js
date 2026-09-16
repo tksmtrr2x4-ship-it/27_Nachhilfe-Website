@@ -9,7 +9,7 @@ export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }
           <div>
             {logoSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoSrc} alt={siteName} className="mb-3 h-12 w-auto" />
+              <img src={logoSrc} alt={`Logo von ${siteName} – Nachhilfe in Villingen-Schwenningen`} className="mb-3 h-12 w-auto" />
             ) : null}
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{siteName}</p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">

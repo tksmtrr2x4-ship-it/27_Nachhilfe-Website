@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
-import { canonical } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  alternates: canonical("/faq"),
-  title: "Häufige Fragen (FAQ)",
+export const metadata = pageMetadata({
+  path: "/faq",
+  title: "FAQ: Nachhilfe in Villingen-Schwenningen",
   description:
     "Antworten zu Ablauf, Online-Unterricht, Absagen, Bezahlung und Einzugsgebiet der Nachhilfe von Lernsprung in Villingen-Schwenningen.",
-};
+});
 
 const FAQS = [
   {
@@ -44,7 +44,7 @@ export default async function FaqPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-        Häufige Fragen
+        Häufige Fragen zur Nachhilfe
       </h1>
       <p className="mt-4 max-w-prose text-slate-600 dark:text-slate-300">
         Die wichtigsten Antworten rund um Ablauf, Online-Unterricht, Absagen und Bezahlung. Wenn

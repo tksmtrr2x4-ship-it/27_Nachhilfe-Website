@@ -1,16 +1,16 @@
 import { listTestimonials } from "@/lib/db";
 import { getPortraitSrc } from "@/lib/logo";
 import CollapsibleText from "@/components/CollapsibleText";
-import { canonical } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  alternates: canonical("/ueber-mich"),
-  title: "Über mich – Jill Manuel Hils",
+export const metadata = pageMetadata({
+  path: "/ueber-mich",
+  title: "Über mich – Jill Manuel Hils, Nachhilfe VS",
   description:
-    "Abitur 2026 mit 1,8, Leistungsfächer Mathematik, Biologie und Wirtschaft: Warum ich in Villingen-Schwenningen Nachhilfe ab Klasse 8 gebe – persönlich, auf Augenhöhe.",
-};
+    "Abitur 2026 mit 1,8, Leistungsfächer Mathe, Bio und Wirtschaft: Warum ich in Villingen-Schwenningen Nachhilfe ab Klasse 8 gebe – persönlich, auf Augenhöhe.",
+});
 
 const FACTS = [
   { label: "Abiturschnitt 2026", value: "1,8" },
@@ -36,7 +36,7 @@ export default async function UeberMichPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={portraitSrc}
-              alt="Porträtfoto von Jill Manuel Hils"
+              alt="Porträtfoto von Jill Manuel Hils, Nachhilfe in Villingen-Schwenningen"
               className="h-40 w-40 rounded-2xl object-cover shadow-sm"
             />
           ) : (

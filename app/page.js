@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
 import { getLogoSrc } from "@/lib/logo";
-import { canonical, parseSearchConsoleToken } from "@/lib/seo";
+import { pageMetadata, parseSearchConsoleToken } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,12 @@ export async function generateMetadata() {
   // (Alternative zur DNS-/HTML-Datei-Bestätigung der Search Console).
   const google = parseSearchConsoleToken(process.env.SEARCH_CONSOLE_META_TAG);
   return {
-    alternates: canonical("/"),
+    ...pageMetadata({
+      path: "/",
+      fullTitle: "Nachhilfe Villingen-Schwenningen – Mathe, Physik, Bio | Lernsprung",
+      description:
+        "Nachhilfe in Villingen-Schwenningen ab Klasse 8: Einzelstunden in Mathe, Physik, Biologie und Wirtschaft, vor Ort oder online. Ab 15 € pro 45 Minuten.",
+    }),
     ...(google ? { verification: { google } } : {}),
   };
 }
@@ -57,12 +62,15 @@ export default async function HomePage() {
           }}
         />
         <div className="relative mx-auto max-w-6xl px-6 py-20 sm:py-32">
-          <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold text-indigo-200">
-            Nachhilfe ab Klasse {settings.minClass} · Villingen-Schwenningen
-          </span>
-          <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl">
-            {settings.slogan}
+          {/* Die H1 trägt das Suchthema ("Nachhilfe in Villingen-Schwenningen")
+              und sitzt in der bisherigen Badge-Optik; der Slogan bleibt als
+              große Zeile optisch unverändert, ist aber keine Überschrift mehr. */}
+          <h1 className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold text-indigo-200">
+            Nachhilfe in Villingen-Schwenningen · ab Klasse {settings.minClass}
           </h1>
+          <p className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl">
+            {settings.slogan}
+          </p>
           <p className="mt-6 max-w-prose text-lg text-slate-300">{settings.subline}</p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
@@ -144,7 +152,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <MascotDivider logoSrc={logoSrc} siteName={settings.siteName} />
+      <MascotDivider logoSrc={logoSrc} />
 
       <section id="so-funktionierts" className="bg-slate-50 py-16 dark:bg-slate-900/60 sm:py-20">
         <div className="mx-auto max-w-6xl px-6">
@@ -194,13 +202,13 @@ export default async function HomePage() {
 // Dezentes wiederkehrendes Maskottchen-Element als Section-Trenner – ein
 // einziger kleiner Auftritt zwischen den Homepage-Abschnitten, kein
 // Cartoon-Overload.
-function MascotDivider({ logoSrc, siteName }) {
+function MascotDivider({ logoSrc }) {
   if (!logoSrc) return null;
   return (
     <div className="flex items-center justify-center gap-4 py-2">
       <span className="h-px w-16 bg-slate-200 dark:bg-slate-800" aria-hidden="true" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logoSrc} alt={siteName} className="h-6 w-auto opacity-70 dark:opacity-90" />
+      <img src={logoSrc} alt="" aria-hidden="true" className="h-6 w-auto opacity-70 dark:opacity-90" />
       <span className="h-px w-16 bg-slate-200 dark:bg-slate-800" aria-hidden="true" />
     </div>
   );

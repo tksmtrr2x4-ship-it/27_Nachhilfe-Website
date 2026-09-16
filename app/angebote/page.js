@@ -1,16 +1,16 @@
 import { listOffers, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
 import OffersBrowser from "@/components/OffersBrowser";
-import { canonical } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  alternates: canonical("/angebote"),
-  title: "Nachhilfe-Angebote & Preise in Villingen-Schwenningen",
+export const metadata = pageMetadata({
+  path: "/angebote",
+  title: "Nachhilfe-Preise & Angebote in VS",
   description:
-    "Kursabos und Einzelstunden für Nachhilfe in Villingen-Schwenningen, Klasse 8 bis Abitur. Transparente Preise, direkt online buchen oder Termin anfragen.",
-};
+    "Preise für Nachhilfe in Villingen-Schwenningen: Einzel- und Doppelstunden ab Klasse 8, ab 15 € pro 45 Minuten, vor Ort oder online. Termin direkt anfragen.",
+});
 
 export default async function AngebotePage() {
   const [offers, settings] = await Promise.all([
@@ -25,7 +25,7 @@ export default async function AngebotePage() {
     <div className="mx-auto max-w-6xl px-6 py-16 pb-28 sm:pb-16">
       <div className="max-w-prose">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          Meine Angebote
+          Nachhilfe-Angebote in Villingen-Schwenningen
         </h1>
         <p className="mt-4 text-slate-600 dark:text-slate-300">
           Kursabo oder einzelne Stunde – such dir aus, was zu dir passt. Pakete zahlst du

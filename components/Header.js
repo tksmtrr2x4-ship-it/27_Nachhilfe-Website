@@ -21,7 +21,7 @@ export default function Header({ siteName, logoSrc }) {
         >
           {logoSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoSrc} alt={siteName} className="h-8 w-auto" />
+            <img src={logoSrc} alt="" aria-hidden="true" className="h-8 w-auto" />
           ) : (
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-semibold text-white">
               {siteName?.[0]?.toUpperCase() || "N"}

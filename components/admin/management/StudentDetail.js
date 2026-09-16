@@ -8,7 +8,7 @@ import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
-import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, errorText, input, link, openProtectedFile, todayIso } from "@/components/admin/management/ui";
+import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, openProtectedFile, plural, todayIso } from "@/components/admin/management/ui";
 
 const INVOICE_STATUS = { issued: "Ausgestellt", sent: "Versendet", paid: "Bezahlt", cancelled: "Storniert", issuing: "wird ausgestellt" };
 
@@ -162,10 +162,10 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Stat title="Abgehaltene Stunden" value={stats.held} hint={`${Math.round((stats.heldMinutes / 60) * 10) / 10} Zeitstunden`} />
+        <Stat title="Abgehaltene Stunden" value={stats.held} hint={clockHours(stats.heldMinutes)} />
         <Stat title="Geplant" value={stats.upcoming} />
         <Stat title="Ausgefallen" value={stats.missed} />
-        <Stat title="Offen abzurechnen" value={formatPrice(stats.billableCents)} hint={`${stats.billable} ${stats.billable === 1 ? "Stunde" : "Stunden"}`} tone={stats.billable > 0 ? "amber" : "slate"} />
+        <Stat title="Offen abzurechnen" value={formatPrice(stats.billableCents)} hint={plural(stats.billable, "Stunde", "Stunden")} tone={stats.billable > 0 ? "amber" : "slate"} />
         <Stat title="Bezahlt (Journal)" value={formatPrice(stats.paidCents)} tone="green" />
       </div>
 

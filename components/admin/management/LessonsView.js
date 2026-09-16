@@ -5,7 +5,7 @@ import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 import { isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import LessonForm from "@/components/admin/management/LessonForm";
 import { NotesDialog, billingState, lessonState } from "@/components/admin/management/StudentDetail";
-import { Field, Modal, Stat, btnPrimary, errorText, input, link, todayIso } from "@/components/admin/management/ui";
+import { Field, Modal, Stat, btnPrimary, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
 
 function monthRange(offset) {
   const [y, m] = todayIso().split("-").map(Number);
@@ -133,9 +133,9 @@ export default function LessonsView({ adminFetch, setNotice, onShowStudent }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat title="Abgehalten" value={held.length} hint={`${Math.round((held.reduce((s, l) => s + (l.offerSnapshot?.durationMinutes || 0), 0) / 60) * 10) / 10} Zeitstunden`} />
+        <Stat title="Abgehalten" value={held.length} hint={clockHours(held.reduce((s, l) => s + (l.offerSnapshot?.durationMinutes || 0), 0))} />
         <Stat title="Wert abgehaltener Stunden" value={formatPrice(held.reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0))} />
-        <Stat title="Offen abzurechnen" value={formatPrice(open.reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0))} hint={`${open.length} Stunden`} tone={open.length ? "amber" : "slate"} />
+        <Stat title="Offen abzurechnen" value={formatPrice(open.reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0))} hint={plural(open.length, "Stunde", "Stunden")} tone={open.length ? "amber" : "slate"} />
         <Stat title="Einträge im Filter" value={shown.length} />
       </div>
 

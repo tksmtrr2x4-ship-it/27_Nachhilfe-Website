@@ -15,6 +15,7 @@ import {
   input,
   link,
   openProtectedFile,
+  plural,
   todayIso,
 } from "@/components/admin/management/ui";
 
@@ -137,7 +138,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
           hint={`${receivables.count} offen${receivables.overdueCount ? `, ${receivables.overdueCount} überfällig (${formatPrice(receivables.overdueCents)})` : ""}`}
           tone={receivables.overdueCount ? "red" : receivables.count ? "amber" : "slate"}
         />
-        <Stat title="Noch nicht abgerechnet" value={formatPrice(unbilled.totalCents)} hint={`${unbilled.count} abgehaltene Stunden`} tone={unbilled.count ? "amber" : "slate"} />
+        <Stat title="Noch nicht abgerechnet" value={formatPrice(unbilled.totalCents)} hint={plural(unbilled.count, "abgehaltene Stunde", "abgehaltene Stunden")} tone={unbilled.count ? "amber" : "slate"} />
         <Stat title="Ausgaben ohne Beleg" value={report.missingReceipts} tone={report.missingReceipts ? "amber" : "slate"} />
       </div>
 

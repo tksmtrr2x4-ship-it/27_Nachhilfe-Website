@@ -24,6 +24,16 @@ export function centsToInput(cents) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
 }
 
+export function plural(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+// 135 Minuten -> "2,3 Zeitstunden"
+export function clockHours(minutes) {
+  const h = Math.round(((minutes || 0) / 60) * 10) / 10;
+  return `${h.toLocaleString("de-DE")} ${h === 1 ? "Zeitstunde" : "Zeitstunden"}`;
+}
+
 export function errorText(err) {
   return err.problems?.length > 1 ? `${err.message} ${err.problems.slice(1).join(" ")}` : err.message;
 }

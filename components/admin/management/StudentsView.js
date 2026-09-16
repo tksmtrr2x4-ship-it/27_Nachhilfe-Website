@@ -135,7 +135,7 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
       {data.unassignedBookings.length > 0 && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
-            {data.unassignedBookings.length} {data.unassignedBookings.length === 1 ? "Stunde ist" : "Stunden sind"} noch keinem Profil zugeordnet
+            {data.unassignedBookings.length === 1 ? "1 Stunde ist" : `${data.unassignedBookings.length} Stunden sind`} noch keinem Profil zugeordnet
           </p>
           <ul className="mt-3 space-y-2">
             {data.unassignedBookings.map((b) => (

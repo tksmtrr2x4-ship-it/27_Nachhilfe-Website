@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Picture from "@/components/Picture";
 import { SUBJECTS } from "@/lib/subjects";
 import { resolveBusiness } from "@/lib/business";
 
-export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }) {
+export default function Footer({ siteName, contactEmail, contactPhone, logo }) {
   const year = new Date().getFullYear();
   const business = resolveBusiness({ siteName, contactEmail, contactPhone });
   return (
@@ -10,9 +11,14 @@ export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            {logoSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoSrc} alt={`Logo von ${siteName} – Nachhilfe in Villingen-Schwenningen`} className="mb-3 h-12 w-auto" />
+            {logo ? (
+              <div className="mb-3">
+                <Picture
+                  image={logo}
+                  alt={`Logo von ${siteName} – Nachhilfe in Villingen-Schwenningen`}
+                  className="h-12 w-auto"
+                />
+              </div>
             ) : null}
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{siteName}</p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">

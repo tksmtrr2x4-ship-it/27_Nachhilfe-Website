@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSettings, listOffers } from "@/lib/db";
-import { getLogoSrc } from "@/lib/logo";
+import { getLogoImage } from "@/lib/logo";
+import Picture from "@/components/Picture";
 import { pageMetadata, parseSearchConsoleToken } from "@/lib/seo";
 import { SUBJECTS } from "@/lib/subjects";
 import JsonLd from "@/components/JsonLd";
@@ -43,7 +44,7 @@ const STEPS = [
 
 export default async function HomePage() {
   const [settings, offers] = await Promise.all([getSettings(), listOffers({ onlyActive: true })]);
-  const logoSrc = getLogoSrc();
+  const logo = getLogoImage();
   const aboutBullets = settings.aboutBullets?.length
     ? settings.aboutBullets
     : ["Individuell auf dein Fach und deine Klasse abgestimmt"];
@@ -192,7 +193,7 @@ export default async function HomePage() {
         </ul>
       </section>
 
-      <MascotDivider logoSrc={logoSrc} />
+      <MascotDivider logo={logo} />
 
       <section id="so-funktionierts" className="bg-slate-50 py-16 dark:bg-slate-900/60 sm:py-20">
         <div className="mx-auto max-w-6xl px-6">
@@ -242,13 +243,12 @@ export default async function HomePage() {
 // Dezentes wiederkehrendes Maskottchen-Element als Section-Trenner – ein
 // einziger kleiner Auftritt zwischen den Homepage-Abschnitten, kein
 // Cartoon-Overload.
-function MascotDivider({ logoSrc }) {
-  if (!logoSrc) return null;
+function MascotDivider({ logo }) {
+  if (!logo) return null;
   return (
     <div className="flex items-center justify-center gap-4 py-2">
       <span className="h-px w-16 bg-slate-200 dark:bg-slate-800" aria-hidden="true" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logoSrc} alt="" aria-hidden="true" className="h-6 w-auto opacity-70 dark:opacity-90" />
+      <Picture image={logo} decorative className="h-6 w-auto opacity-70 dark:opacity-90" />
       <span className="h-px w-16 bg-slate-200 dark:bg-slate-800" aria-hidden="true" />
     </div>
   );

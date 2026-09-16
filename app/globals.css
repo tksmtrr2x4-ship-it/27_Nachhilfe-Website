@@ -6,7 +6,6 @@
 }
 
 html {
-  scroll-behavior: smooth;
   /* Lässt native Formularelemente (Datum/Zeit-Picker, Scrollbars) automatisch
      im jeweiligen Modus rendern, passend zum automatischen Tag/Nacht-Wechsel
      über die dark:-Utilities (folgt in Tailwind v4 ohne weitere Konfiguration
@@ -18,8 +17,24 @@ html {
    system automatisch zur Sonnenuntergangszeit umschaltet), ohne jede
    Farb-Transition einzeln zu deklarieren. */
 @media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+/* Wer im Betriebssystem "Bewegung reduzieren" eingestellt hat, bekommt keine
+   Übergänge, Animationen oder sanftes Scrollen (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

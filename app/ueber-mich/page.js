@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { listTestimonials } from "@/lib/db";
 import { SUBJECTS } from "@/lib/subjects";
-import { getPortraitSrc } from "@/lib/logo";
+import { getPortraitImage } from "@/lib/logo";
+import Picture from "@/components/Picture";
 import CollapsibleText from "@/components/CollapsibleText";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -25,7 +26,7 @@ const FACTS = [
 
 export default async function UeberMichPage() {
   const testimonials = await listTestimonials({ onlyActive: true });
-  const portraitSrc = getPortraitSrc();
+  const portrait = getPortraitImage();
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -37,11 +38,13 @@ export default async function UeberMichPage() {
 
       <div className="mt-8 flex flex-col gap-8 sm:flex-row sm:items-start">
         <div className="shrink-0">
-          {portraitSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={portraitSrc}
+          {portrait ? (
+            // Größtes Element im sichtbaren Bereich (LCP) -> sofort und bevorzugt laden.
+            <Picture
+              image={portrait}
               alt="Porträtfoto von Jill Manuel Hils, Nachhilfe in Villingen-Schwenningen"
+              loading="eager"
+              fetchPriority="high"
               className="h-40 w-40 rounded-2xl object-cover shadow-sm"
             />
           ) : (

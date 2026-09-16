@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ShopStatusBanner from "@/components/ShopStatusBanner";
 import { getSettings } from "@/lib/db";
-import { getLogoSrc } from "@/lib/logo";
+import { getLogoImage } from "@/lib/logo";
 import { SITE_ORIGIN, OG_IMAGE } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -49,21 +49,21 @@ export async function generateMetadata() {
 
 export default async function RootLayout({ children }) {
   const settings = await getSettings();
-  const logoSrc = getLogoSrc();
+  const logo = getLogoImage();
   return (
     <html
       lang="de"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <Header siteName={settings.siteName} logoSrc={logoSrc} />
+        <Header siteName={settings.siteName} logo={logo} />
         <ShopStatusBanner settings={settings} />
         <main className="flex-1">{children}</main>
         <Footer
           siteName={settings.siteName}
           contactEmail={settings.contactEmail}
           contactPhone={settings.contactPhone}
-          logoSrc={logoSrc}
+          logo={logo}
         />
       </body>
     </html>

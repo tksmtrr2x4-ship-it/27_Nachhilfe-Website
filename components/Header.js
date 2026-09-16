@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Picture from "@/components/Picture";
 
 const NAV_LINKS = [
   { href: "/ueber-mich", label: "Über mich" },
   { href: "/faq", label: "FAQ" },
 ];
 
-export default function Header({ siteName, logoSrc }) {
+export default function Header({ siteName, logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -19,9 +20,9 @@ export default function Header({ siteName, logoSrc }) {
           className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900 dark:text-white"
           onClick={() => setMenuOpen(false)}
         >
-          {logoSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoSrc} alt="" aria-hidden="true" className="h-8 w-auto" />
+          {logo ? (
+            // Dekorativ: Der Name steht direkt daneben im Link.
+            <Picture image={logo} decorative loading="eager" className="h-8 w-auto" />
           ) : (
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-semibold text-white">
               {siteName?.[0]?.toUpperCase() || "N"}

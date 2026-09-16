@@ -1,4 +1,6 @@
 import SubjectPage from "@/components/SubjectPage";
+import { getSettings } from "@/lib/db";
+import { resolveBusiness } from "@/lib/business";
 import { pageMetadata } from "@/lib/seo";
 import { getSubject } from "@/lib/subjects";
 import JsonLd from "@/components/JsonLd";
@@ -12,13 +14,14 @@ export const metadata = pageMetadata({
   description: subject.description,
 });
 
-export default function Page() {
+export default async function Page() {
+  const settings = await getSettings();
   return (
     <>
       <JsonLd
-        nodes={[serviceSchema(subject), breadcrumbSchema([{ name: subject.label, path: subject.path }])]}
+        nodes={[serviceSchema(subject, settings), breadcrumbSchema([{ name: subject.label, path: subject.path }])]}
       />
-      <SubjectPage subject={subject} />
+      <SubjectPage subject={subject} business={resolveBusiness(settings)} />
     </>
   );
 }

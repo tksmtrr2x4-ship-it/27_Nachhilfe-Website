@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { SUBJECTS } from "@/lib/subjects";
+import { resolveBusiness } from "@/lib/business";
 
 export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }) {
   const year = new Date().getFullYear();
+  const business = resolveBusiness({ siteName, contactEmail, contactPhone });
   return (
     <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -19,10 +21,24 @@ export default function Footer({ siteName, contactEmail, contactPhone, logoSrc }
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-900 dark:text-white">Kontakt</p>
-            <ul className="mt-2 space-y-1 text-sm text-slate-500 dark:text-slate-400">
-              <li>{contactEmail || "j.hils@lernsprung-vs.de"}</li>
-              <li>{contactPhone || "+49 179 4328302"}</li>
-            </ul>
+            {/* Name, Ort und Telefon auf jeder Seite in exakt derselben
+                Schreibweise wie in den strukturierten Daten (lib/business.js). */}
+            <address className="mt-2 space-y-1 text-sm not-italic text-slate-500 dark:text-slate-400">
+              <p>{business.name}</p>
+              <p>
+                {business.postalCode} {business.locality}
+              </p>
+              <p>
+                <a href={business.phoneHref} className="transition hover:text-indigo-600 dark:hover:text-indigo-400">
+                  {business.phoneDisplay}
+                </a>
+              </p>
+              <p>
+                <a href={`mailto:${business.email}`} className="transition hover:text-indigo-600 dark:hover:text-indigo-400">
+                  {business.email}
+                </a>
+              </p>
+            </address>
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-900 dark:text-white">Nachhilfe</p>

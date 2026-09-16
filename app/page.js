@@ -59,6 +59,7 @@ export default async function HomePage() {
       <JsonLd
         nodes={[
           organizationSchema({
+            settings,
             priceRange: priceRangeFromOffers(offers),
             googleProfileUrl: process.env.GOOGLE_PROFIL_URL,
           }),

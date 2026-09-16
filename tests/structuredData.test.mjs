@@ -62,3 +62,13 @@ test("JSON-LD ist gültiges JSON und maskiert < gegen Script-Ausbruch", () => {
   assert.ok(!out.includes("<"));
   assert.equal(JSON.parse(out)["@graph"][0].name, "</script><script>alert(1)</script>");
 });
+
+test("Stammdaten folgen den Admin-Einstellungen, tel:-Link korrekt", async () => {
+  const { resolveBusiness, telHref } = await import("@/lib/business");
+  assert.equal(telHref("+49 179 4328302"), "tel:+491794328302");
+  const b = resolveBusiness({ siteName: "Lernsprung.VS", contactPhone: "+49 179 4328302", contactEmail: "j.hils@lernsprung-vs.de" });
+  assert.equal(b.phoneHref, "tel:+491794328302");
+  const fallback = resolveBusiness({});
+  assert.equal(fallback.name, "Lernsprung.VS");
+  assert.equal(organizationSchema({ settings: { contactPhone: "+49 1" } }).telephone, "+49 1");
+});

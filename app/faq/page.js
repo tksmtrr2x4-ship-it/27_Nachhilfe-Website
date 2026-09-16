@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
+import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema } from "@/lib/structuredData";
@@ -81,6 +82,27 @@ export default async function FaqPage() {
           ein Angebot ansehen
         </Link>
         .
+      </p>
+      <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+        Mehr zu den Fächern:{" "}
+        {SUBJECTS.map((subject, i) => (
+          <span key={subject.key}>
+            {i > 0 ? " · " : ""}
+            <Link
+              href={subject.path}
+              className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              {subject.label}
+            </Link>
+          </span>
+        ))}
+        {" · "}
+        <Link
+          href="/ueber-mich"
+          className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+        >
+          Über mich
+        </Link>
       </p>
     </div>
   );

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { BUSINESS } from "@/lib/business";
 import { SUBJECTS } from "@/lib/subjects";
 
 // Gemeinsame Vorlage der Fach-Unterseiten im Stil von „Über mich“ und FAQ.
 // Fachspezifische Texte kommen aus lib/subjects.js, der Ablauf und die
 // Angaben zu Ort und Preisen sind für alle Fächer gleich.
-export default function SubjectPage({ subject }) {
+export default function SubjectPage({ subject, business }) {
   const otherSubjects = SUBJECTS.filter((s) => s.key !== subject.key);
 
   const steps = [
@@ -41,7 +40,7 @@ export default function SubjectPage({ subject }) {
       </nav>
 
       <p className="mt-8 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-        Nachhilfe ab Klasse 8 · {BUSINESS.locality}
+        Nachhilfe ab Klasse 8 · {business.locality}
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
         {subject.h1}
@@ -129,12 +128,12 @@ export default function SubjectPage({ subject }) {
           Vor Ort in Villingen, Schwenningen und Umgebung – oder online
         </h2>
         <div className="mt-4 space-y-4 text-slate-600 dark:text-slate-300">
-          {/* TODO Jill: Wo genau findet der Präsenzunterricht statt (bei den Schüler:innen zuhause, bei dir, anderer Ort)? Ggf. konkrete Orte im Umkreis ergänzen. */}
+          {/* TODO Jill: Umkreis (15 km laut Angeboten) prüfen und ggf. konkrete Orte in der Umgebung ergänzen. */}
           <p className="max-w-prose">
             Die {subject.label} gebe ich in Villingen und in Schwenningen sowie im Umkreis von
-            etwa 15 Kilometern. Wer weiter weg wohnt oder sich die Fahrt sparen möchte, kann den
-            Unterricht auch online machen: Du brauchst nur einen Laptop oder ein Tablet mit
-            Internetverbindung, den Link bekommst du vorab per E-Mail.
+            etwa 15 Kilometern – bei mir oder bei dir zuhause. Wer weiter weg wohnt oder sich die
+            Fahrt sparen möchte, kann den Unterricht auch online machen: Du brauchst nur einen
+            Laptop oder ein Tablet mit Internetverbindung, den Link bekommst du vorab per E-Mail.
           </p>
           <p className="max-w-prose">
             Was eine Einzel- oder Doppelstunde kostet, hängt von der Klassenstufe ab. Alle
@@ -179,10 +178,10 @@ export default function SubjectPage({ subject }) {
             Termin anfragen
           </Link>
           <a
-            href={BUSINESS.phoneHref}
+            href={business.phoneHref}
             className="rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
           >
-            Anrufen: {BUSINESS.phoneDisplay}
+            Anrufen: {business.phoneDisplay}
           </a>
         </div>
       </section>

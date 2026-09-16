@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { listTestimonials } from "@/lib/db";
+import { SUBJECTS } from "@/lib/subjects";
 import { getPortraitSrc } from "@/lib/logo";
 import CollapsibleText from "@/components/CollapsibleText";
 import { pageMetadata } from "@/lib/seo";
@@ -116,8 +118,33 @@ export default async function UeberMichPage() {
           Ich unterrichte selbst seit mittlerweile zwei Jahren. Ich weiß noch aus erster Hand,
           wie die Prüfungen aufgebaut sind und biete deswegen Nachhilfe, die wirklich
           Qualität trägt. In Villingen-Schwenningen biete ich Einzelunterricht bei mir, bei dir zuhause
-          oder online an – in Mathematik, Physik, Biologie und Wirtschaft, ab Klasse 8 bis zum
-          Abitur.
+          oder online an – in{" "}
+          {SUBJECTS.map((subject, i) => (
+            <span key={subject.key}>
+              {i === 0 ? "" : i === SUBJECTS.length - 1 ? " und " : ", "}
+              <Link
+                href={subject.path}
+                className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              >
+                {subject.name}
+              </Link>
+            </span>
+          ))}
+          , ab Klasse 8 bis zum Abitur. Preise und Termine findest du bei den{" "}
+          <Link
+            href="/angebote"
+            className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+          >
+            Angeboten
+          </Link>
+          , Antworten auf typische Fragen in den{" "}
+          <Link
+            href="/faq"
+            className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+          >
+            FAQ
+          </Link>
+          .
         </p>
       </div>
 

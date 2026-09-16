@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getOffer, getSettings } from "@/lib/db";
 import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricing";
 import { getShopStatus } from "@/lib/shopStatus";
+import { classOptionsForOffer } from "@/lib/subjectRules";
 import OfferPriceBlock from "@/components/OfferPriceBlock";
 import BookingFlow from "@/components/BookingFlow";
 import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
@@ -30,8 +31,8 @@ export default async function BuchenPage({ params }) {
 
   const shopStatus = getShopStatus(settings);
 
-  const classOptions = [];
-  for (let c = settings.minClass; c <= settings.maxClass; c++) classOptions.push(String(c));
+  // Nur Klassen, für die dieses Angebot gilt (z. B. Privatstunde "Klasse 8–9").
+  const classOptions = classOptionsForOffer(offer, settings);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">

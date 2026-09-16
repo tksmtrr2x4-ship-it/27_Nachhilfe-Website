@@ -4,12 +4,19 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import OrderSummary from "@/components/OrderSummary";
+import {
+  COURSE_LEVELS,
+  allowedLevels,
+  allowedSubjects,
+  normalizeSelection,
+  offerSubjects,
+  selectionHints,
+  subjectLabel,
+} from "@/lib/subjectRules";
 
 const stripeConfigured = Boolean(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
-
-const DEFAULT_SUBJECTS = ["Mathematik", "Physik", "Biologie", "Wirtschaft"];
 
 // Einmal definiert statt in jedem Feld wiederholt (waren vorher ~7 fast
 // identische Klassen-Strings) – jetzt auch mit Dark-Mode-Varianten.
@@ -24,13 +31,16 @@ function todayIso() {
 export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   const router = useRouter();
   const isSession = offer.type === "session";
-  const subjectOptions = useMemo(() => {
-    const fromOffer = (offer.subject || "")
-      .split("|")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    return fromOffer.length > 0 ? fromOffer : DEFAULT_SUBJECTS;
-  }, [offer.subject]);
+  // Alle Fächer des Angebots; welche davon für die gewählte Klasse buchbar
+  // sind und mit welchem Kursniveau, regelt lib/subjectRules.js (dieselbe
+  // Prüfung läuft serverseitig in app/api/bookings/route.js).
+  const allSubjects = useMemo(() => offerSubjects(offer), [offer]);
+  const initialSelection = normalizeSelection({
+    subjects: allSubjects,
+    studentClass: classOptions[0] || "",
+    subject: allSubjects[0] || "",
+    courseLevel: "",
+  });
   const allowedLocations =
     offer.mode === "online" ? ["online"] : offer.mode === "both" ? ["tutor", "student", "online"] : ["tutor", "student"];
 
@@ -42,7 +52,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   const [form, setForm] = useState({
     studentName: "",
     studentClass: classOptions[0] || "",
-    subject: subjectOptions[0] || "",
+    subject: initialSelection.subject,
+    courseLevel: initialSelection.courseLevel,
     parentName: "",
     parentEmail: "",
     parentPhone: "",
@@ -72,10 +83,28 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  // Klasse, Fach und Kursniveau hängen voneinander ab: nach jedem Wechsel
+  // eine nicht (mehr) buchbare Kombination direkt korrigieren.
+  function updateSelection(field, value) {
+    setForm((f) => {
+      const next = { ...f, [field]: value };
+      return { ...next, ...normalizeSelection({ subjects: allSubjects, ...next }) };
+    });
+  }
+
+  const subjectOptions = allowedSubjects(allSubjects, form.studentClass);
+  const levelOptions = allowedLevels(form.subject, form.studentClass);
+  const hints = selectionHints(allSubjects, form.studentClass, form.subject);
+  const displaySubject = subjectLabel(form.subject, form.courseLevel);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
+    if (!form.subject) {
+      setError("Für diese Klassenstufe ist bei diesem Angebot kein Fach buchbar.");
+      return;
+    }
     if (!form.contractConsent) {
       setError("Bitte bestätige die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung.");
       return;
@@ -155,7 +184,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         </p>
 
         <div className="mt-4">
-          <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
+          <OrderSummary offer={offer} subject={displaySubject} kleinunternehmer={bookingSettings.kleinunternehmer} />
         </div>
 
         {!stripeConfigured ? (
@@ -226,7 +255,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             id="studentClass"
             required
             value={form.studentClass}
-            onChange={(e) => update("studentClass", e.target.value)}
+            onChange={(e) => updateSelection("studentClass", e.target.value)}
             className={inputClass}
           >
             {classOptions.map((c) => (
@@ -245,7 +274,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             id="subject"
             required
             value={form.subject}
-            onChange={(e) => update("subject", e.target.value)}
+            onChange={(e) => updateSelection("subject", e.target.value)}
             className={inputClass}
           >
             {subjectOptions.map((s) => (
@@ -255,6 +284,35 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             ))}
           </select>
         </div>
+
+        {levelOptions.length > 0 ? (
+          <div>
+            <label htmlFor="courseLevel" className={labelClass}>
+              Kursniveau *
+            </label>
+            <select
+              id="courseLevel"
+              required
+              value={form.courseLevel}
+              onChange={(e) => updateSelection("courseLevel", e.target.value)}
+              className={inputClass}
+            >
+              {levelOptions.map((level) => (
+                <option key={level} value={level}>
+                  {COURSE_LEVELS[level]}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
+        {hints.length > 0 ? (
+          <ul className="space-y-1 text-xs text-slate-500 sm:col-span-2 dark:text-slate-400">
+            {hints.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="sm:col-span-2">
           <label htmlFor="notes" className={labelClass}>
@@ -423,7 +481,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       ) : null}
 
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
-        <OrderSummary offer={offer} subject={form.subject} kleinunternehmer={bookingSettings.kleinunternehmer} />
+        <OrderSummary offer={offer} subject={displaySubject} kleinunternehmer={bookingSettings.kleinunternehmer} />
       </div>
 
       {/* Datenschutz ist bewusst keine Checkbox: die Verarbeitung der Angaben

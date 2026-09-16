@@ -2,6 +2,7 @@ import { createBooking, getOffer, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import { notifyAdminOfBooking } from "@/lib/adminNotify";
+import { classOptionsForOffer, offerSubjects, subjectLabel, validateSelection } from "@/lib/subjectRules";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -14,6 +15,7 @@ export async function POST(request) {
     studentName,
     studentClass,
     subject,
+    courseLevel,
     parentName,
     parentEmail,
     parentPhone,
@@ -52,6 +54,25 @@ export async function POST(request) {
       { error: "Bitte alle Pflichtfelder ausfüllen." },
       { status: 400 }
     );
+  }
+
+  // Klassenstufe des Angebots sowie Fach und Kursniveau nach
+  // lib/subjectRules.js – unabhängig davon, was das Formular angezeigt hat.
+  if (!classOptionsForOffer(offer, settings).includes(String(studentClass))) {
+    return Response.json(
+      { error: "Dieses Angebot ist für die gewählte Klassenstufe nicht buchbar." },
+      { status: 400 }
+    );
+  }
+  const level = typeof courseLevel === "string" ? courseLevel : "";
+  const selectionError = validateSelection({
+    subjects: offerSubjects(offer),
+    studentClass: String(studentClass),
+    subject: subject.trim(),
+    courseLevel: level,
+  });
+  if (selectionError) {
+    return Response.json({ error: selectionError }, { status: 400 });
   }
 
   if (!isValidEmail(parentEmail.trim())) {
@@ -140,7 +161,12 @@ export async function POST(request) {
     },
     studentName: studentName.trim(),
     studentClass: String(studentClass),
-    subject: subject.trim(),
+    // Anzeigename inkl. Kursniveau (z. B. "Mathematik (Leistungsfach)"), damit
+    // Admin, E-Mails, Meeting-Seite und Rechnung es ohne Zusatzlogik zeigen;
+    // Fach und Niveau zusätzlich getrennt für Auswertungen.
+    subject: subjectLabel(subject.trim(), level),
+    subjectName: subject.trim(),
+    courseLevel: level,
     parentName: parentName.trim(),
     parentEmail: parentEmail.trim(),
     parentPhone: parentPhone?.trim() || "",

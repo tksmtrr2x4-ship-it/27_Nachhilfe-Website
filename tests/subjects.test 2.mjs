@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { SUBJECTS } from "@/lib/subjects";
 import { INDEXABLE_PAGES } from "@/lib/seo";
-import { SUBJECT_RULES, OBERSTUFE_FROM_CLASS } from "@/lib/subjectRules";
 
 // Sichtbarer Text je Fachseite: fachspezifische Inhalte plus die für alle
 // Fächer gleichen Abschnitte aus components/SubjectPage.js (grob nachgebildet,
@@ -37,18 +36,3 @@ for (const s of SUBJECTS) {
     assert.ok(!/probestunde|probeunterricht|erfolgsquote|garantie|\d+\s?%|sterne|bewertung/i.test(text), text);
   });
 }
-
-test("Fachseiten passen zu den Buchungsregeln", () => {
-  for (const s of SUBJECTS) {
-    const rule = SUBJECT_RULES[s.name];
-    assert.ok(rule, `keine Buchungsregel für ${s.name}`);
-    const levels = s.topics.map((t) => t.level).join(" ");
-    const hasMittelstufe = /Klassen 7\/8|Klassen 9\/10/.test(levels);
-    assert.equal(hasMittelstufe, rule.minClass < OBERSTUFE_FROM_CLASS, `${s.name}: Mittelstufen-Themen passen nicht zu minClass`);
-    assert.equal(/Basisfach/.test(levels), rule.levels.includes("basis"), `${s.name}: Basisfach-Themen vs. Regel`);
-    assert.equal(/Leistungsfach/.test(levels), rule.levels.includes("leistung"), `${s.name}: Leistungsfach-Themen vs. Regel`);
-    assert.ok(s.planUrl.startsWith("https://www.bildungsplaene-bw.de/"));
-  }
-  const wirtschaft = SUBJECTS.find((s) => s.key === "wirtschaft");
-  assert.ok(!/Klasse 8/.test(wirtschaft.description + wirtschaft.intro.join(" ")), "Wirtschaft darf nicht ab Klasse 8 beworben werden");
-});

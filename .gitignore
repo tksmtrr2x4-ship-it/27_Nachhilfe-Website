@@ -55,3 +55,7 @@ next-env.d.ts
 
 # lokale Claude-Code-Werkzeugdateien (Dev-Server-Konfiguration etc.)
 /.claude/
+
+# iCloud-Drive-Konfliktkopien ("datei 2.js", "seite 3.md" …) nie committen
+* [0-9].*
+* [0-9][0-9].*

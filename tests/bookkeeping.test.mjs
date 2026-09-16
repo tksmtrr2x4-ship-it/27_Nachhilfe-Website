@@ -34,8 +34,8 @@ test("Belegtyp am Inhalt erkannt, nicht am Namen", () => {
 
 const entries = [
   { type: "income", category: "tutoring_invoice", method: "bank", date: "2026-01-10", amountCents: 4000 },
-  { type: "income", category: "tutoring_cash", method: "cash", date: "2026-01-20", amountCents: 1500 },
-  { type: "income", category: "tutoring_cash", method: "cash", date: "2026-01-21", amountCents: -1500, reverses: "x" },
+  { type: "income", category: "tutoring_direct", method: "cash", date: "2026-01-20", amountCents: 1500 },
+  { type: "income", category: "tutoring_direct", method: "cash", date: "2026-01-21", amountCents: -1500, reverses: "x" },
   { type: "expense", category: "material", method: "cash", date: "2026-02-01", amountCents: 1290 },
   { type: "expense", category: "travel", method: "cash", date: "2026-02-02", amountCents: 705 },
   { type: "income", category: "tutoring_invoice", method: "bank", date: "2025-12-30", amountCents: 9999 },
@@ -55,7 +55,7 @@ test("Jahresauswertung: Gegenbuchung neutralisiert, Vorjahr bleibt außen vor", 
 test("Kleinunternehmer-Grenzen 25.000 € / 100.000 €", () => {
   const big = [
     { type: "income", category: "tutoring_invoice", date: "2025-06-01", amountCents: 21_000_00 },
-    { type: "income", category: "tutoring_cash", date: "2026-06-01", amountCents: 101_000_00 },
+    { type: "income", category: "tutoring_direct", date: "2026-06-01", amountCents: 101_000_00 },
     { type: "income", category: "other_income", date: "2026-06-02", amountCents: 50_000_00 },
   ];
   const k = kleinunternehmerCheck(big, 2026);

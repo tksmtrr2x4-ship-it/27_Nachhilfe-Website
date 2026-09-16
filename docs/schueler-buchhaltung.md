@@ -21,21 +21,32 @@ denselben Regeln geprüft (`lib/subjectRules.js`).
 
 ## Abrechnungswege einer Stunde
 
-Eine abgehaltene Stunde wird genau einmal bezahlt – die Wege schließen sich
+Eine abgehaltene Stunde wird genau einmal abgerechnet – die Wege schließen sich
 technisch gegenseitig aus (`lib/lessons/rules.js → isBillableSession`):
 
 1. **Rechnung** (Tab „Rechnungen“) → beim Markieren als bezahlt wird Datum
    **und Zahlungsart** (Überweisung, bar, Karte) abgefragt und automatisch als
    Einnahme gebucht.
-2. **Barzahlung ohne Rechnung** (Schülerprofil → offene Stunden auswählen →
-   „Bar bezahlt verbuchen“) → Einnahme im Journal, Stunden sind danach gesperrt
-   und erscheinen nicht mehr als Rechnungsposition. Eine Rechnung mit bereits
-   bar bezahlten Stunden lässt sich nicht ausstellen.
+2. **Als bezahlt verbuchen** (Schülerprofil → offene Stunden auswählen) – für
+   Zahlungen **ohne Rechnung**, bar, per Überweisung oder Karte, mit dem
+   **tatsächlichen Zahlungsdatum** (auch nachträglich). Einnahme im Journal
+   (Kategorie „Nachhilfe (ohne Rechnung)“), die Stunden sind danach gesperrt.
 3. **Online-Zahlung (Stripe)** → wird beim Zahlungseingang automatisch und nur
-   einmal gebucht.
+   einmal gebucht, ohne Journalnummern zu verbrauchen.
+4. **Vor Einführung abgerechnet** (Schülerprofil → nur Stunden **vor dem
+   16.09.2026**) – für alte Stunden, deren Bezahlung bereits anderswo erfasst
+   ist (frühere EÜR, bisherige Liste). Pflichtnotiz, wo sie erfasst ist.
+   **Es entsteht keine Buchung**; die Markierung lässt sich wieder aufheben.
+   Geld, das 2026 eingegangen und nirgends erfasst ist, gehört stattdessen über
+   Weg 2 ins Journal.
 
-Für Bareinnahmen bis 250 € gibt es eine **Quittung als PDF** mit den Angaben
-einer Kleinbetragsrechnung (§ 33 UStDV) inklusive Hinweis auf § 19 UStG.
+Eine Rechnung mit Stunden aus Weg 2 oder 4 lässt sich nicht ausstellen.
+
+**Quittung** (nur Bareinnahmen bis 250 €, Angaben einer Kleinbetragsrechnung
+nach § 33 UStDV inkl. § 19-Hinweis) mit zwei getrennten Daten: „Ausgestellt am“
+ist der Tag der Erfassung im Journal, „Zahlung erhalten am“ das tatsächliche
+Zahlungsdatum – nachgetragene Zahlungen erzeugen so nie einen rückdatierten
+Beleg.
 
 ## Buchhaltung (Einnahmenüberschussrechnung)
 

@@ -365,7 +365,7 @@ function EntryDialog({ preset, students, adminFetch, pin, setNotice, onClose, on
   const [form, setForm] = useState({
     type: preset.type,
     date: todayIso(),
-    category: preset.travel ? "travel" : preset.type === "income" ? "tutoring_cash" : "material",
+    category: preset.travel ? "travel" : preset.type === "income" ? "tutoring_direct" : "material",
     method: preset.type === "income" ? "cash" : "bank",
     amount: "",
     km: "",
@@ -462,10 +462,10 @@ function EntryDialog({ preset, students, adminFetch, pin, setNotice, onClose, on
             <input type="file" className="mt-1 block w-full text-sm" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </Field>
         )}
-        {form.type === "income" && form.category === "tutoring_cash" && (
+        {form.type === "income" && form.category === "tutoring_direct" && (
           <p className="text-xs text-slate-500 sm:col-span-2">
-            Tipp: Bar bezahlte Stunden besser im Schülerprofil verbuchen – dann gelten die Stunden automatisch als bezahlt und landen nicht mehr in
-            einer Rechnung.
+            Tipp: Stunden ohne Rechnung besser im Schülerprofil über „Als bezahlt verbuchen“ erfassen – dann gelten die Stunden automatisch als
+            bezahlt und landen nicht mehr in einer Rechnung.
           </p>
         )}
         <p className="text-xs text-slate-500 sm:col-span-2">Nach dem Speichern ist der Eintrag unveränderlich; Fehler werden per Storno korrigiert.</p>

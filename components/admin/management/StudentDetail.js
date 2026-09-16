@@ -5,7 +5,7 @@ import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 import { COURSE_LEVELS } from "@/lib/subjectRules";
 import { SCHOOL_TYPES, STUDENT_STATUS, LOCATION_TYPES } from "@/lib/students/validation";
 import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
-import { isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, openProtectedFile, plural, todayIso } from "@/components/admin/management/ui";
@@ -22,7 +22,11 @@ export function lessonState(lesson, today) {
 
 export function billingState(lesson, today) {
   if (lesson.invoiceId) return { text: "Rechnung", cls: "text-slate-600" };
-  if (lesson.paymentLedgerEntryId) return { text: "Bar bezahlt", cls: "text-emerald-700" };
+  if (lesson.paymentLedgerEntryId) {
+    const how = { cash: "bar", bank: "per Überweisung", card: "per Karte" }[lesson.paymentMethod] || "";
+    return { text: `Bezahlt ${how}`.trim(), cls: "text-emerald-700" };
+  }
+  if (lesson.settledExternally) return { text: "Vor Einführung abgerechnet", cls: "text-slate-600", note: lesson.settledExternally.note };
   if (lesson.status === "paid") return { text: "Online bezahlt", cls: "text-emerald-700" };
   if (isBillableSession(lesson, today)) return { text: "Offen", cls: "font-semibold text-amber-700" };
   return { text: "–", cls: "text-slate-400" };
@@ -33,7 +37,8 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
   const [editing, setEditing] = useState(false);
   const [lessonDialog, setLessonDialog] = useState(null); // "new" | lesson
   const [notesDialog, setNotesDialog] = useState(null); // lesson
-  const [cashDialog, setCashDialog] = useState(false);
+  const [paymentDialog, setPaymentDialog] = useState(false);
+  const [settleDialog, setSettleDialog] = useState(false);
   const [selected, setSelected] = useState([]);
   const [note, setNote] = useState({ text: "", date: todayIso() });
   const today = todayIso();
@@ -56,6 +61,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
   const billable = lessons.filter((l) => isBillableSession(l, today));
   const selectedBillable = selected.filter((sid) => billable.some((l) => l._id === sid));
   const selectedCents = billable.filter((l) => selectedBillable.includes(l._id)).reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0);
+  const selectedAllOld = selectedBillable.length > 0 && billable.filter((l) => selectedBillable.includes(l._id)).every(isBeforeJournalStart);
 
   async function setHeld(lessonId, heldStatus) {
     try {
@@ -104,6 +110,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       await adminFetch(`/api/admin/students/${id}`, { method: "DELETE" });
       setNotice("Profil gelöscht.");
       onDeleted();
+    } catch (err) {
+      setNotice(errorText(err));
+    }
+  }
+
+  async function unsettle(lesson) {
+    if (!confirm(`Markierung „vor Einführung abgerechnet“ für die Stunde vom ${formatDate(lesson.requestedDate)} aufheben? Die Stunde gilt danach wieder als offen.`)) return;
+    try {
+      await adminFetch("/api/admin/lessons/settle", { method: "DELETE", body: JSON.stringify({ studentId: student._id, bookingId: lesson._id }) });
+      refresh();
     } catch (err) {
       setNotice(errorText(err));
     }
@@ -262,8 +278,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
               >
                 Rechnung erstellen
               </button>
-              <button className={btnPrimary} disabled={selectedBillable.length === 0} onClick={() => setCashDialog(true)}>
-                Bar bezahlt verbuchen
+              <button className={btnPrimary} disabled={selectedBillable.length === 0} onClick={() => setPaymentDialog(true)}>
+                Als bezahlt verbuchen
+              </button>
+              <button
+                className={btnSecondary}
+                disabled={!selectedAllOld}
+                title={selectedAllOld ? "" : `Nur für Stunden vor dem ${formatDate(JOURNAL_START_DATE)}`}
+                onClick={() => setSettleDialog(true)}
+              >
+                Vor Einführung abgerechnet
               </button>
             </div>
           )}
@@ -318,7 +342,10 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                     <td className="py-2 pr-3">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${state.cls}`}>{state.text}</span>
                     </td>
-                    <td className={`py-2 pr-3 ${bill.cls}`}>{bill.text}</td>
+                    <td className={`py-2 pr-3 ${bill.cls}`}>
+                      {bill.text}
+                      {bill.note ? <span className="block max-w-[14rem] text-xs text-slate-500">{bill.note}</span> : null}
+                    </td>
                     <td className="py-2">
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
                         {!locked && !cancelled && l.heldStatus !== "held" && (
@@ -334,6 +361,11 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                         <button className={link} onClick={() => setNotesDialog(l)}>
                           Protokoll
                         </button>
+                        {l.settledExternally && (
+                          <button className={link} onClick={() => unsettle(l)}>
+                            Markierung aufheben
+                          </button>
+                        )}
                         {l.source === "admin" && !locked && (
                           <>
                             <button className={link} onClick={() => setLessonDialog(l)}>
@@ -425,8 +457,23 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
         />
       )}
 
-      {cashDialog && (
-        <CashDialog
+      {settleDialog && (
+        <SettleDialog
+          student={student}
+          lessons={billable.filter((l) => selectedBillable.includes(l._id))}
+          adminFetch={adminFetch}
+          setNotice={setNotice}
+          onClose={() => setSettleDialog(false)}
+          onSaved={() => {
+            setSettleDialog(false);
+            setSelected([]);
+            refresh();
+          }}
+        />
+      )}
+
+      {paymentDialog && (
+        <PaymentDialog
           student={student}
           customer={customer}
           lessons={billable.filter((l) => selectedBillable.includes(l._id))}
@@ -434,9 +481,9 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
           adminFetch={adminFetch}
           pin={pin}
           setNotice={setNotice}
-          onClose={() => setCashDialog(false)}
+          onClose={() => setPaymentDialog(false)}
           onSaved={() => {
-            setCashDialog(false);
+            setPaymentDialog(false);
             setSelected([]);
             refresh();
           }}
@@ -479,8 +526,15 @@ export function NotesDialog({ lesson, adminFetch, setNotice, onClose, onSaved })
   );
 }
 
-function CashDialog({ student, customer, lessons, totalCents, adminFetch, pin, setNotice, onClose, onSaved }) {
+const METHODS = [
+  ["cash", "Bar"],
+  ["bank", "Überweisung"],
+  ["card", "Karte"],
+];
+
+function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin, setNotice, onClose, onSaved }) {
   const [date, setDate] = useState(todayIso());
+  const [method, setMethod] = useState("cash");
   const [counterparty, setCounterparty] = useState(customer?.name || student.name);
   const [saving, setSaving] = useState(false);
   const [entry, setEntry] = useState(null);
@@ -488,12 +542,12 @@ function CashDialog({ student, customer, lessons, totalCents, adminFetch, pin, s
   async function save() {
     setSaving(true);
     try {
-      const res = await adminFetch("/api/admin/lessons/cash-payment", {
+      const res = await adminFetch("/api/admin/lessons/payment", {
         method: "POST",
-        body: JSON.stringify({ studentId: student._id, bookingIds: lessons.map((l) => l._id), date, counterparty }),
+        body: JSON.stringify({ studentId: student._id, bookingIds: lessons.map((l) => l._id), date, method, counterparty }),
       });
       setEntry(res.entry);
-      setNotice(`Barzahlung ${formatPrice(res.entry.amountCents)} als ${res.entry.entryNumber} verbucht.`);
+      setNotice(`Zahlung ${formatPrice(res.entry.amountCents)} als ${res.entry.entryNumber} verbucht.`);
     } catch (err) {
       setNotice(errorText(err));
     } finally {
@@ -502,21 +556,23 @@ function CashDialog({ student, customer, lessons, totalCents, adminFetch, pin, s
   }
 
   if (entry) {
+    const quittung = entry.method === "cash" && entry.amountCents <= 25000;
     return (
-      <Modal title="Barzahlung verbucht" onClose={onSaved}>
+      <Modal title="Zahlung verbucht" onClose={onSaved}>
         <p className="text-sm text-slate-700">
-          {formatPrice(entry.amountCents)} wurden als <strong>{entry.entryNumber}</strong> im Journal verbucht. Die Stunden gelten als bezahlt und
-          erscheinen nicht mehr bei den offenen Rechnungsposten.
+          {formatPrice(entry.amountCents)} wurden als <strong>{entry.entryNumber}</strong> mit Zahlungsdatum {formatDate(entry.date)} im Journal
+          verbucht. Die Stunden gelten als bezahlt und erscheinen nicht mehr bei den offenen Rechnungsposten.
         </p>
+        {entry.method === "cash" && entry.amountCents > 25000 && (
+          <p className="mt-2 text-sm text-amber-700">Über 250 € bitte zusätzlich eine reguläre Rechnung ausstellen.</p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
-          {entry.amountCents <= 25000 ? (
+          {quittung && (
             <button className={btnPrimary} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${entry._id}/quittung`).catch((err) => setNotice(err.message))}>
               Quittung öffnen (PDF)
             </button>
-          ) : (
-            <p className="text-sm text-amber-700">Über 250 € bitte zusätzlich eine reguläre Rechnung ausstellen.</p>
           )}
-          <button className={btnSecondary} onClick={onSaved}>
+          <button className={quittung ? btnSecondary : btnPrimary} onClick={onSaved}>
             Fertig
           </button>
         </div>
@@ -524,8 +580,9 @@ function CashDialog({ student, customer, lessons, totalCents, adminFetch, pin, s
     );
   }
 
+  const backdated = date < todayIso();
   return (
-    <Modal title="Barzahlung verbuchen" onClose={onClose}>
+    <Modal title="Als bezahlt verbuchen" onClose={onClose}>
       <ul className="space-y-1 text-sm text-slate-700">
         {lessons.map((l) => (
           <li key={l._id}>
@@ -534,20 +591,86 @@ function CashDialog({ student, customer, lessons, totalCents, adminFetch, pin, s
         ))}
       </ul>
       <p className="mt-3 text-lg font-semibold text-slate-900">Summe: {formatPrice(totalCents)}</p>
+      <fieldset className="mt-4">
+        <legend className="text-xs font-semibold text-slate-600">Zahlungsart</legend>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {METHODS.map(([key, text]) => (
+            <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-300 text-slate-700"}`}>
+              <input type="radio" name="lesson-payment-method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
+              {text}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Field label="Bar erhalten am">
+        <Field label="Tatsächlich bezahlt am *">
           <input type="date" className={input} value={date} max={todayIso()} onChange={(e) => setDate(e.target.value)} />
         </Field>
-        <Field label="Erhalten von">
+        <Field label="Bezahlt von">
           <input className={input} value={counterparty} onChange={(e) => setCounterparty(e.target.value)} />
         </Field>
       </div>
+      {backdated && (
+        <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+          Nachgetragene Zahlung: Gebucht wird im Jahr {date.slice(0, 4)} (Zahlungsdatum). Eine Quittung trägt das heutige Ausstellungsdatum und
+          zusätzlich das Zahlungsdatum – sie wird nicht rückdatiert.
+        </p>
+      )}
       <p className="mt-3 text-xs text-slate-500">
         Die Buchung ist danach unveränderlich (GoBD). Ein Fehler wird im Journal per Gegenbuchung korrigiert.
       </p>
       <div className="mt-4 flex gap-2">
-        <button className={btnPrimary} onClick={save} disabled={saving || lessons.length === 0}>
-          {saving ? "Verbucht …" : `${formatPrice(totalCents)} bar verbuchen`}
+        <button className={btnPrimary} onClick={save} disabled={saving || lessons.length === 0 || !date}>
+          {saving ? "Verbucht …" : `${formatPrice(totalCents)} verbuchen`}
+        </button>
+        <button className={btnSecondary} onClick={onClose}>
+          Abbrechen
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function SettleDialog({ student, lessons, adminFetch, setNotice, onClose, onSaved }) {
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await adminFetch("/api/admin/lessons/settle", {
+        method: "POST",
+        body: JSON.stringify({ studentId: student._id, bookingIds: lessons.map((l) => l._id), note }),
+      });
+      setNotice(`${res.settled === 1 ? "1 Stunde" : `${res.settled} Stunden`} als „vor Einführung abgerechnet“ markiert.`);
+      onSaved();
+    } catch (err) {
+      setNotice(errorText(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <Modal title="Vor Einführung abgerechnet" onClose={onClose}>
+      <p className="text-sm text-slate-700">
+        Für Stunden, deren Bezahlung <strong>schon anderswo erfasst</strong> ist – z. B. in einer früheren Einnahmenüberschussrechnung oder deiner
+        bisherigen Liste. Es entsteht <strong>keine Buchung</strong> im Journal; die Stunden erscheinen nur nicht mehr als offen.
+      </p>
+      <ul className="mt-3 space-y-1 text-sm text-slate-700">
+        {lessons.map((l) => (
+          <li key={l._id}>
+            {formatDate(l.requestedDate)} · {l.subject} · {formatPrice(l.offerSnapshot?.priceCents || 0)}
+          </li>
+        ))}
+      </ul>
+      <Field label="Wo ist die Bezahlung erfasst? *" className="mt-4">
+        <input className={input} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="z. B. bar bezahlt 2025, in EÜR 2025 enthalten" />
+      </Field>
+      <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+        Geld, das 2026 eingegangen und noch nirgends erfasst ist, bitte stattdessen mit „Als bezahlt verbuchen“ ins Journal übernehmen.
+      </p>
+      <div className="mt-4 flex gap-2">
+        <button className={btnPrimary} onClick={save} disabled={saving || !note.trim()}>
+          Markieren
         </button>
         <button className={btnSecondary} onClick={onClose}>
           Abbrechen

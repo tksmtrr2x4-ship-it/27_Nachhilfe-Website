@@ -27,7 +27,8 @@ const BILLING_FILTERS = {
   all: "Alle",
   open: "Offen abzurechnen",
   invoiced: "Per Rechnung",
-  cash: "Bar bezahlt",
+  direct: "Ohne Rechnung bezahlt",
+  settled: "Vor Einführung abgerechnet",
   missed: "Ausgefallen",
 };
 
@@ -79,7 +80,8 @@ export default function LessonsView({ adminFetch, setNotice, onShowStudent }) {
   const shown = lessons.filter((l) => {
     if (billing === "open") return isBillableSession(l, today);
     if (billing === "invoiced") return Boolean(l.invoiceId);
-    if (billing === "cash") return Boolean(l.paymentLedgerEntryId);
+    if (billing === "direct") return Boolean(l.paymentLedgerEntryId);
+    if (billing === "settled") return Boolean(l.settledExternally);
     if (billing === "missed") return l.heldStatus === "missed";
     return true;
   });
@@ -195,7 +197,10 @@ export default function LessonsView({ adminFetch, setNotice, onShowStudent }) {
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${state.cls}`}>{state.text}</span>
                   </td>
-                  <td className={`px-4 py-3 ${bill.cls}`}>{bill.text}</td>
+                  <td className={`px-4 py-3 ${bill.cls}`}>
+                    {bill.text}
+                    {bill.note ? <span className="block max-w-[14rem] text-xs text-slate-500">{bill.note}</span> : null}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-x-3 gap-y-1">
                       {!locked && l.heldStatus !== "held" && (
@@ -225,7 +230,8 @@ export default function LessonsView({ adminFetch, setNotice, onShowStudent }) {
         </table>
       </div>
       <p className="text-xs text-slate-500">
-        Rechnung erstellen und Barzahlungen verbuchen: im Profil der Schülerin / des Schülers offene Stunden auswählen.
+        Rechnung erstellen, Zahlungen ohne Rechnung verbuchen oder alte Stunden als „vor Einführung abgerechnet“ markieren: im Profil der
+        Schülerin / des Schülers offene Stunden auswählen.
       </p>
 
       {dialog && (

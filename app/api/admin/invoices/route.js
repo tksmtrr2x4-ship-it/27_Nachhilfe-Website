@@ -55,6 +55,7 @@ export async function POST(request) {
       (b) =>
         !b.invoiceId &&
         !b.paymentLedgerEntryId &&
+        !b.settledExternally &&
         (String(b.parentEmail || "").toLowerCase() === customer.emailLower || profileIds.has(b.studentId))
     );
     const lines = [

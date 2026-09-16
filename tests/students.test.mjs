@@ -70,3 +70,19 @@ test("Abgehalten-Vorgabe, Sperre, Abrechenbarkeit", () => {
   assert.equal(isBillableSession({ ...s, requestedDate: "2026-09-20" }, "2026-09-10"), false);
   assert.equal(isBillableSession({ ...s, requestedDate: "2026-09-20", heldStatus: "held" }, "2026-09-10"), true);
 });
+
+test("Vor Einführung abgerechnet: nicht abrechenbar, gesperrt, nur alte Stunden", async () => {
+  const { JOURNAL_START_DATE, isBeforeJournalStart, normalizeSettleInput } = await import("@/lib/lessons/rules");
+  const s = { status: "confirmed", offerSnapshot: { type: "session" }, requestedDate: "2025-11-03" };
+  assert.equal(isBillableSession({ ...s, settledExternally: { note: "EÜR 2025" } }, "2026-09-20"), false);
+  assert.equal(isLessonLocked({ settledExternally: { note: "x" } }), true);
+  assert.equal(isBeforeJournalStart(s), true);
+  assert.equal(isBeforeJournalStart({ requestedDate: JOURNAL_START_DATE }), false);
+  assert.ok(normalizeSettleInput({ note: " " }).problems.length === 1);
+  assert.deepEqual(normalizeSettleInput({ note: "bar 2025, EÜR 2025" }).problems, []);
+});
+
+test("Quittung: Ausstellungsdatum ist der Erfassungstag, nicht das Zahlungsdatum", async () => {
+  const { issueDateOf } = await import("@/lib/bookkeeping/quittung");
+  assert.equal(issueDateOf({ date: "2026-03-02", createdAt: "2026-09-16T22:30:00.000Z" }), "2026-09-17", "Berliner Zeit");
+});

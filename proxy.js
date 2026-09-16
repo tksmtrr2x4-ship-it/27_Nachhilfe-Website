@@ -34,6 +34,8 @@ export function proxy(request) {
     form-action 'self';
     frame-ancestors 'self';
     frame-src 'self' https://meet.lernsprung-vs.de;
+    worker-src 'self';
+    manifest-src 'self';
   `;
   const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, " ").trim();
 

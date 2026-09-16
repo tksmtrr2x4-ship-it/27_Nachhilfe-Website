@@ -38,5 +38,26 @@ async function portrait() {
   console.log("Porträt-Varianten erzeugt");
 }
 
+// Symbole der installierbaren Admin-App (public/admin.webmanifest):
+// normale Icons mit wenig Rand, "maskable" mit Sicherheitszone (Android/
+// Windows schneiden Kreis/Quadrat aus), Apple-Touch-Icon ohne Transparenz.
+async function appIcons() {
+  if (!fs.existsSync(file("logo.png"))) return;
+  const icon = async (size, padding, name) => {
+    const inner = Math.round(size * (1 - 2 * padding));
+    const logoBuffer = await sharp(file("logo.png")).resize(inner, inner, { fit: "contain", background: "#ffffff00" }).toBuffer();
+    await sharp({ create: { width: size, height: size, channels: 4, background: "#ffffff" } })
+      .composite([{ input: logoBuffer, gravity: "center" }])
+      .png({ compressionLevel: 9 })
+      .toFile(file(name));
+  };
+  await icon(192, 0.06, "app-icon-192.png");
+  await icon(512, 0.06, "app-icon-512.png");
+  await icon(512, 0.2, "app-icon-maskable-512.png");
+  await icon(180, 0.08, "apple-touch-icon.png");
+  console.log("App-Symbole erzeugt");
+}
+
 await logo();
 await portrait();
+await appIcons();

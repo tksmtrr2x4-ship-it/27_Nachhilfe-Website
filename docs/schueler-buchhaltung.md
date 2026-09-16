@@ -90,3 +90,21 @@ Journal-Einträge bleiben wegen der Aufbewahrungspflichten (§ 147 AO) erhalten.
   (`client_max_body_size 11m;` in `location /api/admin/ledger` – ohne abschließenden Schrägstrich, sonst leitet nginx die Übersicht um).
 - **Backup** von `/var/lib/lernsprung/belege` zusammen mit den Rechnungs-PDFs
   einplanen.
+
+## Als App auf dem Laptop
+
+Der Admin-Bereich ist eine installierbare Web-App (`public/admin.webmanifest`,
+Service Worker `public/admin-sw.js`, beide nur für `/admin`).
+
+- **Chrome / Edge (Mac, Windows):** `https://www.lernsprung-vs.de/admin` öffnen →
+  Knopf „Als App installieren“ im Admin-Bereich oder Installations-Symbol rechts
+  in der Adressleiste. Danach eigenes Fenster und Symbol im Dock/Startmenü.
+- **Safari (Mac):** `Ablage → Zum Dock hinzufügen`.
+
+Die App lädt alles live vom Server – es gibt bewusst **keinen Offline-Speicher**
+für Schüler- oder Buchhaltungsdaten; ohne Verbindung erscheint eine Hinweisseite.
+Updates kommen mit jedem Deploy automatisch. Die PIN wird wie im Browser nur für
+die laufende Sitzung gemerkt, nach dem Schließen der App ist eine neue Anmeldung
+nötig.
+
+App-Symbole erzeugt `npm run images:optimize` aus `public/logo.png`.

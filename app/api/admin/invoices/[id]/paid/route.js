@@ -2,13 +2,14 @@ import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { markInvoicePaid, markInvoiceUnpaid } from "@/lib/invoicing/issue";
 import { invoiceErrorResponse } from "@/lib/invoicing/api";
 
-// Zahlungseingang wird manuell mit Datum erfasst (kein Bank-Abgleich).
+// Zahlungseingang wird manuell mit Datum und Zahlungsart erfasst (kein
+// Bank-Abgleich) und automatisch als Einnahme im Buchhaltungs-Journal gebucht.
 export async function POST(request, { params }) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const body = await request.json().catch(() => ({}));
-    const invoice = await markInvoicePaid(id, body.paidAt);
+    const invoice = await markInvoicePaid(id, body.paidAt, body.method || "bank");
     return Response.json({ invoice });
   } catch (err) {
     return invoiceErrorResponse(err);

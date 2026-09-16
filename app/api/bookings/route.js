@@ -2,6 +2,7 @@ import { createBooking, getOffer, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import { notifyAdminOfBooking } from "@/lib/adminNotify";
+import { autoLinkBooking } from "@/lib/students/db";
 import { classOptionsForOffer, offerSubjects, subjectLabel, validateSelection } from "@/lib/subjectRules";
 
 function isValidEmail(value) {
@@ -182,6 +183,14 @@ export async function POST(request) {
         }
       : {}),
   });
+
+  // Bestehendem Schülerprofil zuordnen (gleicher Name, gleiche Eltern-E-Mail).
+  // Best-Effort: die Buchung selbst darf daran nie scheitern.
+  try {
+    await autoLinkBooking(booking);
+  } catch (err) {
+    console.error("Automatische Profilzuordnung fehlgeschlagen:", err);
+  }
 
   if (isSession) {
     // Pakete werden hier nur als "pending" angelegt (Zahlung steht noch aus)

@@ -10,6 +10,7 @@ import {
 } from "@/lib/invoicing/db";
 import { normalizeLine, normalizeRecipient } from "@/lib/invoicing/validation";
 import { invoiceErrorResponse, isOverdue } from "@/lib/invoicing/api";
+import { getStudent } from "@/lib/students/db";
 
 export async function GET(request) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
@@ -41,15 +42,28 @@ export async function POST(request) {
 
     const bookingIds = Array.isArray(body.bookingIds) ? body.bookingIds.map(String) : [];
     const bookings = await getBookingsByIds(bookingIds);
-    // Nur nicht bereits abgerechnete Stunden dieser Kundin/dieses Kunden.
+    // Nur nicht bereits abgerechnete (auch nicht bar bezahlte) Stunden dieser
+    // Kundin/dieses Kunden – zugeordnet über die Eltern-E-Mail der Buchung
+    // oder über ein Schülerprofil, das mit dieser Kundin/diesem Kunden
+    // verknüpft ist (selbst eingetragene Stunden).
+    const profileIds = new Set(
+      (await Promise.all([...new Set(bookings.map((b) => b.studentId).filter(Boolean))].map(getStudent)))
+        .filter((s) => s?.customerId === customer._id)
+        .map((s) => s._id)
+    );
     const usable = bookings.filter(
-      (b) => !b.invoiceId && String(b.parentEmail || "").toLowerCase() === customer.emailLower
+      (b) =>
+        !b.invoiceId &&
+        !b.paymentLedgerEntryId &&
+        (String(b.parentEmail || "").toLowerCase() === customer.emailLower || profileIds.has(b.studentId))
     );
     const lines = [
       ...usable.map(lineFromBooking),
       ...(Array.isArray(body.lines) ? body.lines.map(normalizeLine) : []),
     ];
-    const studentName = customer.studentName || usable[0]?.studentName || "";
+    // Name aus den Stunden zuerst: Bei Geschwistern mit gemeinsamer
+    // Rechnungsadresse steht im Kundendatensatz nur ein Kind.
+    const studentName = usable[0]?.studentName || customer.studentName || "";
     const subject = usable[0]?.subject || "";
 
     const invoice = await createDraftInvoice({

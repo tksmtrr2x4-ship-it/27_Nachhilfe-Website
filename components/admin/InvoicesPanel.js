@@ -66,6 +66,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
   const [filter, setFilter] = useState("all");
   const [current, setCurrent] = useState(null); // { invoice, customer, problems }
   const [busy, setBusy] = useState(false);
+  const [paying, setPaying] = useState(null); // Rechnung im Zahlungsdialog
 
   const refresh = useCallback(async () => {
     try {
@@ -179,13 +180,18 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     }
   }
 
-  async function markPaid(inv) {
-    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
-    const paidAt = prompt("Zahlungseingang am (JJJJ-MM-TT):", today);
-    if (!paidAt) return;
+  // Zahlungseingang mit Datum UND Zahlungsart (Überweisung, bar, Karte) –
+  // wird automatisch als Einnahme im Buchhaltungs-Journal gebucht.
+  function markPaid(inv) {
+    setPaying(inv);
+  }
+
+  async function confirmPaid({ paidAt, method }) {
+    const inv = paying;
     try {
-      await adminFetch(`/api/admin/invoices/${inv._id}/paid`, { method: "POST", body: JSON.stringify({ paidAt }) });
-      setNotice(`Rechnung ${inv.number} als bezahlt markiert.`);
+      await adminFetch(`/api/admin/invoices/${inv._id}/paid`, { method: "POST", body: JSON.stringify({ paidAt, method }) });
+      setNotice(`Rechnung ${inv.number} als bezahlt markiert und im Journal verbucht.`);
+      setPaying(null);
       refresh();
       if (current?.invoice?._id === inv._id) openEditor(inv._id);
     } catch (err) {
@@ -194,7 +200,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
   }
 
   async function unmarkPaid(inv) {
-    if (!confirm("Bezahlt-Markierung zurücknehmen?")) return;
+    if (!confirm("Bezahlt-Markierung zurücknehmen?\n\nIm Buchhaltungs-Journal wird dafür eine Gegenbuchung erstellt.")) return;
     try {
       await adminFetch(`/api/admin/invoices/${inv._id}/paid`, { method: "DELETE" });
       refresh();
@@ -242,6 +248,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
 
   return (
     <div className="mt-8 space-y-6">
+      {paying && <PaymentDialog invoice={paying} onConfirm={confirmPaid} onClose={() => setPaying(null)} />}
       <ConfigBanner config={config} />
 
       {view === "list" && (
@@ -1144,5 +1151,60 @@ function CustomerForm({ initial, onCancel, onSave }) {
         </button>
       </div>
     </form>
+  );
+}
+
+const PAYMENT_METHODS = [
+  ["bank", "Überweisung"],
+  ["cash", "Bar"],
+  ["card", "Karte / Online"],
+];
+
+function PaymentDialog({ invoice, onConfirm, onClose }) {
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+  const [paidAt, setPaidAt] = useState(today);
+  const [method, setMethod] = useState("bank");
+  const [saving, setSaving] = useState(false);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" role="dialog" aria-modal="true" aria-label="Zahlungseingang erfassen">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-slate-900">Zahlungseingang {invoice.number}</h3>
+        <p className="mt-1 text-sm text-slate-600">{formatPrice(invoice.totalCents)} · {invoice.recipient?.name}</p>
+        <div className="mt-4 grid gap-3">
+          <label className="block">
+            <span className={label}>Bezahlt am</span>
+            <input type="date" className={input} value={paidAt} max={today} onChange={(e) => setPaidAt(e.target.value)} />
+          </label>
+          <fieldset>
+            <legend className={label}>Zahlungsart</legend>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map(([key, text]) => (
+                <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-300 text-slate-700"}`}>
+                  <input type="radio" name="method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
+                  {text}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <p className="text-xs text-slate-500">Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht (Tab „Schüler &amp; Buchhaltung“).</p>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            className={btnPrimary}
+            disabled={saving || !paidAt}
+            onClick={async () => {
+              setSaving(true);
+              await onConfirm({ paidAt, method });
+              setSaving(false);
+            }}
+          >
+            Als bezahlt buchen
+          </button>
+          <button className={btnSecondary} onClick={onClose}>
+            Abbrechen
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

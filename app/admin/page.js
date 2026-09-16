@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatPrice, formatDate, locationLabel } from "@/lib/format";
 import { computeSavings, computeTotalHours, formatClassRange } from "@/lib/pricing";
 import InvoicesPanel from "@/components/admin/InvoicesPanel";
+import ManagementPanel from "@/components/admin/management/ManagementPanel";
 
 const EMPTY_OFFER = {
   type: "package",
@@ -133,6 +134,24 @@ export default function AdminPage() {
       setNotice(err.message);
     }
   }
+
+  // Aus einem Schülerprofil: Rechnungsentwurf mit den ausgewählten offenen
+  // Stunden anlegen und direkt im Tab "Rechnungen" öffnen.
+  const createInvoiceFromBookings = useCallback(
+    async (bookingIds, customerId) => {
+      try {
+        const data = await adminFetch("/api/admin/invoices", {
+          method: "POST",
+          body: JSON.stringify({ customerId, bookingId: bookingIds[0], bookingIds }),
+        });
+        setOpenInvoiceId(data.invoice._id);
+        setTab("invoices");
+      } catch (err) {
+        setNotice(err.message);
+      }
+    },
+    [adminFetch]
+  );
 
   async function refreshAll() {
     try {
@@ -436,6 +455,7 @@ export default function AdminPage() {
           ["offers", "Angebote"],
           ["bookings", "Buchungen"],
           ["invoices", "Rechnungen"],
+          ["management", "Schüler & Buchhaltung"],
           ["testimonials", "Rückmeldungen"],
           ["settings", "Einstellungen"],
         ].map(([key, label]) => (
@@ -713,6 +733,10 @@ export default function AdminPage() {
           onOpened={() => setOpenInvoiceId(null)}
           onBookingsChanged={refreshAll}
         />
+      )}
+
+      {tab === "management" && (
+        <ManagementPanel adminFetch={adminFetch} pin={pin} setNotice={setNotice} onCreateInvoice={createInvoiceFromBookings} />
       )}
 
       {tab === "testimonials" && (

@@ -2,6 +2,7 @@ import { getStripe } from "@/lib/stripe";
 import { getBooking, updateBooking } from "@/lib/db";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 import { notifyAdminOfBooking } from "@/lib/adminNotify";
+import { recordStripePayment } from "@/lib/bookkeeping/db";
 
 // Stripe braucht den unveränderten Rohtext des Requests für die
 // Signaturprüfung – deshalb hier request.text() statt request.json().
@@ -49,6 +50,15 @@ async function markBookingPaid(session) {
       typeof session.payment_intent === "string" ? session.payment_intent : null,
     paidAt: new Date().toISOString(),
   });
+
+  // Einnahme im Buchhaltungs-Journal (idempotent je Buchung). Ein Fehler hier
+  // wird protokolliert, darf aber Bestätigung und Webhook nicht blockieren –
+  // die Buchung ist dann im Admin manuell nachzutragen.
+  try {
+    await recordStripePayment(paid);
+  } catch (err) {
+    console.error("Journal-Buchung der Stripe-Zahlung fehlgeschlagen:", err);
+  }
 
   // Bestellbestätigung auf dauerhaftem Datenträger (§ 312f Abs. 2 BGB).
   // Best-Effort: ein Mail-Fehler darf die Webhook-Verarbeitung nicht kippen.

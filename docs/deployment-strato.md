@@ -265,48 +265,12 @@ beendet werden).
 
 ---
 
-## 8. Backups
+## 8. Datenbank und Backups
 
-**Datenbank (MongoDB Atlas):** Die App nutzt weiterhin MongoDB Atlas (siehe
-[bestandsaufnahme.md](bestandsaufnahme.md) Abschnitt 6 — der Hosting-Umzug betrifft nur die
-App, nicht zwingend die Datenbank). Der kostenlose/kleine Atlas-Tarif hat **keine**
-automatischen Backups inklusive — deshalb hier ein täglicher Dump vom V-Server aus:
-
-```bash
-sudo mkdir -p /var/backups/lernsprung/mongo
-sudo nano /usr/local/bin/backup-mongo.sh
-```
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-STAMP="$(date +%Y-%m-%d)"
-DEST="/var/backups/lernsprung/mongo/$STAMP"
-source /etc/lernsprung/.env.production
-mongodump --uri="$MONGODB_URI" --db="$MONGODB_DB" --out="$DEST"
-find /var/backups/lernsprung/mongo -maxdepth 1 -mtime +30 -exec rm -rf {} \;
-```
-
-```bash
-sudo chmod +x /usr/local/bin/backup-mongo.sh
-sudo crontab -e
-# Zeile ergänzen:
-0 3 * * * /usr/local/bin/backup-mongo.sh
-```
-
-Rotation: 30 Tage, danach automatisch gelöscht (siehe `find ... -mtime +30`).
-
-**Wiederherstellung:**
-
-```bash
-mongorestore --uri="$MONGODB_URI" --db="$MONGODB_DB" /var/backups/lernsprung/mongo/<datum>/<db-name>
-```
-
-**"Uploads":** Es gibt aktuell **keine** Datei-Upload-Funktion im Code (Logo/Porträt liegen
-manuell in `public/` und sind Teil des Git-Repos, siehe
-[bestandsaufnahme.md](bestandsaufnahme.md) Abschnitt 8 bzw. [lib/logo.js](../lib/logo.js)) —
-sie werden implizit über die Git-Historie mitgesichert. Kein separates Backup nötig, solange
-sich das nicht ändert.
+Die Datenbank läuft seit 16.09.2026 als MongoDB 8.0 direkt auf diesem Server (vorher
+MongoDB Atlas). Einrichtung, Benutzer, tägliches verschlüsseltes Backup (Datenbank,
+Rechnungen, Belege, Konfiguration), Abholung auf den Laptop und Wiederherstellung:
+[datenbank-backup.md](datenbank-backup.md).
 
 ---
 

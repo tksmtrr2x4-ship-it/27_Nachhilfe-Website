@@ -7,13 +7,13 @@ Konzepts (siehe letzte Spalte).
 
 | Daten | Wo gespeichert | Frist | Wie gelöscht | Wer prüft, wann |
 |---|---|---|---|---|
-| Buchungsdaten ohne steuerliche Relevanz (Name, Kontakt, Termin-/Fachangaben) | MongoDB Atlas, Collection `bookings` | 3 Jahre nach Vertragsende (§ 195 BGB) | Manuell im Admin-Bereich löschen, oder Datenbank-Query nach Ablauf der Frist | Betreiberin, empfohlen: jährliche Durchsicht (z.B. jeden Januar für das Vor-Vor-Vorjahr) |
-| Zahlungs-/buchungsrelevante Belege (Preis, Buchungsnummer, Zahlungsstatus) | MongoDB Atlas, Collection `bookings`; zusätzlich bei Stripe | 8 Jahre (§ 147 AO) | Wie oben, zusätzlich: Daten bei Stripe unterliegen deren eigener Aufbewahrungspraxis (siehe Stripe-Datenschutzerklärung) | Betreiberin, jährliche Durchsicht |
+| Buchungsdaten ohne steuerliche Relevanz (Name, Kontakt, Termin-/Fachangaben) | MongoDB (Strato-Server), Collection `bookings` | 3 Jahre nach Vertragsende (§ 195 BGB) | Manuell im Admin-Bereich löschen, oder Datenbank-Query nach Ablauf der Frist | Betreiberin, empfohlen: jährliche Durchsicht (z.B. jeden Januar für das Vor-Vor-Vorjahr) |
+| Zahlungs-/buchungsrelevante Belege (Preis, Buchungsnummer, Zahlungsstatus) | MongoDB (Strato-Server), Collection `bookings`; zusätzlich bei Stripe | 8 Jahre (§ 147 AO) | Wie oben, zusätzlich: Daten bei Stripe unterliegen deren eigener Aufbewahrungspraxis (siehe Stripe-Datenschutzerklärung) | Betreiberin, jährliche Durchsicht |
 | Server-Zugriffslogs (nginx) | `/var/log/nginx/lernsprung-access.log` auf dem V-Server | 7 Tage | **Automatisch** durch `logrotate` (siehe [../logging.md](../logging.md)) | Kein manueller Schritt nötig — stichprobenartig prüfen, dass `logrotate` läuft (`sudo logrotate -d ...`) |
 | Anwendungslogs (pm2) | `/var/log/lernsprung/*.log` auf dem V-Server | 7 Tage | Automatisch durch `logrotate` | Wie oben |
 | Datenbank-Backups | `/var/backups/lernsprung/mongo/` auf dem V-Server | 30 Tage | Automatisch durch das Backup-Skript (`find ... -mtime +30 -exec rm -rf`) | Stichprobenartig prüfen, dass alte Ordner tatsächlich verschwinden |
 | Admin-PIN (Session) | `sessionStorage` im Browser der Betreiberin | Bis Tab/Fenster geschlossen oder Abmeldung | Automatisch durch den Browser bzw. "Abmelden"-Funktion | Kein manueller Schritt nötig |
-| Rückmeldungen/Testimonials | MongoDB Atlas, Collection `testimonials` | Keine feste Frist — freiwillig eingereicht, bleibt bis zum Widerruf durch die Person oder Entfernung durch die Betreiberin sichtbar | Manuell im Admin-Bereich löschen | Betreiberin, bei Widerrufswunsch der/des Betroffenen sofort |
+| Rückmeldungen/Testimonials | MongoDB (Strato-Server), Collection `testimonials` | Keine feste Frist — freiwillig eingereicht, bleibt bis zum Widerruf durch die Person oder Entfernung durch die Betreiberin sichtbar | Manuell im Admin-Bereich löschen | Betreiberin, bei Widerrufswunsch der/des Betroffenen sofort |
 
 ## Größte Lücke: automatisierte Löschung fehlt noch
 

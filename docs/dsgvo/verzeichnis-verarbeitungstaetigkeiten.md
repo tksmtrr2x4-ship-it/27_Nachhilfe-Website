@@ -37,7 +37,7 @@ oder Fristen zu aktualisieren.
 | Empfänger | Stripe (Zahlungsabwicklung), Strato (E-Mail-Versand der Bestätigung) |
 | Drittland | Ja, über Stripe (USA, DPF-zertifiziert) — siehe Datenschutzerklärung Abschnitt 3 |
 | Löschfrist | 3 Jahre nach Vertragsende (nicht-steuerrelevante Daten), 8 Jahre für zahlungsrelevante Belege (§ 147 AO) |
-| TOM | TLS, Admin-PIN-Schutz für Einsicht, MongoDB-Zugriff nur per Connection-String |
+| TOM | TLS, Admin-PIN-Schutz für Einsicht, MongoDB auf dem eigenen Strato-Server, nur lokal erreichbar, Zugriff nur mit Anmeldung |
 
 ## 3. Buchung Einzelstunde (Terminanfrage)
 

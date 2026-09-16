@@ -1,0 +1,3 @@
+# Nach /etc/cron.d/lernsprung-backup kopieren (siehe docs/datenbank-backup.md).
+# Server läuft in UTC: 03:15 UTC = 04:15/05:15 Uhr deutscher Zeit.
+15 3 * * * root /usr/local/bin/lernsprung-backup.sh >> /var/log/lernsprung/backup.log 2>&1

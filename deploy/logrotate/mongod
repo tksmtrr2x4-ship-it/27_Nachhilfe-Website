@@ -1,0 +1,15 @@
+# Nach /etc/logrotate.d/mongod kopieren (siehe docs/datenbank-backup.md).
+# mongod öffnet die Logdatei bei SIGUSR1 neu (systemLog.logRotate: reopen).
+/var/log/mongodb/mongod.log {
+    daily
+    rotate 6
+    missingok
+    notifempty
+    compress
+    delaycompress
+    dateext
+    sharedscripts
+    postrotate
+        /bin/kill -USR1 $(pidof mongod) 2>/dev/null || true
+    endscript
+}

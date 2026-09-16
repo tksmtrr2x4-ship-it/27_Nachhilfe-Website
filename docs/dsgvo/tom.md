@@ -36,8 +36,12 @@ Punkt entspricht einer konkret umgesetzten oder vorgesehenen Maßnahme.
 
 ## Verfügbarkeit und Belastbarkeit
 
-- **Tägliches Datenbank-Backup** (MongoDB-Dump) mit 30-Tage-Rotation, siehe
-  [../deployment-strato.md](../deployment-strato.md) Abschnitt 8.
+- **Datenbank auf dem eigenen Server:** MongoDB nur über 127.0.0.1 erreichbar,
+  Anmeldung Pflicht, getrennte Benutzer für App (nur eigene Datenbank), Backup (nur
+  lesen) und Wartung.
+- **Tägliches verschlüsseltes Backup** (AES-256) von Datenbank, Rechnungen und Belegen:
+  14 Tage auf dem Server, Kopie auf dem Laptop (90 Tage, Monatsstände dauerhaft), siehe
+  [../datenbank-backup.md](../datenbank-backup.md). Test-Restore am 16.09.2026 erfolgreich.
 - **Zero-Downtime-Deploys** über `pm2 reload` statt hartem Neustart.
 - **Prozess-Überwachung:** `pm2` startet die App bei einem Absturz automatisch neu
   (`pm2 startup`/`save`).

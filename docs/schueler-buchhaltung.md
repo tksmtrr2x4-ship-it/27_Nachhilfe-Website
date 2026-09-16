@@ -99,8 +99,8 @@ Journal-Einträge bleiben wegen der Aufbewahrungspflichten (§ 147 AO) erhalten.
 - Speicherort anlegen (einmalig): `sudo install -d -o deploy -g deploy -m 700 /var/lib/lernsprung/belege`
 - nginx: Uploads bis 10 MB für `/api/admin/ledger/` erlauben
   (`client_max_body_size 11m;` in `location /api/admin/ledger` – ohne abschließenden Schrägstrich, sonst leitet nginx die Übersicht um).
-- **Backup** von `/var/lib/lernsprung/belege` zusammen mit den Rechnungs-PDFs
-  einplanen.
+- **Backup:** `/var/lib/lernsprung/belege` und die Rechnungs-PDFs sind Teil des täglichen
+  verschlüsselten Backups, siehe [datenbank-backup.md](datenbank-backup.md).
 
 ## Als App auf dem Laptop
 

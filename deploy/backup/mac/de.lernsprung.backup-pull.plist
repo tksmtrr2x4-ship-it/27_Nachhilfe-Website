@@ -10,8 +10,13 @@
     <string>/bin/bash</string>
     <string>/Users/BENUTZERNAME/.local/bin/lernsprung-backup-pull.sh</string>
   </array>
-  <key>StartInterval</key>
-  <integer>21600</integer>
+  <!-- Stündlich zur Minute 20. Anders als StartInterval holt launchd verpasste
+       Kalender-Termine nach dem Aufwachen nach (Laptop schläft nachts). -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Minute</key>
+    <integer>20</integer>
+  </dict>
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>

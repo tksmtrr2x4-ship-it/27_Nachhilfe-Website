@@ -71,7 +71,8 @@ ssh -t deploy@87.106.37.103 'sudo cat /etc/lernsprung/secrets/backup.key; echo'
 [deploy/backup/mac/lernsprung-backup-pull.sh](../deploy/backup/mac/lernsprung-backup-pull.sh) →
 `~/.local/bin/lernsprung-backup-pull.sh`, gestartet von launchd
 ([de.lernsprung.backup-pull.plist](../deploy/backup/mac/de.lernsprung.backup-pull.plist) →
-`~/Library/LaunchAgents/`) beim Anmelden und alle 6 Stunden.
+`~/Library/LaunchAgents/`) beim Anmelden und stündlich. Schläft der Laptop, holt launchd den
+verpassten Lauf nach dem Aufwachen nach.
 
 - Ziel `~/Backups/Lernsprung` – bewusst nicht in iCloud (die Dateien sind zwar
   verschlüsselt, müssen aber nicht zusätzlich zu Apple).

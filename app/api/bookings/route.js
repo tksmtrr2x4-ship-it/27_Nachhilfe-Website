@@ -192,13 +192,9 @@ export async function POST(request) {
     console.error("Automatische Profilzuordnung fehlgeschlagen:", err);
   }
 
-  if (isSession) {
-    // Pakete werden hier nur als "pending" angelegt (Zahlung steht noch aus)
-    // – die Admin-Mail dafür löst erst der Stripe-Webhook bei tatsächlicher
-    // Zahlung aus (siehe app/api/stripe/webhook/route.js), sonst würde bei
-    // jedem abgebrochenen Checkout fälschlich "gebucht" gemeldet.
-    await notifyAdminOfBooking(booking, "requested");
-  }
+  // Einzelstunden und Pakete sind Anfragen: Die Lehrkraft bestätigt im
+  // Admin-Bereich, bezahlt wird danach per Rechnung.
+  await notifyAdminOfBooking(booking);
 
   return Response.json({ booking });
 }

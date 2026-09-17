@@ -116,18 +116,15 @@ allgemeine Regel schließt `/meeting/` per Negative-Lookahead aus.
 ## Admin-Benachrichtigung bei jeder Anfrage/Buchung
 
 Separat von Jitsi, aber im selben Arbeitsschritt umgesetzt: `lib/adminNotify.js`
-verschickt jetzt bei **jeder** neuen Terminanfrage (Einzelstunde, Status
-"pending") und bei **jedem** tatsächlich bezahlten Paketkauf (Stripe-Webhook,
-Status "paid") eine Mail an `settings.contactEmail`. Vorher liefen
-Paketkäufe komplett ohne Admin-Benachrichtigung durch.
+verschickt bei **jeder** neuen Anfrage (Einzelstunde oder Paket, Status
+"pending") eine Mail an `settings.contactEmail`.
 
 ## Zahlungs-Gate für kostenpflichtige Online-Einzelstunden
 
 `app/meeting/[token]/page.js`: Ist die Buchung eine Online-Einzelstunde mit
-`priceCents > 0` und noch nicht `status === "paid"`, zeigt die Seite statt
-des Videos die Komponente `MeetingPayGate` (Stripe-Checkout). Nach Zahlung
-(Webhook oder Rücksprung-Fallback `lib/paymentSync.js`) wird das Video
-freigeschaltet. **0,00-€-Angebote sind ausgenommen** – dort erscheint das
+`priceCents > 0`, zeigt die Seite statt des Videos die Komponente
+`MeetingPayGate`: Rechnungsadresse und Zahlungsverpflichtung erfassen, danach
+wird das Video freigeschaltet (Stripe-Kartenzahlung seit 17.09.2026 entfernt). **0,00-€-Angebote sind ausgenommen** – dort erscheint das
 Video direkt nach der Terminbestätigung.
 
 ## Offene Punkte / mögliche spätere Erweiterungen

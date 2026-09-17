@@ -14,12 +14,12 @@ Punkt entspricht einer konkret umgesetzten oder vorgesehenen Maßnahme.
   geprüft (nicht nur clientseitig), PIN nur in `sessionStorage` des eigenen Browsers.
 - **Firewall:** `ufw`, nur Ports 22 (SSH), 80/443 (HTTP/HTTPS) sowie 10000/udp (Jitsi-
   Medienstrom) offen.
-- **Passwortmanager:** Zugangsdaten (Strato-Login, Stripe-Dashboard, Server-SSH-
+- **Passwortmanager:** Zugangsdaten (Strato-Login, Server-SSH-
   Passphrase, Admin-PIN) werden in einem Passwortmanager verwaltet, nicht im Klartext
   notiert oder im Code/Repo abgelegt (siehe Secret-Scan in
   [../bestandsaufnahme.md](../bestandsaufnahme.md) Abschnitt 4).
 - **Verschlüsselung des Endgeräts:** Der Rechner, von dem aus administrative Zugriffe
-  (SSH, Admin-Bereich, Stripe-Dashboard) erfolgen, sollte per Festplattenverschlüsselung
+  (SSH, Admin-Bereich) erfolgen, sollte per Festplattenverschlüsselung
   (z.B. FileVault/BitLocker) geschützt sein — <span>TODO: prüfen</span>, ob das aktuell
   aktiviert ist.
 
@@ -31,7 +31,7 @@ Punkt entspricht einer konkret umgesetzten oder vorgesehenen Maßnahme.
   Permissions-Policy, Content-Security-Policy (siehe [next.config.mjs](../../next.config.mjs)
   und [proxy.js](../../proxy.js)) gegen Manipulation/Injection im Browser.
 - **Serverseitige Validierung:** alle sicherheitsrelevanten Prüfungen (Admin-Auth,
-  Buchungs-Pflichtfelder, Stripe-Preis, Webhook-Signatur) laufen serverseitig, nicht nur
+  Buchungs-Pflichtfelder, Fach-/Klassenregeln, Preis aus dem gespeicherten Angebot) laufen serverseitig, nicht nur
   im Frontend.
 
 ## Verfügbarkeit und Belastbarkeit

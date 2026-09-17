@@ -321,7 +321,7 @@ export default function AdminPage() {
   async function setBookingStatus(id, status) {
     try {
       await adminFetch(`/api/admin/bookings/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
-      setNotice(status === "confirmed" ? "Termin bestätigt, Kunde wurde per Mail informiert." : "Status aktualisiert.");
+      setNotice(status === "confirmed" ? "Bestätigt, Kund:in wurde per Mail informiert." : "Status aktualisiert.");
       refreshAll();
     } catch (err) {
       setNotice(err.message);
@@ -634,6 +634,9 @@ export default function AdminPage() {
                     </td>
                     <td className="py-2.5 pr-4">
                       {STATUS_LABEL[b.status] || b.status}
+                      {!isSession && b.status === "confirmed" && (
+                        <span className="mt-1 block text-xs text-slate-500">{b.invoiceId ? "abgerechnet" : "Rechnung offen"}</span>
+                      )}
                       {isSession && b.status === "confirmed" && (
                         <span className="mt-1 block text-xs text-slate-500">
                           {b.invoiceId
@@ -671,7 +674,12 @@ export default function AdminPage() {
                             )}
                           </>
                         )}
-                        {isSession && b.status === "pending" && (
+                        {!isSession && b.status === "confirmed" && !b.invoiceId && (
+                          <button onClick={() => createInvoiceFromBooking(b)} className="font-semibold text-indigo-600 hover:underline">
+                            Rechnung
+                          </button>
+                        )}
+                        {b.status === "pending" && (
                           <button
                             onClick={() => setBookingStatus(b._id, "confirmed")}
                             className="text-emerald-600 hover:text-emerald-700"
@@ -679,7 +687,7 @@ export default function AdminPage() {
                             Bestätigen
                           </button>
                         )}
-                        {isSession && b.status === "confirmed" && (
+                        {b.status === "confirmed" && (
                           <button
                             onClick={() => resendConfirmation(b._id)}
                             className="text-slate-500 hover:text-indigo-600"
@@ -687,10 +695,10 @@ export default function AdminPage() {
                             Mail erneut senden
                           </button>
                         )}
-                        {isSession && b.status !== "cancelled" && (
+                        {b.status !== "cancelled" && (
                           <a
                             href={`mailto:${b.parentEmail}?subject=${encodeURIComponent(
-                              `Deine Terminanfrage – ${b.offerSnapshot?.title}`
+                              `${isSession ? "Deine Terminanfrage" : "Deine Paketanfrage"} – ${b.offerSnapshot?.title}`
                             )}`}
                             className="text-slate-500 hover:text-indigo-600"
                           >

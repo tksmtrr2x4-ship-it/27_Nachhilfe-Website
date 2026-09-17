@@ -3,12 +3,12 @@ import { normalizeRecipient, validateRecipient } from "@/lib/invoicing/validatio
 import { findOrCreateCustomerFromBooking, updateCustomer } from "@/lib/invoicing/db";
 import { CONSENT_TEXT, INVOICE_COMMITMENT_TEXT } from "@/lib/legal/consents";
 
-// Alternative zu Stripe auf der Meeting-Seite: „Per Rechnung zahlen“.
+// Zahlungs-Gate der Meeting-Seite: „Per Rechnung zahlen“.
 // Zugriffsmodell wie die Meeting-Seite selbst – der lange Zufallstoken in
 // der URL ist die Zugangskontrolle (siehe app/meeting/[token]/page.js).
 //
 // Zwei Schritte, beide nur für kostenpflichtige, bestätigte Online-
-// Einzelstunden, die noch nicht über Stripe bezahlt sind:
+// Einzelstunden, die noch nicht bezahlt sind:
 //   1. step "address": Rechnungsadresse + E-Rechnungs-Einwilligung speichern
 //      (Buchung + Kundendatensatz für die spätere Rechnung).
 //   2. step "commit":  Zahlungsverpflichtung aus dem Bestätigungsdialog mit

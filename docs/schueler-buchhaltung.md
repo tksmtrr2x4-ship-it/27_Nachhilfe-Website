@@ -31,9 +31,7 @@ technisch gegenseitig aus (`lib/lessons/rules.js → isBillableSession`):
    Zahlungen **ohne Rechnung**, bar, per Überweisung oder Karte, mit dem
    **tatsächlichen Zahlungsdatum** (auch nachträglich). Einnahme im Journal
    (Kategorie „Nachhilfe (ohne Rechnung)“), die Stunden sind danach gesperrt.
-3. **Online-Zahlung (Stripe)** → wird beim Zahlungseingang automatisch und nur
-   einmal gebucht, ohne Journalnummern zu verbrauchen.
-4. **Vor Einführung abgerechnet** (Schülerprofil → nur Stunden **vor dem
+3. **Vor Einführung abgerechnet** (Schülerprofil → nur Stunden **vor dem
    16.09.2026**) – für alte Stunden, deren Bezahlung bereits anderswo erfasst
    ist (frühere EÜR, bisherige Liste). Pflichtnotiz, wo sie erfasst ist.
    **Es entsteht keine Buchung**; die Markierung lässt sich wieder aufheben.
@@ -76,8 +74,8 @@ Beleg.
 - Kein Bankabgleich; Zahlungen werden manuell bestätigt.
 - Keine Abschreibungsberechnung (AfA) für Anschaffungen über 800 € netto –
   Kategorie vorhanden, Behandlung mit der Steuerberatung klären.
-- Stripe-Gebühren werden nicht automatisch gebucht (als Ausgabe „Bank- und
-  Zahlungsgebühren“ erfassen).
+- Bank- oder Kartengebühren werden nicht automatisch gebucht (als Ausgabe
+  „Bank- und Zahlungsgebühren“ erfassen).
 - Kein Kassenbuch im Sinne der Bilanzierung (für die EÜR nicht vorgeschrieben);
   Bareinnahmen werden einzeln aufgezeichnet (§ 146 Abs. 1 AO).
 

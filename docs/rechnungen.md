@@ -12,8 +12,8 @@ EN 16931, GiroCode zum Scannen), und wird in einem **getrennten Schritt** per
 Mail mit editierbarer Vorschau **versendet**. Zahlungseingang wird manuell mit
 Datum erfasst; Korrekturen laufen ausschließlich über eine **Stornorechnung**
 (nie „Gutschrift“). Kleinunternehmer § 19 UStG: nirgends wird Umsatzsteuer
-ausgewiesen, auch nicht als 0 %. Stripe bleibt unangetastet (spätere Ablösung
-ist eine eigene Aufgabe).
+ausgewiesen, auch nicht als 0 %. Online-Zahlung (Stripe) gibt es seit
+17.09.2026 nicht mehr; Pakete und Online-Stunden laufen ebenfalls per Rechnung.
 
 ## 2. Dateien
 
@@ -47,20 +47,21 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
 
 * **Abgehaltene Stunde:** Bestätigte Einzelstunden mit vergangenem Termin
   gelten automatisch als abgehalten; „Stunde abgehalten“ markiert vorab,
-  „Ausgefallen“ schließt aus. Über Stripe bezahlte Online-Stunden (`status:
-  paid`) werden nicht erneut abgerechnet.
+  „Ausgefallen“ schließt aus.
 * **„Per Rechnung zahlen“ auf der Meeting-Seite:** Das Zahlungs-Gate vor dem
-  Video (`components/MeetingPayGate.js`) bietet neben Stripe die Rechnungs-
-  zahlung an. Ablauf: Rechnungsadresse + E-Rechnungs-Einwilligung
+  Video (`components/MeetingPayGate.js`) verlangt Rechnungsadresse und
+  Zahlungsverpflichtung. Ablauf: Rechnungsadresse + E-Rechnungs-Einwilligung
   (`POST /api/meeting/[token]/invoice`, step `address` → speichert
   `booking.billingAddress`, `paymentMethod: "invoice"`, legt/ergänzt den
   Kundendatensatz) → Bestätigungsdialog „Adresse angekommen“ mit der
   Zahlungsverpflichtung (`INVOICE_COMMITMENT_TEXT`) → „Verstanden“ (step
   `commit` → `invoiceCommitmentAt` + `consents.invoiceCommitment`). Erst
-  danach zeigt die Seite das Video; die Stripe-Route lehnt dann eine
-  Kartenzahlung ab. Die Stunde bleibt `confirmed` und erscheint nach dem
+  danach zeigt die Seite das Video. Die Stunde bleibt `confirmed` und erscheint nach dem
   Termin unter „abrechenbar“ – die Rechnung wird wie gewohnt manuell im
   Admin ausgestellt (Anschrift ist vorausgefüllt).
+* **Pakete:** Nach „Bestätigen“ im Tab „Buchungen“ erscheint dort „Rechnung“.
+  Die Position übernimmt Paketname, Fach und Preis; Leistungsdatum ist der Tag
+  der Bestätigung (im Entwurf änderbar).
 * **Kund:in** = Vertragspartner:in (Elternteil), Schlüssel ist die E-Mail der
   Buchung. Anschrift wird im Entwurf ergänzt („Adresse im Kundendatensatz
   speichern“).
@@ -266,4 +267,4 @@ Die Tests laden die App-Module über den `@/`-Alias (`tests/register-alias.mjs`)
 - [ ] Texte aus Abschnitt 7 in Datenschutzerklärung und AGB übernehmen
       (rechtlich gegenprüfen lassen).
 - [ ] Backup um `INVOICE_STORAGE_PATH` erweitern.
-- [ ] Später, separat: Stripe-Ablösung für Einzelstunden.
+- [x] Stripe entfernt (17.09.2026).

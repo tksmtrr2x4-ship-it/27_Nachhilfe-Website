@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getBookingByMeetingToken } from "@/lib/db";
-import { syncPaymentFromStripe } from "@/lib/paymentSync";
 import { formatDate, formatPrice } from "@/lib/format";
 import MeetingEmbed from "@/components/MeetingEmbed";
 import MeetingPayGate from "@/components/MeetingPayGate";
@@ -18,21 +17,12 @@ export const metadata = {
 };
 
 const JITSI_DOMAIN = "meet.lernsprung-vs.de";
-const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
 
-export default async function MeetingPage({ params, searchParams }) {
+export default async function MeetingPage({ params }) {
   const { token } = await params;
-  const { session_id: sessionId } = (await searchParams) || {};
-  let booking = await getBookingByMeetingToken(token);
+  const booking = await getBookingByMeetingToken(token);
 
   if (!booking) notFound();
-
-  // Rücksprung von Stripe: Zahlung notfalls direkt verifizieren, falls der
-  // Webhook noch nicht durch ist, dann Buchung neu laden.
-  if (sessionId && booking.status !== "paid") {
-    await syncPaymentFromStripe(booking._id, sessionId);
-    booking = (await getBookingByMeetingToken(token)) || booking;
-  }
 
   if (booking.status === "cancelled") {
     return (
@@ -51,9 +41,9 @@ export default async function MeetingPage({ params, searchParams }) {
   // erst dann gilt das Gate als passiert. Die Rechnung selbst stellt die
   // Lehrkraft nach der Stunde im Admin-Bereich aus.
   const invoiceUnlocked = booking.paymentMethod === "invoice" && Boolean(booking.invoiceCommitmentAt);
-  // Kostenpflichtige Online-Einzelstunden: Video erst nach Zahlung (Stripe)
-  // oder nach Wahl der Rechnungszahlung freigeben. 0,00-€-Angebote (z.B.
-  // erste Stunde gratis) sind davon ausgenommen.
+  // Kostenpflichtige Online-Einzelstunden: Video erst nach Angabe der
+  // Rechnungsadresse und Bestätigung der Zahlungspflicht freigeben.
+  // 0,00-€-Angebote (z.B. Kennenlern-Meeting) sind davon ausgenommen.
   const needsPayment =
     booking.offerSnapshot?.type === "session" &&
     booking.locationType === "online" &&
@@ -75,9 +65,7 @@ export default async function MeetingPage({ params, searchParams }) {
         <div className="mt-5">
           <MeetingPayGate
             token={booking.meetingToken}
-            bookingId={booking._id}
             priceLabel={formatPrice(priceCents)}
-            stripeConfigured={stripeConfigured}
             defaultName={booking.parentName}
             email={booking.parentEmail}
           />

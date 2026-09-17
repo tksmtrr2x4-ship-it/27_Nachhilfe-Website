@@ -31,7 +31,7 @@ korrekt beschreiben lässt.
   gesamten Code durchgesehen (siehe [bestandsaufnahme.md](bestandsaufnahme.md) Abschnitt
   11). Ein Fund (Empfänger-E-Mail-Adresse in einer Log-Zeile in
   [lib/mail.js](../lib/mail.js)) wurde in Phase 1 bereits entfernt. Die verbleibenden
-  Log-Zeilen (Stripe-Fehler, Mailversand-Fehler) loggen technische Fehlermeldungen, keine
+  Log-Zeilen (z. B. Mailversand-Fehler) loggen technische Fehlermeldungen, keine
   Namen, E-Mail-Adressen oder Telefonnummern aus dem Buchungsformular.
 - **Restrisiko:** SMTP-Fehlermeldungen von nodemailer (`err.message` in
   `lib/mail.js`/`lib/orderConfirmation.js`) können in seltenen Fällen die Empfänger-Adresse

@@ -18,10 +18,8 @@ export default function DatenschutzPage() {
         <p className="mt-2">
           Wenn du oder deine Eltern eine Nachhilfestunde bei mir buchen, speichere ich Name,
           Klasse, Fach und Kontaktdaten, damit ich die Buchung organisieren und dir Bescheid
-          geben kann. Für die Bezahlung eines Pakets gebt ihr eure Zahlungsdaten direkt bei
-          Stripe ein, das ist eine Bezahlfirma, die das für mich übernimmt. Sonst sehen nur
-          wenige Firmen (z.B. mein E-Mail- und Server-Anbieter Strato) technisch mit den
-          Daten zu tun, niemand nutzt sie für Werbung. Ich hebe die Daten so lange auf, wie
+          geben kann. Nur wenige Firmen (z.B. mein E-Mail- und Server-Anbieter Strato) haben
+          technisch mit den Daten zu tun, niemand nutzt sie für Werbung. Ich hebe die Daten so lange auf, wie
           es gesetzlich vorgeschrieben oder für die Abwicklung nötig ist, danach lösche ich
           sie. Fragen dazu beantworte ich dir jederzeit unter j.hils@lernsprung-vs.de. Die
           ausführliche, rechtlich vollständige Fassung steht direkt darunter.
@@ -72,32 +70,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">3. Zahlungsabwicklung über Stripe</h2>
-          <p className="mt-2">
-            Zahlungen für Pakete werden über den Zahlungsdienstleister Stripe abgewickelt.
-            Vertragspartner ist Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand
-            Canal Dock, Dublin, Irland, als Auftragsverarbeiter. Beim Bezahlvorgang wird auf
-            eine von Stripe gehostete Bezahlseite weitergeleitet; die zur Zahlungsabwicklung
-            erforderlichen Daten (u.a. Zahlungsmittel, Name, E-Mail-Adresse, Buchungsbetrag)
-            werden dabei an Stripe übermittelt. Es gilt ergänzend die Datenschutzerklärung von
-            Stripe: https://stripe.com/de/privacy. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b
-            DSGVO.
-          </p>
-          <p className="mt-2">
-            <strong>Hinweis zur Datenübermittlung in ein Drittland:</strong> Im Rahmen der
-            Zahlungsabwicklung findet eine Weitergabe von Daten an die mit Stripe Payments
-            Europe, Ltd. verbundene Konzerngesellschaft Stripe, Inc./Stripe, LLC mit Sitz in
-            den USA statt. Diese Übermittlung stützt sich unter anderem darauf, dass das
-            Unternehmen unter dem EU-U.S. Data Privacy Framework zertifiziert ist (von der
-            EU-Kommission als Angemessenheitsbeschluss anerkanntes Datenschutzniveau, Art. 45
-            DSGVO); die Zertifizierung wurde zuletzt am 04.09.2026 im offiziellen Verzeichnis
-            unter dataprivacyframework.gov als aktiv geprüft. Ergänzend kommen
-            Standardvertragsklauseln (Art. 46 DSGVO) zum Einsatz.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">4. E-Mail-Versand</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">3. E-Mail-Versand</h2>
           <p className="mt-2">
             Terminbestätigungen und Rückfragen versende ich über ein eigenes Postfach beim
             E-Mail-/Hosting-Anbieter Strato AG, Pascalstraße 10, 10587 Berlin, als
@@ -110,12 +83,12 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">5. Online-Unterricht</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">4. Online-Unterricht</h2>
           <p className="mt-2">
             Für online stattfindenden Unterricht nutze ich eine selbst betriebene Instanz der
             Videokonferenz-Software Jitsi Meet unter einer eigenen Adresse
             (meet.lernsprung-vs.de), die auf demselben Server wie diese Website läuft (siehe
-            Abschnitt 6). Dabei werden Bild- und Tonübertragung sowie technische
+            Abschnitt 5). Dabei werden Bild- und Tonübertragung sowie technische
             Verbindungsdaten (u.a. IP-Adresse während der Sitzung) verarbeitet, ausschließlich
             zur Durchführung der gebuchten Unterrichtsstunde. Rechtsgrundlage ist Art. 6 Abs. 1
             lit. b DSGVO (Erfüllung des Nachhilfevertrags). Da die Software auf meiner eigenen
@@ -126,7 +99,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">6. Hosting und Server-Logfiles</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">5. Hosting und Server-Logfiles</h2>
           <p className="mt-2">
             Diese Website wird auf einem Server der Strato AG, Pascalstraße 10, 10587 Berlin,
             als Auftragsverarbeiter nach Art. 28 DSGVO betrieben, mit Serverstandort
@@ -149,7 +122,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">7. Cookies und lokale Speicherung</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">6. Cookies und lokale Speicherung</h2>
           <p className="mt-2">
             Für Besucher:innen der öffentlichen Seite werden{" "}
             <strong>keine Cookies</strong> gesetzt und
@@ -165,7 +138,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">8. Speicherdauer</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">7. Speicherdauer</h2>
           <p className="mt-2">
             Buchungsdaten ohne steuerliche Relevanz (z.B. Name, Kontaktdaten, Termin- und
             Fachangaben) speichere ich für die Dauer der Geschäftsbeziehung und danach für
@@ -188,7 +161,7 @@ export default function DatenschutzPage() {
 
         <section>
           <h2 className="font-semibold text-slate-900 dark:text-white">
-            9. Keine automatisierte Entscheidungsfindung
+            8. Keine automatisierte Entscheidungsfindung
           </h2>
           <p className="mt-2">
             Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling im
@@ -197,12 +170,12 @@ export default function DatenschutzPage() {
         </section>
 
         <section className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 dark:border-amber-500/40 dark:bg-amber-500/10">
-          <h2 className="font-semibold text-slate-900 dark:text-white">10. Widerspruchsrecht (Art. 21 DSGVO)</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">9. Widerspruchsrecht (Art. 21 DSGVO)</h2>
           <p className="mt-2">
             Soweit die Verarbeitung Ihrer personenbezogenen Daten auf Art. 6 Abs. 1 lit. f
             DSGVO (berechtigtes Interesse) gestützt wird — das betrifft insbesondere die
-            Server-Logfiles nach Abschnitt 6 und die verlängerte Aufbewahrung nach Abschnitt
-            8 — haben Sie das Recht, aus Gründen, die sich aus Ihrer besonderen Situation
+            Server-Logfiles nach Abschnitt 5 und die verlängerte Aufbewahrung nach Abschnitt
+            7 — haben Sie das Recht, aus Gründen, die sich aus Ihrer besonderen Situation
             ergeben, jederzeit gegen diese Verarbeitung Widerspruch einzulegen. Ich verarbeite
             die betroffenen Daten dann nicht mehr, es sei denn, ich kann zwingende
             schutzwürdige Gründe für die Verarbeitung nachweisen, die Ihre Interessen,
@@ -213,9 +186,9 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">11. Weitere Rechte der Betroffenen</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">10. Weitere Rechte der Betroffenen</h2>
           <p className="mt-2">
-            Zusätzlich zum Widerspruchsrecht aus Abschnitt 10 besteht das Recht auf Auskunft
+            Zusätzlich zum Widerspruchsrecht aus Abschnitt 9 besteht das Recht auf Auskunft
             (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO),
             Einschränkung der Verarbeitung (Art. 18 DSGVO) sowie Datenübertragbarkeit (Art. 20
             DSGVO). Anfragen dazu richten Sie bitte an die oben genannte E-Mail-Adresse. Zudem

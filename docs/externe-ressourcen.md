@@ -18,11 +18,8 @@ Fremd-Domain-Kontakte sind bereits sauber:
   Manager, kein Meta-Pixel — weder im Code noch in `package.json` vorhanden.
 - **Bilder:** Logo und Porträt kommen aus `public/` ([lib/logo.js](../lib/logo.js)), keine
   `next/image`-Remote-Domains konfiguriert.
-- **Stripe:** Beim Bezahlvorgang leitet die Seite per `window.location.href` auf die von
-  Stripe gehostete Checkout-Seite weiter (Domain-Wechsel, vom Nutzer aktiv durch Klick auf
-  "Zahlungspflichtig buchen" ausgelöst). Es wird **kein** `stripe.js` oder sonstiges
-  Stripe-Skript auf der eigenen Seite geladen. Das ist genau die im Auftrag vorgesehene
-  Ausnahme und bleibt auch nach der Migration so bestehen.
+- **Stripe:** Seit 17.09.2026 entfernt. Es gibt keine Weiterleitung zu einer externen
+  Bezahlseite mehr.
 
 ## Empirische Prüfung (durchgeführt)
 
@@ -40,12 +37,8 @@ Schriftdateien.
    falls nicht sichtbar) oder einfach die volle URL-Spalte ansehen.
 4. Nach dem Laden die Liste durchgehen: **jede Zeile muss die eigene Domain zeigen**
    (`www.lernsprung-vs.de` nach der Migration, aktuell `localhost`/die Vercel-Vorschau-URL).
-5. Die einzige erlaubte Ausnahme: Klick auf den Bezahlen-Button auf der Buchungsseite führt
-   zu einem vollständigen Seitenwechsel zu `checkout.stripe.com` — das ist gewollt und vom
-   Nutzer selbst ausgelöst, kein automatischer Hintergrund-Request.
-6. Praktisch, um versehentliche Reste zu finden: im Netzwerk-Tab nach Requests filtern, die
-   **nicht** mit der eigenen Domain beginnen — sollte leer bleiben (außer beim aktiven
-   Stripe-Checkout).
+5. Praktisch, um versehentliche Reste zu finden: im Netzwerk-Tab nach Requests filtern, die
+   **nicht** mit der eigenen Domain beginnen — sollte leer bleiben.
 
 ## Zukünftige Ergänzung: Jitsi (Online-Unterricht)
 

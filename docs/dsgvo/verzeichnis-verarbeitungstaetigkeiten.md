@@ -34,8 +34,8 @@ oder Fristen zu aktualisieren.
 | Zweck | Vertragsanbahnung und -erfüllung (Nachhilfevertrag) |
 | Kategorien betroffener Personen | Erziehungsberechtigte (Vertragspartner), Schüler:innen (Leistungsempfänger, i.d.R. minderjährig) |
 | Datenkategorien | Name/E-Mail/Telefon der Erziehungsberechtigten, Name/Klasse/Fach der Schülerin/des Schülers, Buchungsdetails, Zahlungsstatus, Zustimmungs-Checkboxen mit Zeitstempel |
-| Empfänger | Stripe (Zahlungsabwicklung), Strato (E-Mail-Versand der Bestätigung) |
-| Drittland | Ja, über Stripe (USA, DPF-zertifiziert) — siehe Datenschutzerklärung Abschnitt 3 |
+| Empfänger | Strato (Hosting, E-Mail-Versand der Bestätigung) |
+| Drittland | Nein |
 | Löschfrist | 3 Jahre nach Vertragsende (nicht-steuerrelevante Daten), 8 Jahre für zahlungsrelevante Belege (§ 147 AO) |
 | TOM | TLS, Admin-PIN-Schutz für Einsicht, MongoDB auf dem eigenen Strato-Server, nur lokal erreichbar, Zugriff nur mit Anmeldung |
 
@@ -53,15 +53,9 @@ oder Fristen zu aktualisieren.
 
 ## 4. Zahlungsabwicklung
 
-| Feld | Inhalt |
-|---|---|
-| Zweck | Abwicklung der Zahlung für gebuchte Pakete |
-| Kategorien betroffener Personen | Erziehungsberechtigte (Zahlende) |
-| Datenkategorien | Zahlungsmittel, Name, E-Mail, Buchungsbetrag (verarbeitet bei Stripe, nicht auf eigenem Server gespeichert außer Zahlungsstatus/Beleg-Referenz) |
-| Empfänger | Stripe Payments Europe, Ltd. (Auftragsverarbeiter), konzernintern Stripe, Inc./LLC (USA) |
-| Drittland | Ja (DPF-zertifiziert, siehe Datenschutzerklärung) |
-| Löschfrist | 8 Jahre für Belege (§ 147 AO) |
-| TOM | TLS beim Redirect zu Stripe, keine Kartendaten auf eigenem Server |
+Entfallen: Seit 17.09.2026 keine Online-Zahlung mehr (Stripe entfernt). Bezahlt wird per
+Rechnung/Überweisung oder bar; Zahlungseingänge stehen im Buchhaltungs-Journal auf dem
+eigenen Server (siehe [../schueler-buchhaltung.md](../schueler-buchhaltung.md)).
 
 ## 5. E-Mail-Korrespondenz
 

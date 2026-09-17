@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Wie bezahle ich?",
-    a: "Pakete bezahlst du direkt bei der Buchung sicher online per Karte über Stripe. Einzelstunden sind zunächst eine unverbindliche Terminanfrage – die Bezahlung kläre ich mit dir persönlich, sobald der Termin bestätigt ist.",
+    a: "Online bezahlst du nichts. Pakete und Einzelstunden sind zunächst eine unverbindliche Anfrage. Sobald ich bestätigt habe, bekommst du bei Paketen eine Rechnung zur Überweisung; bei Einzelstunden kläre ich die Bezahlung mit dir persönlich, Online-Stunden laufen per Rechnung.",
   },
   {
     q: "In welchem Gebiet bietet Lernsprung Präsenzunterricht an?",

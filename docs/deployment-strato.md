@@ -233,7 +233,7 @@ sudo nano /etc/lernsprung/.env.production
 ```
 
 Inhalt: dieselben Variablen wie in `.env.local.example` aufgelistet, mit den echten
-Produktionswerten (Live-Stripe-Keys, echtem Live-Webhook-Secret, Strato-SMTP-Zugangsdaten,
+Produktionswerten (Strato-SMTP-Zugangsdaten, Rechnungsangaben,
 `NEXT_PUBLIC_SITE_URL=https://www.lernsprung-vs.de`).
 
 ```bash
@@ -320,7 +320,7 @@ da im Auftrag nur der Datenschutztext zum Tool verlangt war, keine neue Funktion
 ## 10. Umzug durchführen (Checkliste für den Betreiber)
 
 Diese Schritte kann **nur der Betreiber selbst** ausführen (Zugriff auf Strato-DNS,
-Stripe-Dashboard, Vercel-Konto, E-Mail-Postfach) — ich liste sie hier vollständig auf,
+Vercel-Konto, E-Mail-Postfach) — ich liste sie hier vollständig auf,
 damit nichts vergessen wird:
 
 - [ ] **DNS-TTL vorab senken** (z.B. auf 300 Sekunden) bei den betroffenen Einträgen im
@@ -330,19 +330,7 @@ damit nichts vergessen wird:
       siehe Abschnitt 4), `nachhilfe.lernsprung-vs.de` ebenfalls auf die neue Server-IP
       umstellen (nginx redirected dann auch von dort auf `www.lernsprung-vs.de`) statt es
       auf Vercel zeigen zu lassen.
-- [ ] **Stripe-Webhook umstellen:** Im Stripe-Dashboard (Live-Modus!) unter
-      **Developers → Webhooks** einen neuen Endpoint auf
-      `https://www.lernsprung-vs.de/api/stripe/webhook` anlegen, Events
-      `checkout.session.completed` + `checkout.session.async_payment_succeeded`, das neue
-      `whsec_...`-Secret in `/etc/lernsprung/.env.production` eintragen, `pm2 reload`. Alten
-      Vercel-Webhook-Endpoint erst danach löschen.
-- [ ] **Webhook testen** (Stripe-CLI, lokal oder vom Server aus):
-      `stripe trigger checkout.session.completed --webhook-endpoint <neue-endpoint-id>` und
-      im nginx-/pm2-Log prüfen, dass die Signatur akzeptiert wurde und keine
-      "ungültige Signatur"-Meldung auftaucht (siehe den in
-      [bestandsaufnahme.md](bestandsaufnahme.md) Abschnitt 3 notierten Befund zum
-      Signatur-Fallback — mit korrekt gesetztem `STRIPE_WEBHOOK_SECRET` greift der
-      unsichere Fallback ohnehin nie).
+- Stripe-Schritte entfallen: Stripe wurde am 17.09.2026 komplett entfernt.
 - [ ] **SMTP einrichten:** Strato-Postfach-Zugangsdaten in `.env.production`, dazu bei
       Strato/DNS: **SPF**-Record (`v=spf1 include:_spf.strato.de ~all` — Strato-eigenen
       SPF-Include prüfen, exakter Wert steht im Strato-Kundenlogin unter E-Mail-

@@ -4,7 +4,8 @@ Next.js-Website für Nachhilfeangebote ab Klasse 8: Startseite mit Slogan, Angeb
 Buchungsformular und ein PIN-geschützter Admin-Bereich zum Anlegen der Angebote. Es gibt zwei
 Angebotsarten:
 
-- **Pakete** (z.B. Kursabo) – Formular ausfüllen, direkt online per Stripe bezahlen.
+- **Pakete** (z.B. Kursabo) – Formular ausfüllen und als Anfrage abschicken; nach Bestätigung
+  im Admin-Bereich wird per Rechnung bezahlt.
 - **Einzelstunden** (45 oder 90 Minuten) – Kund:in wählt Datum, Uhrzeit und Unterrichtsort
   (bei der Lehrkraft oder bei sich zuhause) und schickt eine Terminanfrage ohne Online-Zahlung.
   Im Admin-Bereich kann die Anfrage bestätigt (→ automatische Bestätigungsmail) oder die Person
@@ -55,48 +56,13 @@ In `.env.local`:
 ADMIN_PIN=dein-eigener-pin
 ```
 
-## 4. Stripe einrichten (für echte Zahlungen)
+## 4. Zahlung
 
-1. Konto auf https://dashboard.stripe.com anlegen und verifizieren (Geschäfts-/Bankdaten –
-   das kannst nur du selbst tun).
-2. Unter **Developers → API keys** die Schlüssel kopieren. Im **Testmodus** beginnen sie mit
-   `sk_test_…` / `pk_test_…`, im **Live-Modus** mit `sk_live_…` / `pk_live_…`.
-3. In `.env.local` eintragen:
-
-```
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
-
-Der Preis wird serverseitig aus dem jeweiligen Angebot berechnet (nicht aus dem Browser
-übernommen). Beim Buchen wird auf die von Stripe gehostete Bezahlseite weitergeleitet; nach
-erfolgreicher Zahlung geht es zurück auf `/buchen/danke`, und die Buchung wird als „bezahlt"
-markiert.
-
-### Webhook (empfohlen für Produktivbetrieb)
-
-Damit Buchungen auch dann zuverlässig als bezahlt markiert werden, wenn der/die Besucher:in
-nach der Zahlung nicht zurück auf die Seite kommt, richte einen Webhook ein:
-
-- **Lokal:** `stripe login`, dann in einem zweiten Terminal
-  `stripe listen --forward-to localhost:3000/api/stripe/webhook`. Das ausgegebene
-  `whsec_…` als `STRIPE_WEBHOOK_SECRET` in `.env.local` eintragen.
-- **Produktion:** Im Dashboard unter **Developers → Webhooks** einen Endpoint
-  `https://deine-domain.de/api/stripe/webhook` anlegen, Event
-  `checkout.session.completed` (und `checkout.session.async_payment_succeeded`) abonnieren,
-  das Signing Secret als `STRIPE_WEBHOOK_SECRET` in den Umgebungsvariablen hinterlegen.
-
-### Testkarte
-
-Im Testmodus: Kartennummer `4242 4242 4242 4242`, beliebiges zukünftiges Ablaufdatum,
-beliebige CVC und PLZ.
-
-### Live schalten
-
-Live-Credentials (`sk_live_…` / `pk_live_…`) eintragen, `NEXT_PUBLIC_SITE_URL` auf die echte
-Domain setzen und einen Live-Webhook wie oben anlegen. Ab dann werden reale Zahlungen dem
-hinterlegten Stripe-Konto gutgeschrieben.
+Es gibt keine Online-Zahlung. Pakete und Einzelstunden sind Anfragen; nach der Bestätigung
+im Admin-Bereich wird per Rechnung (E-Rechnung mit GiroCode, siehe `docs/rechnungen.md`)
+oder bei Stunden vor Ort nach Absprache bezahlt. Kostenpflichtige Online-Stunden schalten das
+Video erst frei, wenn Rechnungsadresse und Zahlungsverpflichtung erfasst sind. Zahlungen
+werden im Admin unter „Schüler & Buchhaltung“ verbucht.
 
 ## 5. Mailversand einrichten (SMTP über dein eigenes E-Mail-Konto)
 
@@ -143,8 +109,7 @@ hier personenbezogene Daten von Minderjährigen verarbeitet werden, lohnt sich b
 1. Projekt auf GitHub/GitLab pushen (oder direkt per `vercel` CLI deployen).
 2. Auf https://vercel.com/new das Repo importieren.
 3. Unter **Environment Variables** dieselben Werte wie in `.env.local` eintragen:
-   `ADMIN_PIN`, `MONGODB_URI`, `MONGODB_DB`, `STRIPE_SECRET_KEY`,
-   `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_SITE_URL`,
+   `ADMIN_PIN`, `MONGODB_URI`, `MONGODB_DB`, `NEXT_PUBLIC_SITE_URL`,
    `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`.
 4. Deployen. Der Seed-Schritt (`npm run seed`) muss einmal lokal gegen dieselbe Datenbank
    laufen (oder die Daten werden direkt im Admin-Bereich angelegt).
@@ -157,6 +122,6 @@ beachten (kein flüchtiges Dateisystem mehr).
 ```
 app/            Seiten (Start, Angebote, Buchung, Admin, Impressum, Datenschutz) + API-Routen
 components/     Wiederverwendbare UI-Komponenten (Header, Footer, Buchungsformular)
-lib/            mongo.js (Verbindung), db.js (Datenzugriff), stripe.js, mail.js, auth.js, format.js
+lib/            mongo.js (Verbindung), db.js (Datenzugriff), mail.js, auth.js, format.js
 scripts/seed.mjs  Standard-Einstellungen + Beispiel-Angebote in MongoDB anlegen
 ```

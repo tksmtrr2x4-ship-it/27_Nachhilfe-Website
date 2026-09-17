@@ -1157,7 +1157,7 @@ function CustomerForm({ initial, onCancel, onSave }) {
 const PAYMENT_METHODS = [
   ["bank", "Überweisung"],
   ["cash", "Bar"],
-  ["card", "Karte / Online"],
+  ["card", "Karte"],
 ];
 
 function PaymentDialog({ invoice, onConfirm, onClose }) {

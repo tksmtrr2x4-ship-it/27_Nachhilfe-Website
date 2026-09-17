@@ -14,10 +14,6 @@ import {
   subjectLabel,
 } from "@/lib/subjectRules";
 
-const stripeConfigured = Boolean(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-);
-
 // Einmal definiert statt in jedem Feld wiederholt (waren vorher ~7 fast
 // identische Klassen-Strings) – jetzt auch mit Dark-Mode-Varianten.
 const inputClass =
@@ -44,11 +40,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
   const allowedLocations =
     offer.mode === "online" ? ["online"] : offer.mode === "both" ? ["tutor", "student", "online"] : ["tutor", "student"];
 
-  const [step, setStep] = useState("form");
-  const [booking, setBooking] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [paying, setPaying] = useState(false);
   const [form, setForm] = useState({
     studentName: "",
     studentClass: classOptions[0] || "",
@@ -136,89 +129,15 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
         setError(data.error || "Buchung konnte nicht erstellt werden.");
         return;
       }
-      setBooking(data.booking);
-      // Einzelstunden sind eine Terminanfrage ohne Online-Zahlung – direkt
-      // zur Bestätigungsseite. Pakete gehen weiter zur Zahlungsübersicht.
-      if (isSession) {
-        router.push(`/buchen/danke?bookingId=${data.booking._id}`);
-      } else {
-        setStep("payment");
-      }
+      // Einzelstunden und Pakete sind eine Anfrage ohne Online-Zahlung: Der
+      // Vertrag kommt erst mit der Bestätigung im Admin-Bereich zustande,
+      // bezahlt wird danach per Rechnung.
+      router.push(`/buchen/danke?bookingId=${data.booking._id}`);
     } catch {
       setError("Verbindung fehlgeschlagen. Bitte erneut versuchen.");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function startCheckout() {
-    setError("");
-    setPaying(true);
-    try {
-      const res = await fetch("/api/stripe/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: booking._id }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        setError(data.error || "Bezahlung konnte nicht gestartet werden.");
-        setPaying(false);
-        return;
-      }
-      // Weiter zur gehosteten Stripe-Bezahlseite; von dort geht es
-      // zurück auf /buchen/danke.
-      window.location.href = data.url;
-    } catch {
-      setError("Verbindung fehlgeschlagen. Bitte erneut versuchen.");
-      setPaying(false);
-    }
-  }
-
-  if (step === "payment" && booking) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Bestellung abschließen</h2>
-        <p className="mt-2 max-w-prose text-sm text-slate-600 dark:text-slate-300">
-          Buchung für {form.studentName} – {offer.title}.
-        </p>
-
-        <div className="mt-4">
-          <OrderSummary offer={offer} subject={displaySubject} kleinunternehmer={bookingSettings.kleinunternehmer} />
-        </div>
-
-        {!stripeConfigured ? (
-          <div className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
-            Stripe ist auf dieser Seite noch nicht konfiguriert
-            (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY fehlt). Siehe README für die
-            Einrichtung.
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={startCheckout}
-            disabled={paying}
-            className="mt-6 w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
-          >
-            {paying ? "Weiterleitung zu Stripe…" : "Zahlungspflichtig buchen"}
-          </button>
-        )}
-
-        {error ? (
-          <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={() => setStep("form")}
-          className="mt-6 text-sm text-slate-500 underline underline-offset-2 dark:text-slate-400"
-        >
-          Zurück zum Formular
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -570,7 +489,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           ? "Wird gesendet…"
           : isSession
           ? "Termin unverbindlich anfragen"
-          : "Weiter zur Bezahlung"}
+          : "Paket unverbindlich anfragen"}
       </button>
     </form>
   );

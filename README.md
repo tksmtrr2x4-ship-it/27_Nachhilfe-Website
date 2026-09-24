@@ -95,6 +95,10 @@ Hoster.
 Wichtig: Damit die Benachrichtigung bei neuen Terminanfragen ankommt, muss unter
 **Admin → Einstellungen → Kontakt-E-Mail** deine eigene Adresse hinterlegt sein.
 
+`MAIL_BCC` schickt eine Blindkopie **jeder** ausgehenden Mail (Bestätigung, Rechnung,
+Benachrichtigung) an das eigene Postfach. Geht eine Mail ohnehin schon an diese Adresse,
+wird keine zweite Kopie verschickt. Leer lassen = keine Kopie.
+
 ## 6. Rechtliches
 
 `/impressum`, `/datenschutz`, `/agb` und `/widerruf` sind bereits mit echten Angaben befüllt.

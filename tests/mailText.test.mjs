@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { bccFor } from "@/lib/mail";
 import {
   sanitizeHeaderValue,
   assertSingleEmail,
@@ -71,4 +72,22 @@ test("Stornorechnung nutzt eigene Vorlage ohne das Wort Gutschrift", () => {
   assert.equal(subject, "Ihre Stornorechnung LS-2026-0002 – Lernsprung");
   assert.ok(text.includes("Stornorechnung LS-2026-0002 zur Rechnung LS-2026-0001."));
   assert.ok(!/gutschrift/i.test(text));
+});
+
+test("Blindkopie: nur wenn MAIL_BCC gesetzt ist und nicht schon Empfänger", () => {
+  const before = process.env.MAIL_BCC;
+  try {
+    delete process.env.MAIL_BCC;
+    assert.equal(bccFor("eltern@example.com"), null);
+
+    process.env.MAIL_BCC = "j.hils@lernsprung-vs.de";
+    assert.equal(bccFor("eltern@example.com"), "j.hils@lernsprung-vs.de");
+    // Admin-Benachrichtigung geht schon an dieselbe Adresse – keine zweite Kopie.
+    assert.equal(bccFor("J.Hils@Lernsprung-VS.de"), null);
+    assert.equal(bccFor(["eltern@example.com", "j.hils@lernsprung-vs.de"]), null);
+    assert.equal(bccFor(""), "j.hils@lernsprung-vs.de");
+  } finally {
+    if (before === undefined) delete process.env.MAIL_BCC;
+    else process.env.MAIL_BCC = before;
+  }
 });

@@ -12,7 +12,7 @@ async function studentFrom(body) {
 
 // Alte Stunden als "vor Einführung abgerechnet" markieren (keine Buchung).
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const body = await request.json();
     const { data, problems } = normalizeSettleInput(body);
@@ -27,7 +27,7 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const body = await request.json();
     const student = await studentFrom(body);

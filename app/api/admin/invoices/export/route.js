@@ -25,7 +25,7 @@ function euro(cents) {
 }
 
 export async function GET(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const invoices = (await listInvoices()).filter((i) => i.status !== "draft" && i.status !== "issuing");
   invoices.sort((a, b) => String(a.number).localeCompare(String(b.number)));
   const header = ["Rechnungsnummer", "Typ", "Rechnungsdatum", "Fällig am", "Empfänger", "E-Mail", "Betrag (EUR)", "Status", "Überfällig", "Zahlungsdatum", "Versendet am", "Storniert Rechnung", "Storniert durch"];

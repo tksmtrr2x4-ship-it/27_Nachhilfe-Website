@@ -5,7 +5,7 @@ import { invoiceErrorResponse } from "@/lib/invoicing/api";
 import { formatDate } from "@/lib/format";
 
 export async function GET(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   const customer = await getCustomer(id);
   if (!customer) return Response.json({ error: "Kund:in nicht gefunden." }, { status: 404 });
@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
 // Formular – die E-Rechnungs-Einwilligung manuell dokumentieren (mit
 // Zeitstempel und Quelle "admin").
 export async function PATCH(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const body = await request.json();
@@ -49,7 +49,7 @@ export async function PATCH(request, { params }) {
 // in der 8-jährigen Frist liegt, bleibt der Datensatz erhalten. Ohne
 // solche Rechnungen wird gelöscht – Entwürfe gleich mit.
 export async function DELETE(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const customer = await getCustomer(id);

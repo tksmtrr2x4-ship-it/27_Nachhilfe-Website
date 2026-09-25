@@ -4,7 +4,7 @@ import { linkBookings, unlinkBooking } from "@/lib/students/db";
 
 // Online-Buchungen einem Profil zuordnen bzw. die Zuordnung lösen.
 export async function POST(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     const body = await request.json();
@@ -15,7 +15,7 @@ export async function POST(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     const body = await request.json();

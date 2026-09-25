@@ -5,18 +5,12 @@
 // Content-Disposition und den Popup-Trick beim Öffnen von PDFs je eigen
 // implementiert haben.
 
-// `credential` ist das Sitzungs-Kennwort (nach Anmeldung mit Karte) oder –
-// solange keine Karte eingespeist ist – der PIN. Der Server prüft beides.
-export function authHeaders(credential) {
-  return { "x-admin-session": credential, "x-admin-pin": credential };
-}
-
 function filenameOf(res) {
   return res.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1];
 }
 
 export async function fetchBlob(pin, url) {
-  const res = await fetch(url, { headers: authHeaders(pin) });
+  const res = await fetch(url, { headers: { "x-admin-pin": pin } });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || "Datei konnte nicht geladen werden.");
@@ -51,7 +45,7 @@ export async function downloadProtectedFile(pin, url, fallbackName) {
 export async function uploadProtectedFile(pin, url, file, fieldName = "file") {
   const body = new FormData();
   body.append(fieldName, file);
-  const res = await fetch(url, { method: "POST", headers: authHeaders(pin), body });
+  const res = await fetch(url, { method: "POST", headers: { "x-admin-pin": pin }, body });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error(data.error || "Upload fehlgeschlagen."), { problems: data.problems });
   return data;
@@ -62,7 +56,7 @@ export function createAdminClient(pin, onUnauthorized) {
   async function json(path, options = {}) {
     const res = await fetch(path, {
       ...options,
-      headers: { "Content-Type": "application/json", ...authHeaders(pin), ...(options.headers || {}) },
+      headers: { "Content-Type": "application/json", "x-admin-pin": pin, ...(options.headers || {}) },
     });
     if (res.status === 403) {
       onUnauthorized?.();

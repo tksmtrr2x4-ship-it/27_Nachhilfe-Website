@@ -13,7 +13,7 @@ import { invoiceErrorResponse, isOverdue } from "@/lib/invoicing/api";
 import { getStudent } from "@/lib/students/db";
 
 export async function GET(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || undefined;
   const customerId = searchParams.get("customerId") || undefined;
@@ -28,7 +28,7 @@ export async function GET(request) {
 // wird per E-Mail gefunden/angelegt, ausgewählte Stunden werden Positionen)
 // oder direkt für eine:n Kund:in (customerId) mit freien Positionen.
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const body = await request.json();
     let customer = null;

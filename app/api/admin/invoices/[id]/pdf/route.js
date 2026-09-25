@@ -10,7 +10,7 @@ import { invoiceErrorResponse } from "@/lib/invoicing/api";
 // erratbarer Pfad). Entwurf: Live-Vorschau mit Wasserzeichen; ausgestellt:
 // exakt die archivierte Datei, vorher Hash geprüft.
 export async function GET(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const invoice = await getInvoice(id);

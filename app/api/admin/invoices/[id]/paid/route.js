@@ -5,7 +5,7 @@ import { invoiceErrorResponse } from "@/lib/invoicing/api";
 // Zahlungseingang wird manuell mit Datum und Zahlungsart erfasst (kein
 // Bank-Abgleich) und automatisch als Einnahme im Buchhaltungs-Journal gebucht.
 export async function POST(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const body = await request.json().catch(() => ({}));
@@ -18,7 +18,7 @@ export async function POST(request, { params }) {
 
 // Versehentliche Markierung zurücknehmen.
 export async function DELETE(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const invoice = await markInvoiceUnpaid(id);

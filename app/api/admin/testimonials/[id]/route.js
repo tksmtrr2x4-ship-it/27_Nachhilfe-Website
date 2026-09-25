@@ -2,7 +2,7 @@ import { updateTestimonial, deleteTestimonial } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 
 export async function PATCH(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   const body = await request.json();
 
@@ -19,7 +19,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   const ok = await deleteTestimonial(id);
   if (!ok) return Response.json({ error: "Nicht gefunden." }, { status: 404 });

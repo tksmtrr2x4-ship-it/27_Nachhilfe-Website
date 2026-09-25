@@ -7,7 +7,7 @@ import { invoiceErrorResponse } from "@/lib/invoicing/api";
 // GET: Vorschau (Betreff/Text-Vorschlag, Empfänger, Einwilligungs-Status),
 // die der Admin vor dem Versand bearbeiten kann.
 export async function GET(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   const invoice = await getInvoice(id);
   if (!invoice) return Response.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
@@ -32,7 +32,7 @@ export async function GET(request, { params }) {
 
 // POST: tatsächlicher Versand mit dem (ggf. bearbeiteten) Text.
 export async function POST(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const { id } = await params;
   try {
     const body = await request.json();

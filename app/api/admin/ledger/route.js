@@ -10,7 +10,7 @@ import { listLessons } from "@/lib/lessons/db";
 import { isBillableSession } from "@/lib/lessons/rules";
 
 export async function GET(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const today = todayIsoBerlin();
     const { searchParams } = new URL(request.url);
@@ -41,7 +41,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { data, problems } = normalizeEntryInput(await request.json());
     assertValid(problems);

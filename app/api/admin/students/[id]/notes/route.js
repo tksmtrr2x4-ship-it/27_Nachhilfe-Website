@@ -4,7 +4,7 @@ import { addNote } from "@/lib/students/db";
 import { normalizeNoteInput } from "@/lib/students/validation";
 
 export async function POST(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     const { data, problems } = normalizeNoteInput(await request.json());

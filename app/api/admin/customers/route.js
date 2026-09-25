@@ -4,14 +4,14 @@ import { normalizeRecipient } from "@/lib/invoicing/validation";
 import { invoiceErrorResponse } from "@/lib/invoicing/api";
 
 export async function GET(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   const customers = await listCustomers();
   return Response.json({ customers });
 }
 
 // Manuell angelegte:r Kund:in (z.B. Bestandskund:in ohne Online-Buchung).
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const body = await request.json();
     const email = String(body.email || "").trim();

@@ -6,7 +6,7 @@ import { getStudent } from "@/lib/students/db";
 import { getBooking } from "@/lib/db";
 
 export async function PATCH(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     const body = await request.json();
@@ -29,7 +29,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     return Response.json(await deleteManualLesson(id));

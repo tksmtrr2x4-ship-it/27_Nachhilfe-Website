@@ -8,7 +8,6 @@ import { Badge, Button, DataTable, Toolbar, formatPrice, useDialogs } from "@/co
 import OfferForm, { EMPTY_OFFER } from "@/components/admin/website/OfferForm";
 import TestimonialForm, { EMPTY_TESTIMONIAL } from "@/components/admin/website/TestimonialForm";
 import SettingsForm from "@/components/admin/website/SettingsForm";
-import ZugangView from "@/components/admin/website/ZugangView";
 
 // Bereich "Website": Angebote, Rückmeldungen und die Website-Einstellungen.
 // Alles, was Besucher:innen sehen – getrennt von der täglichen Arbeit mit
@@ -284,8 +283,6 @@ export default function WebsiteView({ view: viewParam, onView }) {
             />
           </div>
         ))}
-
-      {view === "zugang" && <ZugangView />}
 
       {view === "einstellungen" && (
         <div className="space-y-4">

@@ -5,7 +5,7 @@ import { listCustomers } from "@/lib/invoicing/db";
 import { normalizeStudentInput } from "@/lib/students/validation";
 
 export async function GET(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const [students, unassigned, customers] = await Promise.all([listStudentsWithStats(), listUnassignedBookings(), listCustomers()]);
     return Response.json({
@@ -19,7 +19,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { data, problems } = normalizeStudentInput(await request.json());
     assertValid(problems);

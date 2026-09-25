@@ -7,7 +7,7 @@ import { getCustomer } from "@/lib/invoicing/db";
 // Zahlung ohne Rechnung (bar, Überweisung, Karte) für abgehaltene, noch
 // nicht abgerechnete Stunden verbuchen – mit dem tatsächlichen Zahlungsdatum.
 export async function POST(request) {
-  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
+  if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const body = await request.json();
     const student = await getStudent(String(body.studentId || ""));

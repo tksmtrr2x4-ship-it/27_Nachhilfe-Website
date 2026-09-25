@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Tägliches Backup: Datenbank, Rechnungs-PDFs/XML, Belege, Server-Konfiguration.
+# Tägliches Backup: Datenbank, Rechnungs-PDFs/XML, Belege, Quittungen,
+# Server-Konfiguration.
 # Nach /usr/local/bin/lernsprung-backup.sh kopieren, läuft als root per Cron
 # (siehe docs/datenbank-backup.md). Ergebnis ist eine einzige verschlüsselte Datei
 # (AES-256, Schlüssel /etc/lernsprung/secrets/backup.key), die der Laptop abholt.
@@ -35,6 +36,7 @@ tar -C / -cf "$WORK/$NAME/dateien.tar" \
   --exclude=etc/lernsprung/secrets/backup.key \
   "${INVOICE_STORAGE_PATH#/}" \
   var/lib/lernsprung/belege \
+  var/lib/lernsprung/quittungen \
   etc/lernsprung \
   etc/mongod.conf \
   etc/nginx/sites-available \

@@ -48,6 +48,7 @@ Inhalt je Backup (eine Datei `lernsprung-JJJJ-MM-TT_HHMM.tar.enc`):
 
 - `mongodb.archive.gz` – kompletter Dump der App-Datenbank
 - `dateien.tar` – Rechnungs-PDFs (`INVOICE_STORAGE_PATH`), Belege (`/var/lib/lernsprung/belege`),
+  Quittungen (`/var/lib/lernsprung/quittungen`),
   `/etc/lernsprung` (Umgebungsvariablen und DB-Zugangsdaten, ohne Backup-Schlüssel),
   `/etc/mongod.conf`, nginx-Sites
 - `SHA256SUMS`

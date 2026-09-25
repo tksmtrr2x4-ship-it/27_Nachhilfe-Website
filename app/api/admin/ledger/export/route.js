@@ -19,7 +19,7 @@ export async function GET(request) {
     if (kind === "journal") {
       const entries = entriesOfYear(all, year).sort((a, b) => a.date.localeCompare(b.date) || a.entryNumber.localeCompare(b.entryNumber));
       rows = [
-        ["Journal-Nr.", "Zahlungsdatum", "Art", "Kategorie", "Beschreibung", "Gegenpartei", "Zahlungsart", "Betrag (EUR)", "Kilometer", "Rechnung", "Beleg", "Storno von", "Storniert durch", "Stornogrund", "Erfasst am"],
+        ["Journal-Nr.", "Zahlungsdatum", "Art", "Kategorie", "Beschreibung", "Gegenpartei", "Zahlungsart", "Betrag (EUR)", "Kilometer", "Rechnung", "Beleg", "Storno von", "Storniert durch", "Stornogrund", "Erfasst am", "Quittung-Nr.", "Quittung ausgestellt am", "Ausfertigungen"],
         ...entries.map((e) => [
           e.entryNumber,
           e.date,
@@ -36,6 +36,9 @@ export async function GET(request) {
           e.reversedBy ? all.find((x) => x._id === e.reversedBy)?.entryNumber || e.reversedBy : "",
           e.reversalReason || "",
           e.createdAt,
+          e.quittung?.number || "",
+          e.quittung?.issueDate || "",
+          e.quittung?.number ? String((e.quittung.copies?.length || 0) + 1) : "",
         ]),
       ];
     } else {

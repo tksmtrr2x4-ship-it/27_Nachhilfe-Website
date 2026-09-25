@@ -6,6 +6,7 @@ import { SUB_VIEWS, subViewFrom } from "@/lib/admin/nav";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import InvoicesPanel from "@/components/admin/InvoicesPanel";
 import BookkeepingView from "@/components/admin/management/BookkeepingView";
+import QuittungenView from "@/components/admin/finanzen/QuittungenView";
 
 // Bereich "Finanzen": Rechnungen, Journal (EÜR) und Quittungen.
 function FinanzenPage() {
@@ -48,6 +49,8 @@ function FinanzenPage() {
       {view === "journal" ? (
         <BookkeepingView adminFetch={adminFetch} pin={pin} setNotice={notify} onShowStudent={showStudent} />
       ) : null}
+
+      {view === "quittungen" ? <QuittungenView /> : null}
     </div>
   );
 }

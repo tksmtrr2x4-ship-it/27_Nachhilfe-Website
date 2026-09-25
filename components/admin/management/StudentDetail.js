@@ -8,7 +8,8 @@ import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
-import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, openProtectedFile, plural, todayIso } from "@/components/admin/management/ui";
+import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
+import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 
 const INVOICE_STATUS = { issued: "Ausgestellt", sent: "Versendet", paid: "Bezahlt", cancelled: "Storniert", issuing: "wird ausgestellt" };
 
@@ -416,11 +417,22 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                 </span>
                 <span className="flex items-center gap-3">
                   {formatPrice(e.amountCents)}
-                  {e.method === "cash" && e.type === "income" && e.amountCents > 0 && !e.reversedBy && !e.reverses && e.amountCents <= 25000 && (
-                    <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/quittung`).catch((err) => setNotice(err.message))}>
-                      Quittung
-                    </button>
-                  )}
+                  {(() => {
+                    const action = quittungAction(e);
+                    if (action.kind === "none") return null;
+                    return (
+                      <button
+                        className={link}
+                        onClick={() =>
+                          action.kind === "open"
+                            ? openQuittung({ pin, entry: e, notify: setNotice })
+                            : issueQuittung({ adminFetch, pin, entry: e, notify: setNotice }).then((q) => q && refresh())
+                        }
+                      >
+                        {action.kind === "open" ? "Quittung öffnen" : "Quittung ausstellen"}
+                      </button>
+                    );
+                  })()}
                 </span>
               </li>
             ))}
@@ -556,23 +568,36 @@ function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin
   }
 
   if (entry) {
-    const quittung = entry.method === "cash" && entry.amountCents <= 25000;
+    const action = quittungAction(entry);
+    const canQuittung = action.kind !== "none";
     return (
       <Modal title="Zahlung verbucht" onClose={onSaved}>
         <p className="text-sm text-slate-700">
           {formatPrice(entry.amountCents)} wurden als <strong>{entry.entryNumber}</strong> mit Zahlungsdatum {formatDate(entry.date)} im Journal
           verbucht. Die Stunden gelten als bezahlt und erscheinen nicht mehr bei den offenen Rechnungsposten.
         </p>
-        {entry.method === "cash" && entry.amountCents > 25000 && (
-          <p className="mt-2 text-sm text-amber-700">Über 250 € bitte zusätzlich eine reguläre Rechnung ausstellen.</p>
-        )}
+        {entry.method === "cash" && !canQuittung && action.reason ? (
+          <p className="mt-2 text-sm text-amber-700">{action.reason}</p>
+        ) : null}
+        {canQuittung ? (
+          <p className="mt-2 text-xs text-slate-500">
+            Die Quittung bekommt eine eigene Nummer, wird unveränderbar gespeichert und enthält Original und Durchschlag.
+          </p>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
-          {quittung && (
-            <button className={btnPrimary} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${entry._id}/quittung`).catch((err) => setNotice(err.message))}>
-              Quittung öffnen (PDF)
+          {canQuittung && (
+            <button
+              className={btnPrimary}
+              onClick={() =>
+                action.kind === "open"
+                  ? openQuittung({ pin, entry, notify: setNotice })
+                  : issueQuittung({ adminFetch, pin, entry, notify: setNotice })
+              }
+            >
+              {action.kind === "open" ? `Quittung ${action.number} öffnen` : "Quittung ausstellen (PDF)"}
             </button>
           )}
-          <button className={quittung ? btnSecondary : btnPrimary} onClick={onSaved}>
+          <button className={canQuittung ? btnSecondary : btnPrimary} onClick={onSaved}>
             Fertig
           </button>
         </div>

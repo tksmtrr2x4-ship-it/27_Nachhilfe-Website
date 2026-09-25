@@ -4,6 +4,7 @@ import { createManualEntry, listEntries } from "@/lib/bookkeeping/db";
 import { buildYearReport, entriesOfYear, kleinunternehmerCheck, openReceivables } from "@/lib/bookkeeping/report";
 import { normalizeEntryInput } from "@/lib/bookkeeping/validation";
 import { receiptStorageHealth } from "@/lib/bookkeeping/receipts";
+import { quittungStorageHealth } from "@/lib/bookkeeping/quittungStorage";
 import { listInvoices } from "@/lib/invoicing/db";
 import { listLessons } from "@/lib/lessons/db";
 import { isBillableSession } from "@/lib/lessons/rules";
@@ -16,11 +17,12 @@ export async function GET(request) {
     const requested = Number.parseInt(searchParams.get("year"), 10);
     const year = Number.isFinite(requested) && requested > 2000 && requested < 2100 ? requested : Number(today.slice(0, 4));
 
-    const [entries, invoices, lessons, storage] = await Promise.all([
+    const [entries, invoices, lessons, storage, quittungStorage] = await Promise.all([
       listEntries({ years: [year - 1, year] }),
       listInvoices(),
       listLessons(),
       receiptStorageHealth(),
+      quittungStorageHealth(),
     ]);
     const billable = lessons.filter((l) => isBillableSession(l, today));
     return Response.json({
@@ -31,6 +33,7 @@ export async function GET(request) {
       receivables: openReceivables(invoices, today),
       unbilled: { count: billable.length, totalCents: billable.reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0) },
       receiptStorage: { ok: storage.ok },
+      quittungStorage: { ok: quittungStorage.ok },
     });
   } catch (err) {
     return adminErrorResponse(err, "Buchhaltung");

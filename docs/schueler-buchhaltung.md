@@ -40,11 +40,45 @@ technisch gegenseitig aus (`lib/lessons/rules.js → isBillableSession`):
 
 Eine Rechnung mit Stunden aus Weg 2 oder 4 lässt sich nicht ausstellen.
 
-**Quittung** (nur Bareinnahmen bis 250 €, Angaben einer Kleinbetragsrechnung
-nach § 33 UStDV inkl. § 19-Hinweis) mit zwei getrennten Daten: „Ausgestellt am“
-ist der Tag der Erfassung im Journal, „Zahlung erhalten am“ das tatsächliche
-Zahlungsdatum – nachgetragene Zahlungen erzeugen so nie einen rückdatierten
-Beleg.
+## Quittungen (Barzahlungen)
+
+Eine Quittung ist zugleich Empfangsbekenntnis (§ 368 BGB) und
+Kleinbetragsrechnung (§ 33 UStDV, bis 250 € brutto). Sie enthält Name und
+Anschrift, Ausstellungsdatum, Art der Leistung, den Betrag in Ziffern **und in
+Worten**, den Namen der zahlenden Person, den § 19-Hinweis, Ort/Datum und eine
+Unterschriftszeile. Das PDF hat zwei Seiten: **Original** für die zahlende
+Person, **Durchschlag** für die eigenen Aufzeichnungen.
+
+Ablauf (seit 25.09.2026):
+
+1. **Ausstellen auf Klick** – im Bestätigungsdialog nach „Als bezahlt
+   verbuchen“, in der Journalzeile oder aus dem Schülerprofil. Erst dabei
+   entsteht das Dokument.
+2. Es bekommt eine **eigene lückenlose Nummer** (`Q-2026-0001`, eigener Zähler
+   neben den Rechnungsnummern) und nennt zusätzlich den Buchungsbeleg
+   (`J-2026-0031`), damit beide Nummernkreise zusammenpassen.
+3. Das PDF wird **einmal geschrieben und nie überschrieben**
+   (`/var/lib/lernsprung/quittungen`, abweichend über `QUITTUNG_STORAGE_PATH`),
+   mit SHA-256 in der Datenbank. Jeder spätere Abruf liefert **dieselbe Datei**,
+   nicht ein neu erzeugtes PDF.
+4. **Finanzen → Quittungen** listet alle ausgestellten Quittungen eines Jahres
+   mit Nummer, Datum, zahlender Person, Betrag und Journalnummer; „Zweit-
+   ausfertigung“ gibt dieselbe Datei erneut heraus und protokolliert das.
+5. Im Journal-CSV stehen die Spalten `Quittung-Nr.`, `Quittung ausgestellt am`
+   und `Ausfertigungen`.
+
+Zwei getrennte Daten, damit nie ein rückdatierter Beleg entsteht:
+**„Ausgestellt am“** ist der Tag der Ausstellung, **„Zahlung erhalten am“** das
+tatsächliche Zahlungsdatum.
+
+Keine Quittung gibt es für: andere Zahlungsarten als bar, Beträge über 250 €
+(dann reguläre Rechnung), stornierte Buchungen und Gegenbuchungen sowie
+Einträge ohne Namen der zahlenden Person (Regeln in
+`lib/bookkeeping/quittungRules.js`).
+
+Wird eine Buchung storniert, zu der eine Quittung im Umlauf ist, bleibt die
+Quittung archiviert – der Dialog weist darauf hin, dass die zahlende Person
+eine schriftliche Korrektur braucht.
 
 ## Buchhaltung (Einnahmenüberschussrechnung)
 

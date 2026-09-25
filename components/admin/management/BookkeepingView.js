@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDate, formatPrice } from "@/lib/format";
 import { ENTRY_TYPES, EXPENSE_CATEGORIES, INCOME_CATEGORIES, KM_RATE_CENTS, PAYMENT_METHODS, categoryLabel } from "@/lib/bookkeeping/categories";
+import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
+import { useDialogs } from "@/components/admin/ui";
 import {
   Field,
   Modal,
@@ -33,6 +35,7 @@ async function uploadReceipt(pin, entryId, file) {
 }
 
 export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStudent }) {
+  const { ask } = useDialogs();
   const currentYear = Number(todayIso().slice(0, 4));
   const [year, setYear] = useState(currentYear);
   const [data, setData] = useState(null);
@@ -57,8 +60,17 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
   }, [refresh]);
 
   async function reverse(entry) {
-    const reason = prompt(`Gegenbuchung zu ${entry.entryNumber} (${formatPrice(entry.amountCents)}).\n\nGrund der Korrektur:`);
-    if (!reason?.trim()) return;
+    const reason = await ask({
+      title: `Gegenbuchung zu ${entry.entryNumber} (${formatPrice(entry.amountCents)})`,
+      message: entry.quittung?.number
+        ? `Achtung: Zu dieser Zahlung wurde Quittung ${entry.quittung.number} ausgestellt. Die Quittung bleibt archiviert – bitte der zahlenden Person eine schriftliche Korrektur zukommen lassen.`
+        : "Der Eintrag bleibt erhalten und wird durch eine Gegenbuchung ausgeglichen (GoBD).",
+      label: "Grund der Korrektur",
+      required: true,
+      maxLength: 300,
+      confirmLabel: "Gegenbuchung erstellen",
+    });
+    if (!reason) return;
     try {
       const res = await adminFetch(`/api/admin/ledger/${entry._id}/reverse`, { method: "POST", body: JSON.stringify({ reason }) });
       setNotice(`Gegenbuchung ${res.entry.entryNumber} erstellt.`);
@@ -312,11 +324,25 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
                             Storno
                           </button>
                         )}
-                        {!inactive && e.type === "income" && e.method === "cash" && e.amountCents > 0 && e.amountCents <= 25000 && (
-                          <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/quittung`).catch((err) => setNotice(err.message))}>
-                            Quittung
-                          </button>
-                        )}
+                        {(() => {
+                          // Ausstellen oder die bereits ausgestellte öffnen –
+                          // Regeln in lib/bookkeeping/quittungRules.js.
+                          const action = quittungAction(e);
+                          if (action.kind === "none") return null;
+                          return (
+                            <button
+                              className={link}
+                              title={action.kind === "open" ? "Archivierte Quittung öffnen" : "Quittung mit eigener Nummer ausstellen"}
+                              onClick={() =>
+                                action.kind === "open"
+                                  ? openQuittung({ pin, entry: e, notify: setNotice })
+                                  : issueQuittung({ adminFetch, pin, entry: e, notify: setNotice }).then((q) => q && refresh())
+                              }
+                            >
+                              {action.kind === "open" ? "Quittung öffnen" : "Quittung ausstellen"}
+                            </button>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>

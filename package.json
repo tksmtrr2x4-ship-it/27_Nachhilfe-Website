@@ -13,7 +13,8 @@
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/register-alias.mjs --test \"tests/**/*.test.mjs\"",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "invoice:sample": "node --import ./tests/register-alias.mjs scripts/invoice-sample.mjs",
-    "images:optimize": "node scripts/optimize-images.mjs"
+    "images:optimize": "node scripts/optimize-images.mjs",
+    "karten:sperren": "node scripts/karten-sperren.mjs"
   },
   "dependencies": {
     "@e-invoice-eu/core": "^3.3.0",

@@ -6,7 +6,7 @@ import { invoiceErrorResponse } from "@/lib/invoicing/api";
 // Verweis auf das Original), markiert das Original als storniert. Danach
 // kann eine korrigierte Rechnung neu erstellt werden.
 export async function POST(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   try {
     const storno = await cancelInvoice(id);

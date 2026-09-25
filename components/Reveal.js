@@ -23,12 +23,12 @@ export default function Reveal({ children, delay = 0, as: Tag = "div", className
     if (!belowFold || typeof IntersectionObserver === "undefined") {
       // Schon sichtbar (z.B. der Seitenauftakt) oder Browser ohne Beobachter:
       // nichts verstecken, nichts animieren.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setState("true");
       return undefined;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setState("false");
     const observer = new IntersectionObserver(
       (entries) => {

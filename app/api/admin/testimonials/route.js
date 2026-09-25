@@ -2,13 +2,13 @@ import { listTestimonials, createTestimonial } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const testimonials = await listTestimonials();
   return Response.json({ testimonials });
 }
 
 export async function POST(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const body = await request.json();
   const testimonial = await createTestimonial({
     name: (body.name || "").trim(),

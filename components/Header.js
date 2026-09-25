@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Picture from "@/components/Picture";
 
@@ -11,10 +11,30 @@ const NAV_LINKS = [
 
 export default function Header({ siteName, logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Beim Scrollen wird die Leiste kompakter und bekommt einen feinen Schatten,
+  // damit sie sich vom Inhalt abhebt, ohne ihn zu erschlagen.
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/85">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <header
+      className={`sticky top-0 z-40 border-b transition-all duration-300 ${
+        scrolled
+          ? "border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/90"
+          : "border-transparent bg-white/70 backdrop-blur-md dark:bg-slate-950/60"
+      }`}
+    >
+      <div
+        className={`mx-auto flex max-w-6xl items-center justify-between px-6 transition-all duration-300 ${
+          scrolled ? "py-2.5" : "py-4"
+        }`}
+      >
         <Link
           href="/"
           className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900 dark:text-white"
@@ -24,7 +44,7 @@ export default function Header({ siteName, logo }) {
             // Dekorativ: Der Name steht direkt daneben im Link.
             <Picture image={logo} decorative loading="eager" className="h-8 w-auto" />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-semibold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-semibold text-white">
               {siteName?.[0]?.toUpperCase() || "N"}
             </span>
           )}
@@ -33,13 +53,22 @@ export default function Header({ siteName, logo }) {
 
         <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300 sm:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-indigo-600 dark:hover:text-indigo-400">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="group relative py-1 transition hover:text-brand-600 dark:hover:text-brand-400"
+            >
               {link.label}
+              {/* Unterstrich wächst beim Überfahren aus der Mitte. */}
+              <span
+                className="absolute inset-x-0 -bottom-0.5 h-0.5 origin-center scale-x-0 rounded-full bg-gradient-to-r from-brand-500 to-accent-400 transition-transform duration-300 group-hover:scale-x-100"
+                aria-hidden="true"
+              />
             </Link>
           ))}
           <Link
             href="/angebote"
-            className="rounded-full bg-indigo-600 px-4 py-2.5 text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-500 dark:shadow-none"
+            className="rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-5 py-2.5 text-white shadow-md shadow-brand-500/25 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-500/35"
           >
             Angebote
           </Link>
@@ -86,7 +115,7 @@ export default function Header({ siteName, logo }) {
           <Link
             href="/angebote"
             onClick={() => setMenuOpen(false)}
-            className="mt-2 rounded-full bg-indigo-600 px-4 py-2.5 text-center text-white transition hover:bg-indigo-500"
+            className="mt-2 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-4 py-2.5 text-center text-white transition hover:from-brand-400 hover:to-brand-600"
           >
             Angebote
           </Link>

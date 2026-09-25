@@ -77,7 +77,7 @@ export default function SubjectPage({ subject, business }) {
           {subject.topics.map((group) => (
             <div
               key={group.level}
-              className="rounded-2xl border border-slate-200 p-6 dark:border-slate-800 dark:bg-slate-900"
+              className="lift rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:border-brand-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-brand-700"
             >
               <h3 className="font-semibold text-slate-900 dark:text-white">{group.level}</h3>
               <ul className="mt-3 space-y-2">
@@ -175,18 +175,26 @@ export default function SubjectPage({ subject, business }) {
         </div>
       </section>
 
-      <section className="mt-14 rounded-3xl bg-indigo-600 px-8 py-10">
-        <h2 className="text-2xl font-semibold text-white">Termin für {subject.label} anfragen</h2>
-        <p className="mt-2 max-w-md text-indigo-100">
+      <section className="grain relative mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-ink-900 px-8 py-11 shadow-2xl shadow-brand-950/30 sm:px-12">
+        <div
+          className="drift pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(50% 120% at 12% 0%, rgba(123,92,246,0.5), transparent 65%), radial-gradient(45% 120% at 88% 100%, rgba(245,154,31,0.25), transparent 60%)",
+          }}
+          aria-hidden="true"
+        />
+        <h2 className="relative text-2xl font-semibold text-white">Termin für {subject.label} anfragen</h2>
+        <p className="relative mt-3 max-w-md leading-relaxed text-slate-300">
           Ruf kurz für das kostenlose Vorgespräch an oder frag direkt eine Einzelstunde mit deinem
           Wunschtermin an.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="relative mt-7 flex flex-wrap gap-3">
           <Link
             href="/angebote"
-            className="rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-indigo-600 shadow-lg transition hover:bg-indigo-50"
+            className="group rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
           >
-            Termin anfragen
+            Termin anfragen <span className="arrow-slide">→</span>
           </Link>
           <a
             href={business.phoneHref}
@@ -204,7 +212,7 @@ export default function SubjectPage({ subject, business }) {
             <li key={s.key}>
               <Link
                 href={s.path}
-                className="block rounded-2xl border border-slate-200 p-4 text-sm font-semibold text-slate-900 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:hover:text-indigo-400"
+                className="lift block rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-900 hover:border-brand-300 hover:text-brand-600 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:hover:text-brand-400"
               >
                 {s.label}
               </Link>

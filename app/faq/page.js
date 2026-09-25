@@ -55,9 +55,9 @@ export default async function FaqPage() {
         etwas fehlt, schreib mir einfach direkt.
       </p>
 
-      <div className="mt-10 divide-y divide-slate-200 rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+      <div className="mt-10 divide-y divide-slate-200 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
         {FAQS.map((item) => (
-          <details key={item.q} className="group p-6 open:bg-slate-50 dark:open:bg-slate-900">
+          <details key={item.q} className="group p-6 transition-colors hover:bg-slate-50/70 open:bg-slate-50 dark:hover:bg-slate-800/40 dark:open:bg-slate-800/60">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 dark:text-white">
               {item.q}
               <span

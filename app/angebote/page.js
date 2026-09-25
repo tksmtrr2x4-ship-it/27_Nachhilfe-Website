@@ -33,8 +33,8 @@ export default async function AngebotePage() {
           Nachhilfe-Angebote in Villingen-Schwenningen
         </h1>
         <p className="mt-4 text-slate-600 dark:text-slate-300">
-          Kursabo oder einzelne Stunde – such dir aus, was zu dir passt. Pakete zahlst du
-          direkt online, eine Einzelstunde fragst du unverbindlich mit deinem Wunschtermin an.
+          Kursabo oder einzelne Stunde – such dir aus, was zu dir passt. Beides fragst du
+          unverbindlich an: Ich bestätige per E-Mail, bezahlt wird danach.
         </p>
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
           Mehr zu den Fächern:{" "}

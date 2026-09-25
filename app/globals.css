@@ -5,12 +5,59 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Markenfarben. „brand" ist das Violett-Indigo der Seite, „accent" das Warmorange
+   des Maskottchens (dasselbe wie auf Rechnungen und Quittungen). Flächen werden
+   nie flach eingefärbt, sondern immer als Verlauf – ein einzelner satter
+   Farbblock wirkt billig. */
+@theme {
+  --color-brand-50: #f4f3ff;
+  --color-brand-100: #ebe8ff;
+  --color-brand-200: #d9d3ff;
+  --color-brand-300: #bcb0ff;
+  --color-brand-400: #9a85fd;
+  --color-brand-500: #7b5cf6;
+  --color-brand-600: #653ce8;
+  --color-brand-700: #5429c8;
+  --color-brand-800: #4624a3;
+  --color-brand-900: #3b2183;
+  --color-brand-950: #241356;
+
+  --color-accent-300: #ffd08a;
+  --color-accent-400: #ffb547;
+  --color-accent-500: #f59a1f;
+  --color-accent-600: #d97c0b;
+
+  --color-ink-900: #0c1024;
+  --color-ink-950: #070a18;
+
+  /* Der bisherige Indigo-Ton der Seite zeigt auf dieselbe Markenfarbe. So
+     ziehen alle vorhandenen indigo-*-Klassen (Links, Chips, Knöpfe auf den
+     Unterseiten) ohne Massenumbenennung mit, und neuer Code nutzt brand-*. */
+  --color-indigo-50: var(--color-brand-50);
+  --color-indigo-100: var(--color-brand-100);
+  --color-indigo-200: var(--color-brand-200);
+  --color-indigo-300: var(--color-brand-300);
+  --color-indigo-400: var(--color-brand-400);
+  --color-indigo-500: var(--color-brand-500);
+  --color-indigo-600: var(--color-brand-600);
+  --color-indigo-700: var(--color-brand-700);
+  --color-indigo-800: var(--color-brand-800);
+  --color-indigo-900: var(--color-brand-900);
+  --color-indigo-950: var(--color-brand-950);
+}
+
 html {
   /* Lässt native Formularelemente (Datum/Zeit-Picker, Scrollbars) automatisch
      im jeweiligen Modus rendern, passend zum automatischen Tag/Nacht-Wechsel
      über die dark:-Utilities (folgt in Tailwind v4 ohne weitere Konfiguration
      automatisch prefers-color-scheme). */
   color-scheme: light dark;
+}
+
+/* Anker (z.B. #so-funktionierts) nicht unter die feste Kopfzeile scrollen. */
+:target,
+[id] {
+  scroll-margin-top: 6rem;
 }
 
 /* Sanfter Übergang beim Wechsel zwischen Tag/Nacht (z.B. wenn das Betriebs-
@@ -25,8 +72,111 @@ html {
   }
 }
 
+body {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Überschriften brechen an sinnvollen Stellen statt mit einem Wort allein in
+   der letzten Zeile. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-950);
+}
+
+/* Sichtbarer Fokus-Ring für Tastaturnutzung (WCAG 2.4.7), ohne Mausklicks
+   mit einem Ring zu versehen. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Bewegung
+   Ein kleiner, wiederverwendbarer Satz statt Effekten an jeder Stelle einzeln:
+   - .reveal      Inhalte blenden beim Hereinscrollen sanft auf (components/Reveal.js)
+   - .lift        Karten heben sich beim Überfahren leicht an
+   - .arrow-slide Pfeile in Links laufen ein Stück mit
+   - .sheen       langsamer Lichtschimmer über Farbflächen
+   Alles gilt nur, wenn im Betriebssystem keine reduzierte Bewegung eingestellt
+   ist – siehe Block ganz unten.
+   --------------------------------------------------------------------------- */
+
+/* Ausgangszustand ist sichtbar. Versteckt wird nur, was der Browser aktiv als
+   "noch nicht im Bild" markiert hat (components/Reveal.js) – ohne JavaScript
+   bleibt damit alles lesbar. */
+.reveal {
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal[data-visible="false"] {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  will-change: opacity, transform;
+}
+
+.lift {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+
+.lift:hover {
+  transform: translateY(-3px);
+}
+
+.arrow-slide {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .arrow-slide,
+a:hover > .arrow-slide,
+button:hover > .arrow-slide {
+  transform: translateX(4px);
+}
+
+/* Langsam wanderndes Licht auf dunklen Flächen (Hero, Abschluss-Karte). */
+@keyframes lernsprung-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+}
+
+.drift {
+  animation: lernsprung-drift 18s ease-in-out infinite;
+}
+
+/* Feine Körnung – nimmt großen Farbflächen das Plakative. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
 /* Wer im Betriebssystem "Bewegung reduzieren" eingestellt hat, bekommt keine
-   Übergänge, Animationen oder sanftes Scrollen (WCAG 2.3.3). */
+   Übergänge, Animationen oder sanftes Scrollen (WCAG 2.3.3). Inhalte sind dann
+   sofort sichtbar statt eingeblendet. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -36,21 +186,13 @@ html {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
 
-body {
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-}
+  .reveal[data-visible="false"] {
+    opacity: 1;
+    transform: none;
+  }
 
-::selection {
-  background: #c7d2fe;
-  color: #1e1b4b;
-}
-
-/* Sichtbarer Fokus-Ring für Tastaturnutzung (WCAG 2.4.7), ohne Mausklicks
-   mit einem Ring zu versehen. */
-:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
-  border-radius: 4px;
+  .lift:hover {
+    transform: none;
+  }
 }

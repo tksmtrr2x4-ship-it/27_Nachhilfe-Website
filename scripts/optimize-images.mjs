@@ -30,12 +30,15 @@ async function logo() {
 
 async function portrait() {
   if (!fs.existsSync(file("portrait.jpg"))) return console.log("portrait.jpg fehlt – übersprungen");
-  // Anzeige 160 x 160 px -> doppelte Auflösung.
-  const resize = [320, 320, { fit: "cover" }];
-  await sharp(file("portrait.jpg")).resize(...resize).avif({ quality: 55 }).toFile(file("portrait-320.avif"));
-  await sharp(file("portrait.jpg")).resize(...resize).webp({ quality: 78 }).toFile(file("portrait-320.webp"));
-  await sharp(file("portrait.jpg")).resize(...resize).jpeg({ quality: 80, mozjpeg: true }).toFile(file("portrait-320.jpg"));
-  console.log("Porträt-Varianten erzeugt");
+  // 320 px: kleine Anzeige (160 px) auf Retina.
+  // 640 px: Porträt im Auftakt der Startseite (bis ~320 px breit) auf Retina.
+  for (const size of [320, 640]) {
+    const resize = [size, size, { fit: "cover" }];
+    await sharp(file("portrait.jpg")).resize(...resize).avif({ quality: 55 }).toFile(file(`portrait-${size}.avif`));
+    await sharp(file("portrait.jpg")).resize(...resize).webp({ quality: 78 }).toFile(file(`portrait-${size}.webp`));
+    await sharp(file("portrait.jpg")).resize(...resize).jpeg({ quality: 80, mozjpeg: true }).toFile(file(`portrait-${size}.jpg`));
+  }
+  console.log("Porträt-Varianten erzeugt (320, 640)");
 }
 
 // Symbole der installierbaren Admin-App (public/admin.webmanifest):

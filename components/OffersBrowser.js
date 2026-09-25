@@ -7,7 +7,7 @@ import OfferPriceBlock, { DiscountBadge } from "@/components/OfferPriceBlock";
 
 function OfferCard({ offer, settings, shopClosed }) {
   return (
-    <div className="relative flex h-full flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:hover:border-slate-700">
+    <div className="lift relative flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:border-brand-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:hover:border-brand-700">
       <DiscountBadge offer={offer} />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -67,7 +67,7 @@ function OfferCard({ offer, settings, shopClosed }) {
           ) : (
             <Link
               href={`/buchen/${offer._id}`}
-              className="shrink-0 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
+              className="group shrink-0 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-brand-500/25 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-500/35"
             >
               {offer.type === "session" ? "Termin anfragen" : "Jetzt buchen"}
             </Link>
@@ -90,7 +90,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
 
   if (selectedClass === null) {
     return (
-      <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-12 rounded-3xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-8 text-center shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Für welche Klasse suchst du Nachhilfe?
         </h2>
@@ -103,7 +103,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
               key={c}
               type="button"
               onClick={() => setSelectedClass(c)}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-brand-400 hover:text-brand-600 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-500 dark:hover:text-brand-400"
             >
               Klasse {c}
             </button>

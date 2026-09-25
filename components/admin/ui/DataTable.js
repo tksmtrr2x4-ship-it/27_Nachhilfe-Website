@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 // direkt, der Rest hinter „…“), und unter sm wird jede Zeile zu einer Karte –
 // dadurch scrollt nichts mehr seitlich.
 //
-// columns: [{ key, header, cell(row), align: "left"|"right", width, priority }]
+// columns: [{ key, header, cell(row), align: "left"|"right", width, priority, hideBelowXl }]
 //   priority "primary"   → Überschrift der Karte
 //            "secondary" → Feldliste der Karte (Standard)
 //            "meta"      → kleine graue Fußzeile der Karte
@@ -36,8 +36,8 @@ export function DataTable({
     <div>
       {caption ? <p className="mb-2 text-xs text-slate-500">{caption}</p> : null}
 
-      {/* Tabelle ab sm */}
-      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 sm:block">
+      {/* Tabelle ab lg – darunter Karten, damit nichts seitlich scrollt */}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 lg:block">
         <table className="w-full table-fixed text-left text-sm">
           <colgroup>
             {columns.map((col) => (
@@ -48,7 +48,11 @@ export function DataTable({
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               {columns.map((col) => (
-                <th key={col.key} scope="col" className={`px-4 py-2.5 font-semibold ${col.align === "right" ? "text-right" : ""}`}>
+                <th
+                  key={col.key}
+                  scope="col"
+                  className={`px-4 py-2.5 font-semibold ${col.align === "right" ? "text-right" : ""} ${col.hideBelowXl ? "hidden xl:table-cell" : ""}`}
+                >
                   {col.header}
                 </th>
               ))}
@@ -75,7 +79,10 @@ export function DataTable({
                   className={`align-top ${rowTone?.(row) === "red" ? "bg-red-50/40" : "bg-white"} ${onRowClick ? "hover:bg-slate-50" : ""}`}
                 >
                   {columns.map((col, i) => (
-                    <td key={col.key} className={`px-4 py-3 ${col.align === "right" ? "text-right tabular-nums" : ""}`}>
+                    <td
+                      key={col.key}
+                      className={`px-4 py-3 ${col.align === "right" ? "text-right tabular-nums" : ""} ${col.hideBelowXl ? "hidden xl:table-cell" : ""}`}
+                    >
                       {onRowClick && i === 0 ? (
                         <button type="button" onClick={() => onRowClick(row)} className="text-left font-semibold text-slate-900 hover:text-indigo-600">
                           {col.cell(row)}
@@ -97,8 +104,8 @@ export function DataTable({
         </table>
       </div>
 
-      {/* Karten unter sm */}
-      <ul className="space-y-3 sm:hidden">
+      {/* Karten unter lg */}
+      <ul className="space-y-3 lg:hidden">
         {groups.map((group) => (
           <li key={group.key}>
             {group.label ? (
@@ -123,11 +130,11 @@ export function DataTable({
                         )}
                       </div>
                     ))}
-                  <dl className="mt-2 grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-sm">
+                  <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
                     {columns
                       .filter((col) => !col.priority || col.priority === "secondary")
                       .map((col) => (
-                        <div key={col.key} className="col-span-2 grid grid-cols-[7.5rem,1fr] gap-x-3">
+                        <div key={col.key} className="col-span-2 grid grid-cols-[7.5rem_1fr] gap-x-3">
                           <dt className="text-xs font-semibold text-slate-500">{col.header}</dt>
                           <dd className="min-w-0 text-slate-800">{col.cell(row)}</dd>
                         </div>

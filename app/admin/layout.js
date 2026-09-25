@@ -1,3 +1,5 @@
+import AdminGate from "@/components/admin/shell/AdminGate";
+
 export const metadata = {
   title: "Admin",
   robots: { index: false, follow: true },
@@ -18,6 +20,9 @@ export const viewport = {
   themeColor: "#4f46e5",
 };
 
+// Die PIN-Abfrage und der Rahmen (Navigation, Meldungen) liegen im Layout,
+// damit jeder Bereich eine eigene Adresse hat und beim Wechsel nur der Inhalt
+// neu geladen wird.
 export default function AdminLayout({ children }) {
-  return children;
+  return <AdminGate>{children}</AdminGate>;
 }

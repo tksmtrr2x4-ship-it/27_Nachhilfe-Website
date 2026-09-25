@@ -557,7 +557,9 @@ export default function AdminPage() {
       )}
 
       {tab === "bookings" && (
-        <div className="mt-8 overflow-x-auto">
+        <div className="mt-8">
+          <p className="mb-3 text-xs text-slate-500">Sortiert nach Unterrichtstermin, neueste zuerst.</p>
+          <div className="overflow-x-auto">
           {/* Mindestbreite: auf dem Handy wurde die 7-spaltige Tabelle sonst
               auf Bildschirmbreite zusammengequetscht (jedes Wort eine Zeile);
               so behält sie lesbare Spalten und scrollt im Container seitlich. */}
@@ -733,6 +735,7 @@ export default function AdminPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

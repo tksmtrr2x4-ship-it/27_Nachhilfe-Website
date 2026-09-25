@@ -239,12 +239,22 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     }
   }
 
-  const visible = invoices.filter((inv) => {
-    if (filter === "all") return true;
-    if (filter === "open") return ["issued", "sent"].includes(inv.status);
-    if (filter === "overdue") return inv.overdue;
-    return inv.status === filter;
-  });
+  // Entwürfe zuerst (offene Arbeit, noch ohne Nummer), danach nach
+  // Rechnungsdatum – das ist die Spalte, die in der Tabelle steht.
+  const visible = invoices
+    .filter((inv) => {
+      if (filter === "all") return true;
+      if (filter === "open") return ["issued", "sent"].includes(inv.status);
+      if (filter === "overdue") return inv.overdue;
+      return inv.status === filter;
+    })
+    .sort((a, b) => {
+      const draftA = a.status === "draft" || a.status === "issuing";
+      const draftB = b.status === "draft" || b.status === "issuing";
+      if (draftA !== draftB) return draftA ? -1 : 1;
+      if ((a.issueDate || "") !== (b.issueDate || "")) return (a.issueDate || "") < (b.issueDate || "") ? 1 : -1;
+      return (a.number || "") < (b.number || "") ? 1 : -1;
+    });
 
   return (
     <div className="mt-8 space-y-6">

@@ -8,7 +8,7 @@ import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
-import PapierakteButton from "@/components/admin/PapierakteButton";
+import TagebuchDialog, { downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
 import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
 import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 
@@ -157,9 +157,6 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
           <button className={btnSecondary} onClick={() => setEditing((v) => !v)}>
             {editing ? "Bearbeiten schließen" : "Profil bearbeiten"}
           </button>
-          <PapierakteButton pin={pin} studentId={student._id} notify={setNotice}>
-            Papierakte für diesen Schüler
-          </PapierakteButton>
           <button className={btnDanger} onClick={removeStudent}>
             Löschen
           </button>
@@ -337,6 +334,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                     </td>
                     <td className="py-2 pr-3">
                       {l.subject}
+                      {l.diary?.topic ? <span className="mt-1 block max-w-xs text-xs font-semibold text-slate-600">{l.diary.topic}</span> : null}
                       {l.lessonNotes ? <span className="mt-1 block max-w-xs whitespace-pre-wrap text-xs text-slate-500">{l.lessonNotes}</span> : null}
                     </td>
                     <td className="py-2 pr-3 text-slate-600">
@@ -363,9 +361,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                             ausgefallen
                           </button>
                         )}
-                        <button className={link} onClick={() => setNotesDialog(l)}>
-                          Protokoll
-                        </button>
+                        {!cancelled && (
+                          <>
+                            <button className={link} onClick={() => setNotesDialog(l)}>
+                              Tagebuch
+                            </button>
+                            <button className={link} onClick={() => downloadTagebuchblatt(pin, l).catch((err) => setNotice(errorText(err)))}>
+                              Blatt
+                            </button>
+                          </>
+                        )}
                         {l.settledExternally && (
                           <button className={link} onClick={() => unsettle(l)}>
                             Markierung aufheben
@@ -461,7 +466,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       )}
 
       {notesDialog && (
-        <NotesDialog
+        <TagebuchDialog
           lesson={notesDialog}
           adminFetch={adminFetch}
           setNotice={setNotice}
@@ -506,39 +511,6 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
         />
       )}
     </div>
-  );
-}
-
-export function NotesDialog({ lesson, adminFetch, setNotice, onClose, onSaved }) {
-  const [text, setText] = useState(lesson.lessonNotes || "");
-  const [saving, setSaving] = useState(false);
-  async function save() {
-    setSaving(true);
-    try {
-      await adminFetch(`/api/admin/lessons/${lesson._id}`, { method: "PATCH", body: JSON.stringify({ notesOnly: true, lessonNotes: text }) });
-      setNotice("Stundenprotokoll gespeichert.");
-      onSaved();
-    } catch (err) {
-      setNotice(errorText(err));
-    } finally {
-      setSaving(false);
-    }
-  }
-  return (
-    <Modal title={`Stundenprotokoll ${formatDate(lesson.requestedDate)} · ${lesson.studentName}`} onClose={onClose}>
-      <Field label="Themen, Hausaufgaben, Beobachtungen">
-        <textarea className={`${input} min-h-40`} value={text} onChange={(e) => setText(e.target.value)} maxLength={5000} />
-      </Field>
-      <p className="mt-2 text-xs text-slate-500">Keine Gesundheitsdaten ohne ausdrückliche schriftliche Einwilligung notieren.</p>
-      <div className="mt-4 flex gap-2">
-        <button className={btnPrimary} onClick={save} disabled={saving}>
-          Speichern
-        </button>
-        <button className={btnSecondary} onClick={onClose}>
-          Abbrechen
-        </button>
-      </div>
-    </Modal>
   );
 }
 

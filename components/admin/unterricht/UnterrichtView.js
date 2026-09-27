@@ -30,7 +30,7 @@ import {
   useDialogs,
 } from "@/components/admin/ui";
 import LessonForm from "@/components/admin/management/LessonForm";
-import { NotesDialog } from "@/components/admin/management/StudentDetail";
+import TagebuchDialog from "@/components/admin/management/TagebuchDialog";
 
 // Eine Liste für alles, was Unterricht ist: Online-Anfragen, bestätigte
 // Termine, selbst eingetragene Stunden und Pakete. Sortiert nach dem Tag des
@@ -271,7 +271,7 @@ export default function UnterrichtView({ filters, onFilters }) {
         onClick: () => createInvoice(b),
       },
       {
-        label: "Protokoll",
+        label: "Tagebuch",
         hidden: !isSession || b.status === "cancelled",
         onClick: () => setNotesDialog(b),
       },
@@ -413,7 +413,7 @@ export default function UnterrichtView({ filters, onFilters }) {
       ) : null}
 
       {notesDialog ? (
-        <NotesDialog
+        <TagebuchDialog
           lesson={notesDialog}
           adminFetch={adminFetch}
           setNotice={notify}

@@ -10,13 +10,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/register-alias.mjs --test \"tests/**/*.test.mjs\"",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/register-alias.mjs --test \"tests/**/*.test.mjs\" \"lib/**/__tests__/*.test.mjs\"",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "invoice:sample": "node --import ./tests/register-alias.mjs scripts/invoice-sample.mjs",
     "images:optimize": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@e-invoice-eu/core": "^3.3.0",
+    "docx": "9.6.1",
     "mongodb": "^7.6.0",
     "next": "^16.3.4",
     "nodemailer": "^9.1.0",

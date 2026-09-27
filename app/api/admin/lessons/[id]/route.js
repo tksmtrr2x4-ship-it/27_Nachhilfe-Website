@@ -4,15 +4,19 @@ import { deleteManualLesson, updateLesson } from "@/lib/lessons/db";
 import { normalizeLessonInput } from "@/lib/lessons/rules";
 import { getStudent } from "@/lib/students/db";
 import { getBooking } from "@/lib/db";
+import { normalizeDiaryInput } from "@/lib/lessons/diary";
 
 export async function PATCH(request, { params }) {
   if (!isAdminAuthorized(request)) return forbiddenResponse();
   try {
     const { id } = await params;
     const body = await request.json();
-    // Nur Stundenprotokoll: für jede Stunde erlaubt, auch nach Abrechnung.
+    // Nur Tagebuch (Stundenprotokoll + Tagebuchfelder): für jede Stunde
+    // erlaubt, auch nach Abrechnung.
     if (body.notesOnly) {
-      const lesson = await updateLesson(id, { lessonNotes: String(body.lessonNotes || "").trim().slice(0, 5000) }, { notesOnly: true });
+      const { diary, lessonNotes, problems } = normalizeDiaryInput(body);
+      assertValid(problems);
+      const lesson = await updateLesson(id, { lessonNotes, diary: body.diary ? diary : null }, { notesOnly: true });
       return Response.json({ lesson });
     }
     const existing = await getBooking(id);

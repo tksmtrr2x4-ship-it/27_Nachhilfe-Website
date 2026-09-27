@@ -22,6 +22,7 @@ const nextConfig = {
   // mit Datei-Tracing (Vercel, output: "standalone") ausdrücklich mitnehmen.
   outputFileTracingIncludes: {
     "/api/admin/papierakte": ["./lib/papierakte/assets/logo.png"],
+    "/api/admin/lessons/*/tagebuch": ["./lib/papierakte/assets/logo.png"],
   },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];

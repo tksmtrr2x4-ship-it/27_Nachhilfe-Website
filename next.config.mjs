@@ -18,6 +18,11 @@ const SECURITY_HEADERS = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Das Logo der Papierakte wird zur Laufzeit per fs gelesen – für Umgebungen
+  // mit Datei-Tracing (Vercel, output: "standalone") ausdrücklich mitnehmen.
+  outputFileTracingIncludes: {
+    "/api/admin/papierakte": ["./lib/papierakte/assets/logo.png"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

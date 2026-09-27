@@ -21,14 +21,14 @@ const noB = { top: NONE, bottom: NONE, left: NONE, right: NONE };
 const line = (c = GREY_LINE, s = 4) => ({ style: BorderStyle.SINGLE, size: s, color: c });
 const box = { top: line(), bottom: line(), left: line(), right: line() };
 
-// text with ☐ rendered in symbol font; "**x**" bold
+// text with ☐ / ☒ (angekreuzt) rendered in symbol font; "**x**" bold
 function runs(text, o = {}) {
   const out = [];
   String(text).split("**").forEach((seg, i) => {
     const bold = i % 2 === 1 || o.bold;
-    seg.split(/(☐)/).forEach((t) => {
+    seg.split(/(☐|☒)/).forEach((t) => {
       if (!t) return;
-      if (t === "☐") out.push(new TextRun({ text: "☐", font: SYM, size: (o.size || 18) + 4, color: o.boxColor || PETROL }));
+      if (t === "☐" || t === "☒") out.push(new TextRun({ text: t, font: SYM, size: (o.size || 18) + 4, color: o.boxColor || PETROL }));
       else out.push(new TextRun({ text: t, font: FONT, size: o.size || 18, color: o.color || TEXT, bold, italics: o.italics }));
     });
   });
@@ -40,8 +40,9 @@ const P = (text, o = {}) =>
 // Form cell: small label on top, writing space below
 function fcell(label, width, o = {}) {
   const kids = [];
-  if (label) kids.push(new Paragraph({ spacing: { after: 20 }, children: runs(label, { size: 14, color: GREY_TXT }) }));
-  if (o.value) kids.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: String(o.value), font: FONT, size: 20, color: NAVY })] }));
+  if (label) kids.push(new Paragraph({ spacing: { after: 0 }, children: runs(label, { size: 14, color: GREY_TXT }) }));
+  // value: eingetragener Text, Zeilenumbrüche werden zu eigenen Absätzen
+  if (o.value) String(o.value).split("\n").forEach((t) => kids.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: t, font: FONT, size: 20, color: NAVY })] })));
   if (o.opts) kids.push(new Paragraph({ spacing: { after: 0, line: 276 }, children: runs(o.opts, { size: 18 }) }));
   if (!kids.length) kids.push(new Paragraph({ children: [] }));
   return new TableCell({
@@ -50,7 +51,7 @@ function fcell(label, width, o = {}) {
     borders: o.borders || box,
     shading: o.fill ? { type: ShadingType.CLEAR, color: "auto", fill: o.fill } : undefined,
     verticalAlign: o.vAlign || VerticalAlign.TOP,
-    margins: { top: 40, bottom: 40, left: 90, right: 90 },
+    margins: { top: 20, bottom: 20, left: 90, right: 90 },
     children: kids,
   });
 }
@@ -81,7 +82,7 @@ function sect(num, title, sub) {
     new TextRun({ text: "  " + title, font: FONT, size: 22, bold: true, color: NAVY }),
   ];
   if (sub) ch.push(new TextRun({ text: "   " + sub, font: FONT, size: 15, color: GREY_TXT }));
-  return new Paragraph({ keepNext: true, spacing: { before: 200, after: 90 }, children: ch });
+  return new Paragraph({ keepNext: true, spacing: { before: 120, after: 60 }, children: ch });
 }
 
 // Ruled writing lines (table with only bottom borders)
@@ -125,7 +126,6 @@ function header(h, rightText) {
               new TextRun({ text: "  ·  Lernsprung VS", font: FONT, size: 16, color: PETROL })] })] }),
         ] })],
       }),
-      new Paragraph({ spacing: { after: 0 }, children: [] }),
     ],
   });
 }
@@ -221,7 +221,7 @@ A.push(new Table({
       children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 0 }, children: [new TextRun({ text: d, font: FONT, size: 17, bold: true, color: "FFFFFF" })] })],
     })) }),
     ...["Mögliche Zeiten (von – bis)", "Nicht möglich"].map((lab) => new TableRow({
-      cantSplit: true, height: { value: 620, rule: HeightRule.ATLEAST },
+      cantSplit: true, height: { value: 540, rule: HeightRule.ATLEAST },
       children: dayHdr.map((d, i) => new TableCell({
         width: { size: DW[i], type: WidthType.DXA }, borders: box,
         shading: i === 0 ? { type: ShadingType.CLEAR, color: "auto", fill: GREY_LIGHT } : undefined,
@@ -236,7 +236,7 @@ A.push(gap(60));
 A.push(
   R([["Erster Termin (Datum, Uhrzeit)", CW / 2], ["Weitere Termine / fester Termin", CW / 2]], 620),
   R([["Preis je Einheit (ohne USt., § 19 UStG)", 4000, { opts: "________ €  für  ______ min" }], ["Rechnung", CW - 4000, { opts: "☐ per E-Mail   ☐ auf Papier   · Überweisung / GiroCode" }]]),
-  R([["Besondere Absprachen", CW]], 820)
+  R([["Besondere Absprachen", CW]], 700)
 );
 
 // 5 Rechtliches
@@ -262,7 +262,7 @@ A.push(new Table({
 
 // 6 Notizen
 A.push(sect("6", "Gesprächsnotizen"));
-A.push(lines(8, 430));
+A.push(lines(8, 390));
 
 // 7 Übertrag
 A.push(sect("7", "Übertrag in den Admin-Bereich"));
@@ -271,95 +271,95 @@ A.push(R([["Erledigt", CW - 2000, { opts: "☐ Kunde angelegt  ☐ Schüler ange
 return A;
 }
 
-// =====================================================================
-// 2) KAROBLATT (5 mm)
-// =====================================================================
-const SQ = 283; // 5 mm in twips
-const COLS = 34, ROWS = 47;
-function karo(pf = {}) {
-  const info = formTable([
-    row([["Schüler/in", 3200, { value: pf.schueler }], ["Fach / Thema", 3400, { value: pf.fach }], ["Datum", 1838], ["Blatt", 1200]], 520),
-  ], [3200, 3400, 1838, 1200]);
-  const g = line("C7D0D8", 2);
-  const grid = new Table({
-    width: { size: SQ * COLS, type: WidthType.DXA },
-    columnWidths: Array(COLS).fill(SQ),
-    layout: TableLayoutType.FIXED,
-    alignment: AlignmentType.CENTER,
-    rows: Array.from({ length: ROWS }, () => new TableRow({
-      height: { value: SQ, rule: HeightRule.EXACT },
-      children: Array.from({ length: COLS }, () => new TableCell({
-        width: { size: SQ, type: WidthType.DXA },
-        borders: { top: g, bottom: g, left: g, right: g },
-        margins: { top: 0, bottom: 0, left: 0, right: 0 },
-        children: [new Paragraph({ spacing: { before: 0, after: 0, line: 20, lineRule: "exact" }, children: [new TextRun({ text: "", size: 2 })] })],
-      })),
-    })),
-  });
-  return [info, new Paragraph({ spacing: { after: 100 }, children: [] }), grid];
-}
 
 // =====================================================================
-// 3) NACHHILFETAGEBUCH
+// 2) NACHHILFETAGEBUCH (ein Blatt pro Stunde)
 // =====================================================================
-function tagebuch(pf = {}) {
+const cb = (on) => (on ? "☒" : "☐");
+// Skala zum Einkreisen; die gewählte Stufe erscheint fett in Klammern
+function skala(links, wert, rechts) {
+  const stufen = [1, 2, 3, 4, 5].map((n) => (n === wert ? `**(${n})**` : String(n)));
+  return `${links}  ${stufen.join(" · ")}  ${rechts}`;
+}
+
+function tagebuch(kopf = {}, st = {}) {
 const T = [];
 T.push(
   new Paragraph({ spacing: { before: 40, after: 100 }, children: [
     new TextRun({ text: "Nachhilfetagebuch", font: FONT, size: 34, bold: true, color: NAVY }),
-    new TextRun({ text: "   zwei Stunden pro Seite · Vorlage zum Kopieren", font: FONT, size: 16, color: GREY_TXT }),
+    new TextRun({ text: "   ein Blatt pro Stunde", font: FONT, size: 16, color: GREY_TXT }),
   ] }),
   formTable([
-    row([["Schüler/in", 3300, { value: pf.schueler }], ["Fach", 2300, { value: pf.fach }], ["Klasse / Schule", 2638, { value: pf.klasseSchule }], ["Blatt-Nr.", 1400]], 520),
+    row([["Schüler/in", 3300, { value: kopf.schueler }], ["Fach", 2300, { value: kopf.fach }], ["Klasse / Schule", 2638, { value: kopf.klasseSchule }], ["Blatt-Nr.", 1400]], 520),
   ], [3300, 2300, 2638, 1400])
 );
 
 const E4 = [1900, 2300, 3038, 2400];
-function entry(n) {
-  const out = [];
-  out.push(new Paragraph({ keepNext: true, spacing: { before: 150, after: 60 }, children: [
-    new TextRun({ text: ` Stunde ${n} `, font: FONT, size: 18, bold: true, color: "FFFFFF", shading: { type: ShadingType.CLEAR, color: "auto", fill: ORANGE } }),
-    new TextRun({ text: "   Laufende Nr. ______", font: FONT, size: 15, color: GREY_TXT }),
-  ] }));
-  out.push(formTable([
-    row([["Datum", E4[0]], ["Uhrzeit (von – bis)", E4[1]], ["Dauer", E4[2], { opts: "☐ 45   ☐ 90   ☐ ____ min" }], ["Ort", E4[3], { opts: "☐ online   ☐ vor Ort" }]], 520),
-    row([["Thema der Stunde", CW, { span: 4 }]], 480),
-    row([["Was wurde gemacht? (Inhalte, Aufgaben, Erklärungen)", CW, { span: 4 }]], 1300),
-    row([["Hausaufgabe / Übung bis zum nächsten Mal", E4[0] + E4[1] + E4[2], { span: 3 }], ["Material / Seiten", E4[3]]], 700),
-    row([["Verständnis (einkreisen)", E4[0] + E4[1], { span: 2, opts: "kaum  1 · 2 · 3 · 4 · 5  sicher" }], ["Mitarbeit (einkreisen)", E4[2] + E4[3], { span: 2, opts: "wenig  1 · 2 · 3 · 4 · 5  sehr gut" }]], 480),
-    row([["Offene Fragen · Lücken · Plan für das nächste Mal", CW, { span: 4 }]], 700),
-    row([["Nächster Termin", E4[0]], ["Nächste Klausur / Test", E4[1]], ["Abrechnung", E4[2] + E4[3], { span: 2, fill: GREY_LIGHT, opts: "☐ im Admin  ☐ abgerechnet, Rg.-Nr. _______  ☐ bezahlt" }]], 520),
-    row([["Ausfall", CW, { span: 4, opts: "☐ ausgefallen · abgesagt von ______________ am __________   ☐ rechtzeitig   ☐ zu kurzfristig" }]], 400),
-  ], E4));
-  return out;
-}
-T.push(...entry(1), ...entry(2));
+const dauer = st.dauer;
+const dauerOpts = `${cb(dauer === 45)} 45   ${cb(dauer === 90)} 90   ${dauer && dauer !== 45 && dauer !== 90 ? `☒ ${dauer}` : "☐ ____"} min`;
+const ortOpts = `${cb(st.ort === "online")} online   ${cb(st.ort === "vor Ort")} vor Ort`;
+const ab = st.abrechnung || {};
+const abOpts = `${cb(ab.imAdmin)} im Admin  ${cb(ab.rechnungNr)} abgerechnet, Rg.-Nr. ${ab.rechnungNr || "_______"}  ${cb(ab.bezahlt)} bezahlt`;
+const ausfallOpts = `${cb(st.ausgefallen)} ausgefallen · abgesagt von ______________ am __________   ☐ rechtzeitig   ☐ zu kurzfristig`;
+
+T.push(new Paragraph({ keepNext: true, spacing: { before: 150, after: 60 }, children: [
+  new TextRun({ text: " Stunde ", font: FONT, size: 18, bold: true, color: "FFFFFF", shading: { type: ShadingType.CLEAR, color: "auto", fill: ORANGE } }),
+  new TextRun({ text: `   Laufende Nr. ${st.nr || "______"}`, font: FONT, size: 15, color: GREY_TXT }),
+] }));
+T.push(formTable([
+  row([["Datum", E4[0], { value: st.datum }], ["Uhrzeit (von – bis)", E4[1], { value: st.uhrzeit }], ["Dauer", E4[2], { opts: dauerOpts }], ["Ort", E4[3], { opts: ortOpts }]], 520),
+  row([["Thema der Stunde", CW, { span: 4, value: st.thema }]], 560),
+  row([["Was wurde gemacht? (Inhalte, Aufgaben, Erklärungen)", CW, { span: 4, value: st.inhalt }]], 3400),
+  row([["Hausaufgabe / Übung bis zum nächsten Mal", E4[0] + E4[1] + E4[2], { span: 3, value: st.hausaufgabe }], ["Material / Seiten", E4[3], { value: st.material }]], 1400),
+  row([["Verständnis (einkreisen)", E4[0] + E4[1], { span: 2, opts: skala("kaum", st.verstaendnis, "sicher") }], ["Mitarbeit (einkreisen)", E4[2] + E4[3], { span: 2, opts: skala("wenig", st.mitarbeit, "sehr gut") }]], 480),
+  row([["Offene Fragen · Lücken · Plan für das nächste Mal", CW, { span: 4, value: st.offen }]], 1400),
+  row([["Nächster Termin", E4[0], { value: st.naechsterTermin }], ["Nächste Klausur / Test", E4[1], { value: st.naechsteKlausur }], ["Abrechnung", E4[2] + E4[3], { span: 2, fill: GREY_LIGHT, opts: abOpts }]], 520),
+  row([["Ausfall", CW, { span: 4, opts: ausfallOpts }]], 400),
+], E4));
 return T;
 }
 
 // =====================================================================
 /**
- * Baut die Papierakte (5 Seiten: Aufnahmebogen 2 S., Karoblatt 2 S., Nachhilfetagebuch 1 S.).
+ * Papierakte: der Aufnahmebogen (2 Seiten). Wird nie vorbelegt.
  * @param {object} opts
- * @param {Buffer} opts.logo      PNG-Logo (logo.png, 900 × 830 px)
- * @param {object} [opts.prefill] optional: { schueler, fach, klasseSchule } – nur Kopfzeilen von Karoblatt und Tagebuch
+ * @param {Buffer} opts.logo  PNG-Logo (logo.png, 900 × 830 px)
  */
-function buildPapierakte({ logo: logoBuffer, prefill } = {}) {
+function buildPapierakte({ logo: logoBuffer } = {}) {
   if (!logoBuffer) throw new Error("logo fehlt");
   logo = logoBuffer;
-  const pf = prefill || {};
   return new Document({
     creator: "Lernsprung VS",
-    title: "Papierakte Lernsprung – Aufnahmebogen, Karoblätter, Nachhilfetagebuch",
+    title: "Papierakte Lernsprung – Aufnahmebogen",
     styles: { default: { document: { run: { font: FONT, size: 18, color: TEXT } } } },
     sections: [
       { properties: pageProps({ titlePage: true }),
         headers: { first: header(66, "Papierakte"), default: header(52, "Aufnahmebogen") },
         footers: { first: footer(VERTRAULICH), default: footer(VERTRAULICH) },
         children: aufnahmebogen() },
-      { properties: pageProps(), headers: { default: header(52, "Karoblatt 5 mm") }, footers: { default: footer("") }, children: karo(pf) },
-      { properties: pageProps(), headers: { default: header(52, "Karoblatt 5 mm") }, footers: { default: footer("") }, children: karo(pf) },
-      { properties: pageProps(), headers: { default: header(52, "Nachhilfetagebuch") }, footers: { default: footer(VERTRAULICH) }, children: tagebuch(pf) },
+    ],
+  });
+}
+
+/**
+ * Tagebuchblatt für eine Stunde (1 Seite). Alle Werte optional – ohne Werte
+ * entsteht das leere Blatt zum Ausfüllen von Hand.
+ * @param {object} opts
+ * @param {Buffer} opts.logo
+ * @param {object} [opts.kopf]   { schueler, fach, klasseSchule }
+ * @param {object} [opts.stunde] { nr, datum, uhrzeit, dauer (Minuten), ort ("online" | "vor Ort"),
+ *   thema, inhalt, hausaufgabe, material, verstaendnis (1–5), mitarbeit (1–5), offen,
+ *   naechsterTermin, naechsteKlausur, abrechnung: { imAdmin, rechnungNr, bezahlt }, ausgefallen }
+ */
+function buildTagebuchblatt({ logo: logoBuffer, kopf, stunde } = {}) {
+  if (!logoBuffer) throw new Error("logo fehlt");
+  logo = logoBuffer;
+  return new Document({
+    creator: "Lernsprung VS",
+    title: "Nachhilfetagebuch Lernsprung",
+    styles: { default: { document: { run: { font: FONT, size: 18, color: TEXT } } } },
+    sections: [
+      { properties: pageProps(), headers: { default: header(52, "Nachhilfetagebuch") }, footers: { default: footer(VERTRAULICH) }, children: tagebuch(kopf || {}, stunde || {}) },
     ],
   });
 }
@@ -367,5 +367,8 @@ function buildPapierakte({ logo: logoBuffer, prefill } = {}) {
 async function renderPapierakteDocx(opts) {
   return Packer.toBuffer(buildPapierakte(opts));
 }
+async function renderTagebuchblattDocx(opts) {
+  return Packer.toBuffer(buildTagebuchblatt(opts));
+}
 
-module.exports = { buildPapierakte, renderPapierakteDocx };
+module.exports = { buildPapierakte, renderPapierakteDocx, buildTagebuchblatt, renderTagebuchblattDocx };

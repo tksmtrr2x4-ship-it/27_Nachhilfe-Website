@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildOverview } from "@/lib/admin/overview";
 import { lessonDateOf } from "@/lib/bookings/order";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
+import PapierakteButton from "@/components/admin/PapierakteButton";
 import { Badge, Stat, Toolbar, errorText, formatDate, formatPrice, plural, todayIso } from "@/components/admin/ui";
 
 // Startseite der Verwaltung: was heute ansteht, danach der Rest.
@@ -17,7 +18,7 @@ const SEVERITY = {
 };
 
 export default function UebersichtPage() {
-  const { adminFetch, notify } = useAdmin();
+  const { adminFetch, pin, notify } = useAdmin();
   const today = todayIso();
   const [bookings, setBookings] = useState([]);
   const [ledger, setLedger] = useState(null);
@@ -48,7 +49,11 @@ export default function UebersichtPage() {
 
   return (
     <div className="space-y-6">
-      <Toolbar title={`Guten Tag – heute ist ${formatDate(today)}`} hint="Was ansteht, auf einen Blick." />
+      <Toolbar title={`Guten Tag – heute ist ${formatDate(today)}`} hint="Was ansteht, auf einen Blick.">
+        <PapierakteButton pin={pin} notify={notify}>
+          Papierakte (leer) herunterladen
+        </PapierakteButton>
+      </Toolbar>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat title="Stunden heute" value={overview.today.count} tone={overview.today.count ? "indigo" : "slate"} />

@@ -8,6 +8,7 @@ import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
+import PapierakteButton from "@/components/admin/PapierakteButton";
 import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
 import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 
@@ -156,6 +157,9 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
           <button className={btnSecondary} onClick={() => setEditing((v) => !v)}>
             {editing ? "Bearbeiten schließen" : "Profil bearbeiten"}
           </button>
+          <PapierakteButton pin={pin} studentId={student._id} notify={setNotice}>
+            Papierakte für diesen Schüler
+          </PapierakteButton>
           <button className={btnDanger} onClick={removeStudent}>
             Löschen
           </button>

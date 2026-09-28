@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import { relyingParty } from "@/lib/auth/passkeys";
 
 // Reine Prüfungen ohne Datenbank und ohne Browser.
@@ -204,10 +205,11 @@ test("Bestätigung per Mail: ablehnen, ablaufen, Flut begrenzen", async () => {
 async function loadLoginRequests() {
   const fs = await import("node:fs");
   const db = fakeDb();
+  const schluessel = `__testDb_${crypto.randomUUID()}`;
   const source = fs
     .readFileSync(new URL("../lib/auth/loginRequests.js", import.meta.url), "utf8")
-    .replace('import { getDb } from "@/lib/mongo";', "const getDb = async () => globalThis.__testDb;");
-  globalThis.__testDb = db;
+    .replace('import { getDb } from "@/lib/mongo";', `const getDb = async () => globalThis[${JSON.stringify(schluessel)}];`);
+  globalThis[schluessel] = db;
   const requests = await import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
   return { requests, db };
 }
@@ -222,6 +224,10 @@ function fakeDb() {
       return value === want;
     });
   const find = (query) => [...docs.values()].find((doc) => matches(doc, query)) || null;
+  const apply = (doc, update) => {
+    for (const [feld, wert] of Object.entries(update.$inc || {})) doc[feld] = (doc[feld] || 0) + wert;
+    Object.assign(doc, update.$set || {});
+  };
   const col = {
     async createIndex() {},
     async insertOne(doc) {
@@ -248,15 +254,23 @@ function fakeDb() {
         },
       };
     },
-    async findOneAndUpdate(query, update) {
-      const doc = find(query);
+    async findOneAndUpdate(query, update, options = {}) {
+      let doc = find(query);
+      if (!doc && options.upsert) {
+        doc = { ...query };
+        docs.set(doc._id, doc);
+      }
       if (!doc) return null;
-      Object.assign(doc, update.$set || {});
+      apply(doc, update);
       return { ...doc };
     },
-    async updateOne(query, update) {
-      const doc = find(query);
-      if (doc) Object.assign(doc, update.$set || {});
+    async updateOne(query, update, options = {}) {
+      let doc = find(query);
+      if (!doc && options.upsert) {
+        doc = { ...query };
+        docs.set(doc._id, doc);
+      }
+      if (doc) apply(doc, update);
       return { matchedCount: doc ? 1 : 0 };
     },
     async deleteOne(query) {
@@ -266,4 +280,54 @@ function fakeDb() {
     },
   };
   return { collection: () => col, docs };
+}
+
+test("PIN-Sperre gilt nur, wo ein PIN verlangt wird", async () => {
+  const { isPinRequired } = await import("@/lib/auth/rateLimit");
+  assert.equal(isPinRequired({ passkeys: 0, known: false }), true);
+  assert.equal(
+    isPinRequired({ passkeys: 0, known: true }),
+    true,
+    "ohne Passkey ist der PIN der einzige Faktor – auch am bekannten Gerät"
+  );
+  assert.equal(isPinRequired({ passkeys: 2, known: false }), true, "neues Gerät: PIN zusätzlich");
+  assert.equal(
+    isPinRequired({ passkeys: 2, known: true }),
+    false,
+    "bekanntes Gerät mit Passkey: kein PIN, also darf die PIN-Sperre die Anmeldung nicht blockieren"
+  );
+});
+
+test("Bremse: PIN sperrt nach acht Fehlversuchen, Passkey nie", async () => {
+  const { limit } = await loadRateLimit();
+
+  assert.deepEqual(await limit.checkPinAttempt(), { allowed: true });
+  for (let i = 0; i < 7; i += 1) await limit.notePinFailure();
+  assert.deepEqual(await limit.checkPinAttempt(), { allowed: true }, "sieben Fehlversuche reichen nicht");
+
+  await limit.notePinFailure();
+  const gesperrt = await limit.checkPinAttempt();
+  assert.equal(gesperrt.allowed, false, "der achte sperrt");
+  assert.ok(gesperrt.retryInMinutes >= 1 && gesperrt.retryInMinutes <= 10);
+
+  await limit.resetPinFailures();
+  assert.deepEqual(await limit.checkPinAttempt(), { allowed: true }, "eine richtige Eingabe hebt die Sperre auf");
+
+  // Ein Passkey lässt sich nicht erraten. Würden Fehlversuche hier sperren,
+  // wäre das die Schwachstelle: Jeder hinter der Tür könnte die Anmeldung am
+  // eigenen Gerät lahmlegen.
+  for (let i = 0; i < 50; i += 1) await limit.notePasskeyFailure("Test");
+  assert.deepEqual(await limit.checkPinAttempt(), { allowed: true }, "Passkey-Fehlschläge sperren nichts");
+});
+
+async function loadRateLimit() {
+  const fs = await import("node:fs");
+  const db = fakeDb();
+  const schluessel = `__testDb_${crypto.randomUUID()}`;
+  const source = fs
+    .readFileSync(new URL("../lib/auth/rateLimit.js", import.meta.url), "utf8")
+    .replace('import { getDb } from "@/lib/mongo";', `const getDb = async () => globalThis[${JSON.stringify(schluessel)}];`);
+  globalThis[schluessel] = db;
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
+  return { limit: mod, db };
 }

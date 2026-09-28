@@ -1,7 +1,7 @@
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import { allCredentials, countPasskeys, relyingParty, storeChallenge } from "@/lib/auth/passkeys";
 import { isKnownDevice, DEVICE_COOKIE } from "@/lib/auth/devices";
-import { checkPinAttempt } from "@/lib/auth/rateLimit";
+import { checkPinAttempt, isPinRequired } from "@/lib/auth/rateLimit";
 import { loginMailRequired } from "@/lib/auth/loginMail";
 
 // Schritt 1 der Anmeldung: Was verlangt der Server von diesem Gerät?
@@ -11,20 +11,25 @@ import { loginMailRequired } from "@/lib/auth/loginMail";
 // An neuen Geräten kommt zum Abschluss die Bestätigung per Mail dazu
 // (mailStep), siehe app/api/admin/auth/finish/route.js.
 export async function POST(request) {
-  const limit = await checkPinAttempt();
-  if (!limit.allowed) {
-    return Response.json(
-      { error: `Zu viele Fehlversuche. Bitte ${limit.retryInMinutes} Minuten warten.` },
-      { status: 429 }
-    );
+  const known = await isKnownDevice(request.cookies.get(DEVICE_COOKIE)?.value);
+  const passkeys = await countPasskeys();
+
+  // Die PIN-Sperre gilt nur, wenn hier auch ein PIN verlangt wird. Sonst
+  // könnte jemand die Anmeldung am eigenen Gerät durch Falschraten lahmlegen.
+  if (isPinRequired({ passkeys, known })) {
+    const limit = await checkPinAttempt();
+    if (!limit.allowed) {
+      return Response.json(
+        { error: `Zu viele Fehlversuche. Bitte ${limit.retryInMinutes} Minuten warten.` },
+        { status: 429 }
+      );
+    }
   }
 
-  const known = await isKnownDevice(request.cookies.get(DEVICE_COOKIE)?.value);
   // An bekannten Geräten entfällt der Mail-Schritt; ohne eingerichteten
   // Mailversand ebenfalls (sonst könnte sich niemand mehr anmelden).
   const mailStep = !known && loginMailRequired();
 
-  const passkeys = await countPasskeys();
   if (passkeys === 0) {
     return Response.json({ mode: "pin-only", mailStep });
   }

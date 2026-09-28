@@ -2,7 +2,7 @@ import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { findByCredentialId, notePasskeyUse, countPasskeys, relyingParty, takeChallenge } from "@/lib/auth/passkeys";
 import { DEVICE_COOKIE, isKnownDevice } from "@/lib/auth/devices";
 import { createSession } from "@/lib/auth/sessions";
-import { checkPinAttempt, notePinFailure, resetPinFailures } from "@/lib/auth/rateLimit";
+import { checkPinAttempt, isPinRequired, notePasskeyFailure, notePinFailure, resetPinFailures } from "@/lib/auth/rateLimit";
 import { REQUEST_MINUTES, createLoginRequest, deleteLoginRequest } from "@/lib/auth/loginRequests";
 import { loginMailAddress, loginMailRequired, maskMail, sendLoginConfirmation } from "@/lib/auth/loginMail";
 
@@ -53,15 +53,18 @@ async function grant({ request, userAgent, known, mitPasskey }) {
 }
 
 export async function POST(request) {
-  const limit = await checkPinAttempt();
-  if (!limit.allowed) {
-    return Response.json({ error: `Zu viele Fehlversuche. Bitte ${limit.retryInMinutes} Minuten warten.` }, { status: 429 });
-  }
-
   const body = await request.json().catch(() => ({}));
   const userAgent = request.headers.get("user-agent") || "";
   const passkeys = await countPasskeys();
   const known = await isKnownDevice(request.cookies.get(DEVICE_COOKIE)?.value);
+
+  // Nur wo ein PIN gefragt ist, gilt auch die Sperre gegen PIN-Raten.
+  if (isPinRequired({ passkeys, known })) {
+    const limit = await checkPinAttempt();
+    if (!limit.allowed) {
+      return Response.json({ error: `Zu viele Fehlversuche. Bitte ${limit.retryInMinutes} Minuten warten.` }, { status: 429 });
+    }
+  }
 
   // Aufbau-Zustand: Es gibt noch keinen Passkey, also zählt der PIN allein.
   if (passkeys === 0) {
@@ -85,7 +88,7 @@ export async function POST(request) {
 
   const stored = await findByCredentialId(body.response?.id);
   if (!stored) {
-    await notePinFailure();
+    await notePasskeyFailure("unbekannter Passkey");
     return Response.json({ error: "Dieser Passkey ist hier nicht hinterlegt." }, { status: 401 });
   }
 
@@ -106,12 +109,12 @@ export async function POST(request) {
       },
     });
   } catch (err) {
-    await notePinFailure();
+    await notePasskeyFailure(err.message);
     return Response.json({ error: `Passkey nicht bestätigt: ${err.message}` }, { status: 401 });
   }
 
   if (!verification.verified) {
-    await notePinFailure();
+    await notePasskeyFailure("nicht bestätigt");
     return Response.json({ error: "Passkey nicht bestätigt." }, { status: 401 });
   }
 

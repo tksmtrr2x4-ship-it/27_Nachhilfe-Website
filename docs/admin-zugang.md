@@ -4,7 +4,7 @@ Vier Schichten, von außen nach innen:
 
 | Schicht | Was sie leistet | Was sie **nicht** leistet |
 |---|---|---|
-| **Tür-Code in der Adresse** | Ohne ihn antworten `/admin` und `/api/admin` mit „nicht gefunden“. Bots, Scanner und Suchmaschinen sehen keinen Verwaltungsbereich. | Keinen Schutz gegen jemanden, der den Code kennt – er steht im Verlauf und in Lesezeichen. Tarnung, nicht Sperre. |
+| **Tür-Code in der Adresse** | Ohne ihn antworten `/admin` und `/api/admin` mit „nicht gefunden“. Bots, Scanner und Suchmaschinen sehen keinen Verwaltungsbereich. | Keinen Schutz gegen jemanden, der den Code kennt – er steht im Browserverlauf, in Lesezeichen und im Keks `lernsprung_tor`. Tarnung, nicht Sperre; als halböffentlich behandeln. |
 | **Passkey** (Face ID, Touch ID, FIDO2-USB-Schlüssel) | Der eigentliche Schutz. Der private Schlüssel verlässt das Gerät nie, ist nicht abtippbar, nicht abfangbar und funktioniert nur auf der echten Domain (phishing-sicher). | Nichts, wenn Gerät **und** PIN in fremde Hände geraten – dagegen steht die Mail-Bestätigung. |
 | **PIN** | Zweiter Faktor an jedem Gerät, das der Server noch nicht kennt. | Allein genügt er nur, solange kein Passkey hinterlegt ist. |
 | **Bestätigung per Mail** | Letzter Schritt an neuen Geräten: Ohne Klick auf den Link entsteht keine Sitzung. Zugleich die Benachrichtigung – eine fremde Anmeldung fällt sofort auf und lässt sich ablehnen. | Keinen Schutz, wenn auch das Postfach übernommen wurde. Und keinen Zugang: Der Link allein öffnet nichts. |
@@ -74,6 +74,7 @@ Schlüssel lesen. Nötig ist ein FIDO2-Sicherheitsschlüssel (YubiKey o. ä.).
 | Mailtext und Empfänger | `lib/auth/loginMail.js` |
 | Sitzungen (12 h) | `lib/auth/sessions.js`, `admin_sessions` |
 | Bremse gegen PIN-Raten (8 Versuche → 10 Minuten Sperre) | `lib/auth/rateLimit.js` |
+| Zugriffsprotokoll ohne Tür-Code | nginx: eigener `location ^~ /tor/` mit `access_log off` |
 | Prüfung bei jeder Anfrage | `lib/auth.js` |
 | Anmeldung | `app/api/admin/auth/start`, `…/finish`, `…/wait`, `components/admin/shell/AdminGate.js` |
 | Bestätigungsseite | `app/anmeldung-bestaetigen/`, `components/LoginBestaetigung.js`, `app/api/anmeldung-bestaetigen/` |
@@ -106,6 +107,20 @@ Drei Entscheidungen, die man beim Lesen des Codes sonst übersieht:
   ersten Gerät ist das unvermeidlich – danach zählt Schritt 4 der Einrichtung.
 - Ein einzelner iCloud-Passkey ist Reserve nur, solange das Apple-Konto erreichbar ist.
   Gegen ein gesperrtes Konto hilft allein der Sicherheitsschlüssel.
+- Wer den Tür-Code kennt, kann durch Falschraten die **PIN-Anmeldung** zehn Minuten am
+  Stück sperren. Das bekannte Gerät mit Passkey bleibt davon unberührt – siehe unten.
+
+### Warum die PIN-Sperre nicht überall gilt
+
+`isPinRequired` in `lib/auth/rateLimit.js` entscheidet, ob die Bremse greift: nur ohne
+hinterlegten Passkey oder an einem unbekannten Gerät. Vorher lief die Prüfung vor jeder
+Anmeldung, und damit konnte jeder hinter der Tür die Betreiberin durch bloßes Falschraten
+dauerhaft aussperren – auch am eigenen Gerät, das gar keinen PIN eingibt.
+
+Fehlgeschlagene **Passkey**-Prüfungen zählen aus demselben Grund nicht mit. Raten bringt
+dort nichts (es fehlt der private Schlüssel), eine Sperre wäre also kein Schutz, sondern
+die Schwachstelle. Mitgeschrieben werden sie trotzdem, unter `admin_login_guard/passkey`,
+allein zur Nachschau.
 - Für ≤ 10 Minuten liegt das Sitzungs-Kennwort einer bestätigten Anmeldung im Klartext in
   `admin_login_requests` (zwei Geräte dürfen es abholen). Die Datenbank ist nur lokal
   erreichbar, MongoDB löscht den Eintrag danach selbst.

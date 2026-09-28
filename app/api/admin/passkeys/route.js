@@ -1,6 +1,7 @@
 import { generateRegistrationOptions, verifyRegistrationResponse } from "@simplewebauthn/server";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { allCredentials, listPasskeys, relyingParty, savePasskey, storeChallenge, takeChallenge } from "@/lib/auth/passkeys";
+import { loginMailAddress, loginMailRequired, maskMail } from "@/lib/auth/loginMail";
 
 // Passkeys verwalten (Verwaltung → Website → Zugang).
 // GET   = Liste
@@ -8,7 +9,13 @@ import { allCredentials, listPasskeys, relyingParty, savePasskey, storeChallenge
 // POST  = Antwort des Geräts prüfen und Passkey speichern
 export async function GET(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
-  return Response.json({ passkeys: await listPasskeys() });
+  // Dazu der Stand des Mail-Schritts – die Anzeige soll nicht behaupten, es
+  // käme eine Bestätigungsmail, wenn gar kein Postfach hinterlegt ist.
+  const aktiv = loginMailRequired();
+  return Response.json({
+    passkeys: await listPasskeys(),
+    mail: { aktiv, adresse: aktiv ? maskMail(loginMailAddress()) : "" },
+  });
 }
 
 export async function PUT(request) {

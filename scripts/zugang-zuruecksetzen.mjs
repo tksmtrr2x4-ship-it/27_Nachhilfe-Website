@@ -15,7 +15,13 @@ if (!process.env.MONGODB_URI && fs.existsSync(envFile)) {
 
 const client = await MongoClient.connect(process.env.MONGODB_URI);
 const db = client.db(process.env.MONGODB_DB);
-for (const name of ["admin_passkeys", "admin_devices", "admin_sessions", "admin_webauthn_challenges"]) {
+for (const name of [
+  "admin_passkeys",
+  "admin_devices",
+  "admin_sessions",
+  "admin_webauthn_challenges",
+  "admin_login_requests",
+]) {
   const res = await db.collection(name).deleteMany({});
   console.log(`${name}: ${res.deletedCount} Einträge entfernt`);
 }

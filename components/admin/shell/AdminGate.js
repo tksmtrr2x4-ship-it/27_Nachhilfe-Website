@@ -9,11 +9,12 @@ import AdminShell from "@/components/admin/shell/AdminShell";
 
 // Anmeldung:
 //   bekanntes Gerät → Passkey allein (Face ID, Touch ID, USB-Schlüssel)
-//   neues Gerät     → Passkey und PIN
-//   noch kein Passkey hinterlegt → PIN allein (Aufbau-Zustand)
+//   neues Gerät     → Passkey, PIN und zum Abschluss der Link aus der Mail
+//   noch kein Passkey hinterlegt → PIN und Mail-Link (Aufbau-Zustand)
 //
 // Nach der Anmeldung spricht der Browser nur noch mit einem Sitzungs-Kennwort.
 const STORAGE_KEY = "admin_session";
+const POLL_MS = 3000;
 
 export default function AdminGate({ children }) {
   // Erst nach dem Mount lesen: Server und Browser rendern sonst
@@ -22,9 +23,13 @@ export default function AdminGate({ children }) {
   const [token, setToken] = useState("");
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState(null); // pin-only | passkey | passkey-pin
+  // Steht an diesem Gerät noch die Bestätigung per Mail an?
+  const [mailStep, setMailStep] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Wartet auf die Bestätigung per Mail: { id, secret, mail, minutes }
+  const [pending, setPending] = useState(null);
 
   useEffect(() => {
     try {
@@ -46,6 +51,7 @@ export default function AdminGate({ children }) {
         return null;
       }
       setMode(data.mode);
+      setMailStep(Boolean(data.mailStep));
       return data;
     } catch {
       setError("Keine Verbindung zum Server.");
@@ -54,13 +60,13 @@ export default function AdminGate({ children }) {
   }, []);
 
   useEffect(() => {
-    if (ready && !token) {
+    if (ready && !token && !pending) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       askMode();
     }
-  }, [ready, token, askMode]);
+  }, [ready, token, pending, askMode]);
 
-  function accept(value) {
+  const accept = useCallback((value) => {
     try {
       sessionStorage.setItem(STORAGE_KEY, value);
     } catch {
@@ -68,7 +74,45 @@ export default function AdminGate({ children }) {
     }
     setToken(value);
     setPin("");
-  }
+    setPending(null);
+  }, []);
+
+  // Solange eine Bestätigung offen ist: regelmäßig nachfragen. Die Sitzung
+  // entsteht erst mit dem Klick in der Mail, deshalb wartet dieser Browser.
+  useEffect(() => {
+    if (!pending) return;
+    let active = true;
+
+    async function look() {
+      try {
+        const res = await fetch("/api/admin/auth/wait", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: pending.id, secret: pending.secret }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!active) return;
+        if (data.status === "bestaetigt" && data.token) {
+          accept(data.token);
+        } else if (data.status === "abgelehnt") {
+          setPending(null);
+          setError("Die Anmeldung wurde über den Mail-Link abgelehnt.");
+        } else if (data.status === "unbekannt") {
+          setPending(null);
+          setError("Die Bestätigung ist abgelaufen. Bitte noch einmal anmelden.");
+        }
+      } catch {
+        // Kurz keine Verbindung: beim nächsten Durchgang wieder.
+      }
+    }
+
+    const timer = setInterval(look, POLL_MS);
+    look();
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [pending, accept]);
 
   async function submit(e) {
     e.preventDefault();
@@ -105,6 +149,11 @@ export default function AdminGate({ children }) {
         setError(data.error || "Anmeldung fehlgeschlagen.");
         return;
       }
+      if (data.pending) {
+        setPin("");
+        setPending({ id: data.waitId, secret: data.waitSecret, mail: data.mail, minutes: data.minutes });
+        return;
+      }
       accept(data.token);
     } finally {
       setBusy(false);
@@ -127,6 +176,40 @@ export default function AdminGate({ children }) {
     return <div className="min-h-screen bg-white" aria-busy="true" />;
   }
 
+  if (pending) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6 text-slate-900">
+        <div className="w-full max-w-sm">
+          <h1 className="text-xl font-semibold text-slate-900">Noch die Mail bestätigen</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            PIN und Passkey haben gestimmt. Eine Mail an <strong>{pending.mail}</strong> enthält den
+            Bestätigungslink – nach dem Klick geht es hier von selbst weiter.
+          </p>
+          <div
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600"
+            role="status"
+          >
+            <span className="size-2 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
+            Wartet auf die Bestätigung …
+          </div>
+          <p className="mt-4 text-xs text-slate-500">
+            Der Link gilt {pending.minutes || 10} Minuten. Du kannst ihn auch auf dem Handy öffnen.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setPending(null);
+              setError("");
+            }}
+            className="mt-5 w-full rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700"
+          >
+            Abbrechen
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!token) {
     const needsPin = mode !== "passkey";
     const needsPasskey = mode !== "pin-only";
@@ -138,8 +221,12 @@ export default function AdminGate({ children }) {
             {mode === "passkey"
               ? "Dieses Gerät ist bekannt – es genügt Face ID, Touch ID oder dein Sicherheitsschlüssel."
               : mode === "passkey-pin"
-                ? "Neues Gerät: PIN eingeben und danach den Passkey bestätigen."
-                : "PIN eingeben."}
+                ? mailStep
+                  ? "Neues Gerät: PIN eingeben, Passkey bestätigen, danach den Link aus der Mail."
+                  : "Neues Gerät: PIN eingeben und danach den Passkey bestätigen."
+                : mailStep
+                  ? "PIN eingeben. Danach kommt ein Bestätigungslink per Mail."
+                  : "PIN eingeben."}
           </p>
           {/* Auch vor der Anmeldung: Service Worker registrieren und Installation anbieten. */}
           <InstallApp />

@@ -1,14 +1,55 @@
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { findByCredentialId, notePasskeyUse, countPasskeys, relyingParty, takeChallenge } from "@/lib/auth/passkeys";
-import { DEVICE_COOKIE, DEVICE_DAYS, isKnownDevice, rememberDevice } from "@/lib/auth/devices";
+import { DEVICE_COOKIE, isKnownDevice } from "@/lib/auth/devices";
 import { createSession } from "@/lib/auth/sessions";
 import { checkPinAttempt, notePinFailure, resetPinFailures } from "@/lib/auth/rateLimit";
+import { REQUEST_MINUTES, createLoginRequest, deleteLoginRequest } from "@/lib/auth/loginRequests";
+import { loginMailAddress, loginMailRequired, maskMail, sendLoginConfirmation } from "@/lib/auth/loginMail";
 
-// Schritt 2: Passkey (und bei neuen Geräten der PIN) prüfen. Erst danach gibt
-// es ein Sitzungs-Kennwort.
+// Schritt 2: Passkey (und bei neuen Geräten der PIN) prüfen.
+//
+// An einem neuen Gerät folgt danach noch die Bestätigung per E-Mail: Die
+// Sitzung entsteht dort erst nach dem Klick auf den Link (siehe
+// lib/auth/loginRequests.js). An einem bekannten Gerät gibt es das
+// Sitzungs-Kennwort sofort.
 function pinOk(pin) {
   const expected = process.env.ADMIN_PIN || "";
   return expected.length > 0 && pin === expected;
+}
+
+// Hinter nginx steht die echte Adresse in x-forwarded-for.
+function clientIp(request) {
+  const forwarded = request.headers.get("x-forwarded-for") || "";
+  return forwarded.split(",")[0].trim() || request.headers.get("x-real-ip") || "";
+}
+
+// Bekanntes Gerät → Sitzung sofort. Neues Gerät → erst die Mail bestätigen.
+async function grant({ request, userAgent, known, mitPasskey }) {
+  if (known || !loginMailRequired()) {
+    const token = await createSession({ device: userAgent });
+    return Response.json({ ok: true, token });
+  }
+
+  const created = await createLoginRequest({ userAgent, ip: clientIp(request), mitPasskey });
+  const sent = await sendLoginConfirmation({ ...created, userAgent, ip: clientIp(request), mitPasskey });
+  if (sent?.error || sent?.skipped) {
+    // Ohne Mail keine Bestätigung – dann die Anfrage gleich wieder wegräumen,
+    // statt den Browser ins Leere warten zu lassen.
+    await deleteLoginRequest(created.id);
+    return Response.json(
+      { error: "Die Bestätigungsmail konnte nicht verschickt werden. Bitte später noch einmal." },
+      { status: 502 }
+    );
+  }
+
+  return Response.json({
+    ok: true,
+    pending: true,
+    waitId: created.id,
+    waitSecret: created.waitSecret,
+    mail: maskMail(loginMailAddress()),
+    minutes: REQUEST_MINUTES,
+  });
 }
 
 export async function POST(request) {
@@ -20,6 +61,7 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const userAgent = request.headers.get("user-agent") || "";
   const passkeys = await countPasskeys();
+  const known = await isKnownDevice(request.cookies.get(DEVICE_COOKIE)?.value);
 
   // Aufbau-Zustand: Es gibt noch keinen Passkey, also zählt der PIN allein.
   if (passkeys === 0) {
@@ -28,11 +70,9 @@ export async function POST(request) {
       return Response.json({ error: "Falscher PIN." }, { status: 401 });
     }
     await resetPinFailures();
-    const token = await createSession({ device: userAgent });
-    return Response.json({ ok: true, token });
+    return grant({ request, userAgent, known, mitPasskey: false });
   }
 
-  const known = await isKnownDevice(request.cookies.get(DEVICE_COOKIE)?.value);
   if (!known && !pinOk(body.pin)) {
     await notePinFailure();
     return Response.json({ error: "Falscher PIN." }, { status: 401 });
@@ -77,16 +117,5 @@ export async function POST(request) {
 
   await resetPinFailures();
   await notePasskeyUse(stored._id, verification.authenticationInfo.newCounter);
-  const token = await createSession({ device: userAgent });
-
-  const response = Response.json({ ok: true, token });
-  // Gerät merken, damit hier künftig der Passkey allein genügt.
-  if (!known) {
-    const deviceToken = await rememberDevice({ userAgent });
-    response.headers.append(
-      "Set-Cookie",
-      `${DEVICE_COOKIE}=${deviceToken}; Path=/; Max-Age=${DEVICE_DAYS * 24 * 3600}; HttpOnly; Secure; SameSite=Lax`
-    );
-  }
-  return response;
+  return grant({ request, userAgent, known, mitPasskey: true });
 }

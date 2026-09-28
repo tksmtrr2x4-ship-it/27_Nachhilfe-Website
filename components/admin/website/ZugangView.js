@@ -10,10 +10,14 @@ import { Badge, Button, DataTable, Toolbar, errorText, formatDateTime, input, la
 // Ein Passkey ist entweder gerätegebunden (Face ID auf dem iPhone, Touch ID am
 // Mac) oder steckbar (FIDO2-USB-Schlüssel). Der private Teil verlässt das
 // Gerät nie; auf dem Server liegt nur der öffentliche Teil.
+//
+// Dazu zeigt die Seite, ob an neuen Geräten noch per Mail bestätigt werden muss
+// (siehe lib/auth/loginMail.js).
 export default function ZugangView() {
   const { adminFetch, notify } = useAdmin();
   const { confirm } = useDialogs();
   const [passkeys, setPasskeys] = useState([]);
+  const [mail, setMail] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [label, setLabel] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,6 +26,7 @@ export default function ZugangView() {
     try {
       const data = await adminFetch("/api/admin/passkeys");
       setPasskeys(data.passkeys);
+      setMail(data.mail || null);
     } catch (err) {
       notify(errorText(err));
     } finally {
@@ -90,18 +95,22 @@ export default function ZugangView() {
     <div className="space-y-5">
       <Toolbar
         title="Zugang"
-        hint="Anmeldung mit Passkey. An bekannten Geräten genügt Face ID oder Touch ID, an neuen Geräten zusätzlich der PIN."
+        hint="An bekannten Geräten genügt Face ID oder Touch ID. An neuen Geräten kommen PIN und der Bestätigungslink per Mail dazu."
       />
 
       <div
         className={`rounded-2xl border p-4 text-sm ${
-          passkeys.length > 0
+          passkeys.length > 1
             ? "border-emerald-200 bg-emerald-50/70 text-emerald-900"
-            : "border-amber-200 bg-amber-50/70 text-amber-900"
+            : passkeys.length === 1 || mail?.aktiv
+              ? "border-amber-200 bg-amber-50/70 text-amber-900"
+              : "border-red-200 bg-red-50/70 text-red-900"
         }`}
       >
         {passkeys.length === 0
-          ? "Zurzeit nur ein Faktor: Es ist kein Passkey hinterlegt, die Anmeldung läuft allein über den PIN."
+          ? mail?.aktiv
+            ? `Kein Passkey hinterlegt: Die Anmeldung läuft über PIN und den Bestätigungslink an ${mail.adresse}. Das sind zwei Schritte – ein Passkey ist trotzdem deutlich stärker, weil er nicht abgetippt werden kann.`
+            : "Zurzeit nur ein Faktor: Es ist kein Passkey hinterlegt, die Anmeldung läuft allein über den PIN."
           : passkeys.length === 1
             ? "Ein Passkey hinterlegt. Richte einen zweiten auf einem anderen Gerät oder einem USB-Sicherheitsschlüssel ein – sonst sperrst du dich aus, wenn dieses Gerät verloren geht."
             : `${passkeys.length} Passkeys hinterlegt, davon einer als Reserve. Gut so.`}
@@ -127,6 +136,12 @@ export default function ZugangView() {
         Für einen USB-Sicherheitsschlüssel: Stick einstecken, auf „Passkey einrichten“ tippen und im
         Browser-Dialog „Sicherheitsschlüssel“ wählen. Ein gewöhnlicher USB-Speicherstick funktioniert
         nicht – nötig ist ein FIDO2-Schlüssel.
+      </p>
+
+      <p className="text-xs text-slate-500">
+        {mail?.aktiv
+          ? `Anmeldungen an neuen Geräten werden zusätzlich per Mail an ${mail.adresse} bestätigt. Bekannte Geräte brauchen das nicht. Kommt keine Mail an, lässt sich der Schritt auf dem Server mit ADMIN_LOGIN_MAIL=aus abschalten.`
+          : "Der Bestätigungslink per Mail ist abgeschaltet – es fehlt entweder das Postfach (ADMIN_LOGIN_MAIL) oder der Mailversand (SMTP)."}
       </p>
 
       <DataTable

@@ -35,8 +35,30 @@ PIN und Passkey gestimmt haben. Ein gestohlener Link ohne diese Anmeldung zeigt
 3. **Postfach für die Bestätigungsmail:** `ADMIN_LOGIN_MAIL=<adresse>`. Fehlt die Variable,
    gilt `MAIL_BCC`, sonst `SMTP_USER`. `ADMIN_LOGIN_MAIL=aus` schaltet den Schritt ab.
 4. **Passkey einrichten:** Verwaltung → Website → Zugang → „Passkey einrichten“.
-5. **Zweiten Passkey anlegen** (anderes Gerät oder FIDO2-USB-Schlüssel) – sonst sperrt ein
-   verlorenes Gerät dauerhaft aus.
+5. **Zweiten Passkey anlegen** – nicht auf einem zweiten Apple-Gerät (siehe unten), sondern
+   über den Knopf „Sicherheitsschlüssel“ mit einem FIDO2-Stick.
+
+### Ein Apple-Konto ergibt genau einen Passkey
+
+Apple und Google legen pro Konto **einen** Passkey je Adresse an und spiegeln ihn über den
+Schlüsselbund auf alle Geräte des Kontos. Der am Mac eingerichtete Passkey liegt damit
+bereits auf dem iPhone — und ein zweiter Versuch dort scheitert zwangsläufig
+(`InvalidStateError`, weil `excludeCredentials` den vorhandenen Schlüssel ausschließt). Das
+ist kein Fehler, sondern genau die Absicht: Zwei Einträge für denselben Schlüssel wären
+eine Reserve, die es nicht gibt.
+
+Eine echte Reserve braucht deshalb eine andere Quelle:
+
+| Weg | Was er bringt |
+|---|---|
+| FIDO2-Sicherheitsschlüssel (Knopf „Sicherheitsschlüssel“) | Unabhängig vom Apple-Konto. Die einzige Reserve, die auch bei gesperrtem Konto trägt. |
+| Passkey in einem Passwortmanager (1Password, Bitwarden …) | Unabhängig vom Apple-Konto, aber abhängig von diesem Dienst. |
+| Passkey im Google-Konto (Chrome) | Zweite Wolke, sonst wie oben. |
+
+Der Knopf „Sicherheitsschlüssel“ setzt `authenticatorAttachment: "cross-platform"` und
+`residentKey: "discouraged"` — sonst bietet der Browser wieder Face ID an, und der Stick
+verbraucht unnötig einen seiner wenigen Speicherplätze. Auffindbar muss der Schlüssel
+nicht sein: Bei der Anmeldung nennt der Server die in Frage kommenden Schlüssel selbst.
 
 Ein gewöhnlicher USB-Speicherstick funktioniert nicht: Browser können daraus keinen
 Schlüssel lesen. Nötig ist ein FIDO2-Sicherheitsschlüssel (YubiKey o. ä.).
@@ -55,7 +77,7 @@ Schlüssel lesen. Nötig ist ein FIDO2-Sicherheitsschlüssel (YubiKey o. ä.).
 | Prüfung bei jeder Anfrage | `lib/auth.js` |
 | Anmeldung | `app/api/admin/auth/start`, `…/finish`, `…/wait`, `components/admin/shell/AdminGate.js` |
 | Bestätigungsseite | `app/anmeldung-bestaetigen/`, `components/LoginBestaetigung.js`, `app/api/anmeldung-bestaetigen/` |
-| Verwaltung der Passkeys | `app/api/admin/passkeys`, `components/admin/website/ZugangView.js` |
+| Verwaltung der Passkeys | `app/api/admin/passkeys` (`?art=stick` für den Sicherheitsschlüssel), `components/admin/website/ZugangView.js` |
 
 Bibliothek: `@simplewebauthn/server` und `…/browser` (Version 14) – WebAuthn selbst zu
 implementieren wäre Kryptographie von Hand und damit die schlechtere Wahl.
@@ -82,6 +104,8 @@ Drei Entscheidungen, die man beim Lesen des Codes sonst übersieht:
   hilft nur die Gerätesperre des Betriebssystems.
 - Solange kein Passkey hinterlegt ist, sind PIN und Mail-Link die einzigen Faktoren. Beim
   ersten Gerät ist das unvermeidlich – danach zählt Schritt 4 der Einrichtung.
+- Ein einzelner iCloud-Passkey ist Reserve nur, solange das Apple-Konto erreichbar ist.
+  Gegen ein gesperrtes Konto hilft allein der Sicherheitsschlüssel.
 - Für ≤ 10 Minuten liegt das Sitzungs-Kennwort einer bestätigten Anmeldung im Klartext in
   `admin_login_requests` (zwei Geräte dürfen es abholen). Die Datenbank ist nur lokal
   erreichbar, MongoDB löscht den Eintrag danach selbst.

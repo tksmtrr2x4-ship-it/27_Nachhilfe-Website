@@ -39,27 +39,27 @@ export default function ZugangView() {
     load();
   }, [load]);
 
-  async function addPasskey(e) {
+  // art: "geraet" = Face ID / Touch ID, "stick" = USB-Sicherheitsschlüssel.
+  async function addPasskey(e, art) {
     e.preventDefault();
-    setBusy(true);
+    setBusy(art);
     try {
-      const start = await adminFetch("/api/admin/passkeys", { method: "PUT" });
+      const start = await adminFetch(`/api/admin/passkeys${art === "stick" ? "?art=stick" : ""}`, { method: "PUT" });
       let response;
       try {
         response = await startRegistration({ optionsJSON: start.options });
       } catch (err) {
-        notify(
-          err?.name === "InvalidStateError"
-            ? "Dieses Gerät ist bereits hinterlegt."
-            : err?.name === "NotAllowedError"
-              ? "Abgebrochen."
-              : `Nicht möglich: ${err.message}`
-        );
+        notify(anmeldeFehler(err, art));
         return;
       }
       await adminFetch("/api/admin/passkeys", {
         method: "POST",
-        body: JSON.stringify({ challengeId: start.challengeId, response, label: label || "Neuer Passkey" }),
+        body: JSON.stringify({
+          challengeId: start.challengeId,
+          response,
+          art,
+          label: label || (art === "stick" ? "Sicherheitsschlüssel" : "Neuer Passkey"),
+        }),
       });
       notify("Passkey eingerichtet.");
       setLabel("");
@@ -69,6 +69,19 @@ export default function ZugangView() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Apple und Google legen pro Konto nur einen Passkey je Adresse an. Wer es
+  // auf einem zweiten Gerät derselben Wolke versucht, bekommt deshalb einen
+  // Fehler, der nach einem Defekt aussieht, aber keiner ist.
+  function anmeldeFehler(err, art) {
+    if (err?.name === "InvalidStateError") {
+      return art === "stick"
+        ? "Auf diesem Sicherheitsschlüssel liegt bereits ein Passkey für diese Seite."
+        : "Dieses Konto hat hier schon einen Passkey. Apple und Google legen pro Konto nur einen je Adresse an und spiegeln ihn auf alle Geräte – auf dem iPhone ist er also längst vorhanden. Für einen wirklich zweiten Schlüssel den Weg über den Sicherheitsschlüssel wählen.";
+    }
+    if (err?.name === "NotAllowedError") return "Abgebrochen oder zu lange gewartet.";
+    return `Nicht möglich: ${err.message}`;
   }
 
   async function remove(passkey) {
@@ -112,11 +125,16 @@ export default function ZugangView() {
             ? `Kein Passkey hinterlegt: Die Anmeldung läuft über PIN und den Bestätigungslink an ${mail.adresse}. Das sind zwei Schritte – ein Passkey ist trotzdem deutlich stärker, weil er nicht abgetippt werden kann.`
             : "Zurzeit nur ein Faktor: Es ist kein Passkey hinterlegt, die Anmeldung läuft allein über den PIN."
           : passkeys.length === 1
-            ? "Ein Passkey hinterlegt. Richte einen zweiten auf einem anderen Gerät oder einem USB-Sicherheitsschlüssel ein – sonst sperrst du dich aus, wenn dieses Gerät verloren geht."
+            ? passkeys[0].kind === "geräteübergreifend"
+              ? "Ein Passkey hinterlegt, und zwar im Schlüsselbund deines Apple- bzw. Google-Kontos: Er gilt bereits auf allen Geräten dieses Kontos, auch auf dem iPhone. Ein zweiter per Face ID lässt sich deshalb nicht anlegen – eine echte Reserve wird es erst mit einem USB-Sicherheitsschlüssel, der unabhängig vom Konto funktioniert."
+              : "Ein Passkey hinterlegt, und der gilt nur auf diesem einen Gerät. Richte einen zweiten ein – sonst sperrst du dich aus, wenn das Gerät verloren geht."
             : `${passkeys.length} Passkeys hinterlegt, davon einer als Reserve. Gut so.`}
       </div>
 
-      <form onSubmit={addPasskey} className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <form
+        onSubmit={(e) => addPasskey(e, "geraet")}
+        className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+      >
         <label className="block min-w-48 flex-1">
           <span className={labelClass}>Bezeichnung</span>
           <input
@@ -127,15 +145,25 @@ export default function ZugangView() {
             maxLength={80}
           />
         </label>
-        <Button type="submit" variant="primary" busy={busy} busyLabel="Wartet auf Bestätigung …">
-          Passkey einrichten
+        <Button type="submit" variant="primary" busy={busy === "geraet"} busyLabel="Wartet auf Bestätigung …">
+          Face ID / Touch ID
+        </Button>
+        <Button
+          type="button"
+          onClick={(e) => addPasskey(e, "stick")}
+          busy={busy === "stick"}
+          busyLabel="Schlüssel antippen …"
+        >
+          Sicherheitsschlüssel
         </Button>
       </form>
 
       <p className="text-xs text-slate-500">
-        Für einen USB-Sicherheitsschlüssel: Stick einstecken, auf „Passkey einrichten“ tippen und im
-        Browser-Dialog „Sicherheitsschlüssel“ wählen. Ein gewöhnlicher USB-Speicherstick funktioniert
-        nicht – nötig ist ein FIDO2-Schlüssel.
+        „Face ID / Touch ID“ legt den Passkey im Schlüsselbund deines Apple- oder Google-Kontos ab –
+        von dort gilt er auf allen Geräten dieses Kontos, ein zweiter geht dann nicht mehr.
+        „Sicherheitsschlüssel“ fragt gezielt nach einem Stick: einstecken, tippen, fertig. Nötig ist
+        ein FIDO2-Schlüssel (YubiKey o. ä.); ein gewöhnlicher USB-Speicherstick funktioniert nicht,
+        weil kein Browser Dateien von einem Stick als Anmeldung lesen darf.
       </p>
 
       <p className="text-xs text-slate-500">

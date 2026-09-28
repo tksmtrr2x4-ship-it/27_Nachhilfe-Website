@@ -5,7 +5,8 @@ import { loginMailAddress, loginMailRequired, maskMail } from "@/lib/auth/loginM
 
 // Passkeys verwalten (Verwaltung → Website → Zugang).
 // GET   = Liste
-// PUT   = Vorbereitung: Aufgabe für den Browser erzeugen
+// PUT   = Vorbereitung: Aufgabe für den Browser erzeugen (?art=stick für einen
+//         USB-Sicherheitsschlüssel statt Face ID / Touch ID)
 // POST  = Antwort des Geräts prüfen und Passkey speichern
 export async function GET(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
@@ -22,6 +23,11 @@ export async function PUT(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const rp = relyingParty();
   const existing = await allCredentials();
+  // Apple legt pro Apple-Konto nur einen Passkey je Adresse an und spiegelt
+  // ihn über den iCloud-Schlüsselbund auf alle Geräte. Ein zweiter, davon
+  // unabhängiger Schlüssel geht deshalb nur über einen Stick – dafür muss der
+  // Browser gezielt danach fragen, sonst bietet er wieder Face ID an.
+  const stick = request.nextUrl.searchParams.get("art") === "stick";
   const options = await generateRegistrationOptions({
     rpName: rp.name,
     rpID: rp.id,
@@ -33,8 +39,15 @@ export async function PUT(request) {
     // zweimal registriert wird.
     excludeCredentials: existing.map((c) => ({ id: c.credentialId, transports: c.transports })),
     authenticatorSelection: {
-      // Beides erlaubt: Face ID/Touch ID am Gerät und USB-Sicherheitsschlüssel.
-      residentKey: "preferred",
+      ...(stick
+        ? {
+            authenticatorAttachment: "cross-platform",
+            // Sicherheitsschlüssel haben nur wenige Speicherplätze für
+            // auffindbare Schlüssel. Wir brauchen keinen: Bei der Anmeldung
+            // nennt der Server die in Frage kommenden Schlüssel ohnehin.
+            residentKey: "discouraged",
+          }
+        : { residentKey: "preferred" }),
       userVerification: "required",
     },
   });
@@ -76,7 +89,12 @@ export async function POST(request) {
     counter: credential.counter,
     transports: body.response?.response?.transports || [],
     label: body.label,
-    kind: credentialDeviceType === "multiDevice" ? "geräteübergreifend" : "nur dieses Gerät",
+    kind:
+      credentialDeviceType === "multiDevice"
+        ? "geräteübergreifend"
+        : body.art === "stick"
+          ? "Sicherheitsschlüssel"
+          : "nur dieses Gerät",
   });
   return Response.json({ passkey });
 }

@@ -14,7 +14,8 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "invoice:sample": "node --import ./tests/register-alias.mjs scripts/invoice-sample.mjs",
     "images:optimize": "node scripts/optimize-images.mjs",
-    "zugang:zuruecksetzen": "node scripts/zugang-zuruecksetzen.mjs"
+    "zugang:zuruecksetzen": "node scripts/zugang-zuruecksetzen.mjs",
+    "tor:einladung": "node scripts/tor-einladung.mjs"
   },
   "dependencies": {
     "@e-invoice-eu/core": "^3.3.0",

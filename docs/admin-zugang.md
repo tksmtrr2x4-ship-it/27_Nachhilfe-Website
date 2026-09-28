@@ -4,7 +4,7 @@ Vier Schichten, von außen nach innen:
 
 | Schicht | Was sie leistet | Was sie **nicht** leistet |
 |---|---|---|
-| **Tür-Code in der Adresse** | Ohne ihn antworten `/admin` und `/api/admin` mit „nicht gefunden“. Bots, Scanner und Suchmaschinen sehen keinen Verwaltungsbereich. | Keinen Schutz gegen jemanden, der den Code kennt – er steht im Browserverlauf, in Lesezeichen und im Keks `lernsprung_tor`. Tarnung, nicht Sperre; als halböffentlich behandeln. |
+| **Tür (Einladungslink)** | Ohne gültigen Tür-Keks antworten `/admin` und `/api/admin` mit „nicht gefunden“. Bots, Scanner und Suchmaschinen sehen keinen Verwaltungsbereich. Freigeschaltet wird je Gerät mit einem Link, der fünf Minuten gilt und genau einmal. | Keinen Schutz gegen jemanden, der den Link in diesen fünf Minuten abfängt. Tarnung, nicht Sperre. |
 | **Passkey** (Face ID, Touch ID, FIDO2-USB-Schlüssel) | Der eigentliche Schutz. Der private Schlüssel verlässt das Gerät nie, ist nicht abtippbar, nicht abfangbar und funktioniert nur auf der echten Domain (phishing-sicher). | Nichts, wenn Gerät **und** PIN in fremde Hände geraten – dagegen steht die Mail-Bestätigung. |
 | **PIN** | Zweiter Faktor an jedem Gerät, das der Server noch nicht kennt. | Allein genügt er nur, solange kein Passkey hinterlegt ist. |
 | **Bestätigung per Mail** | Letzter Schritt an neuen Geräten: Ohne Klick auf den Link entsteht keine Sitzung. Zugleich die Benachrichtigung – eine fremde Anmeldung fällt sofort auf und lässt sich ablehnen. | Keinen Schutz, wenn auch das Postfach übernommen wurde. Und keinen Zugang: Der Link allein öffnet nichts. |
@@ -27,16 +27,37 @@ PIN und Passkey gestimmt haben. Ein gestohlener Link ohne diese Anmeldung zeigt
 
 ## Einrichtung
 
-1. **Tür-Code setzen** (einmalig, auf dem Server in `/etc/lernsprung/.env.production`):
-   `ADMIN_GATE_CODE=<lange Zufallszahl>`. Ohne diese Variable ist die Tür offen und alles
-   verhält sich wie vorher.
-2. Einmal `https://www.lernsprung-vs.de/tor/<code>` aufrufen → setzt den Türkeks (ein Jahr)
-   und leitet in die Verwaltung. Pro Gerät und Browser einmal nötig.
-3. **Postfach für die Bestätigungsmail:** `ADMIN_LOGIN_MAIL=<adresse>`. Fehlt die Variable,
+1. **Türschlüssel setzen** (einmalig, auf dem Server in `/etc/lernsprung/.env.production`):
+   `ADMIN_GATE_SECRET=<32 zufällige Bytes als Hex>`, z. B. aus `openssl rand -hex 32`.
+   Nur diese Variable entscheidet, ob die Tür überhaupt aktiv ist – fehlt sie, ist `/admin`
+   ganz normal erreichbar (so bleibt die lokale Entwicklung unbehelligt).
+2. **Erstes Gerät hereinlassen.** Zwei Wege:
+   - `ADMIN_GATE_CODE=<lange Zufallszahl>` setzen und einmal `https://…/tor/<code>` aufrufen.
+     Gedacht zum Anfangen; danach in der Verwaltung abschalten (siehe unten).
+   - oder auf dem Server `npm run tor:einladung` – gibt einen Link aus, der fünf Minuten gilt.
+3. **Weitere Geräte:** Verwaltung → Website → Zugang → „Neues Gerät freischalten“. Der Link
+   erscheint dort einmal, mit QR-Code zum Abscannen und einer ablaufenden Restzeit.
+4. **Dauer-Code abschalten**, sobald alle eigenen Geräte hindurch sind. Danach kommt ein
+   neues Gerät nur noch über eine Einladung. Wieder einschalten geht an derselben Stelle.
+5. **Postfach für die Bestätigungsmail:** `ADMIN_LOGIN_MAIL=<adresse>`. Fehlt die Variable,
    gilt `MAIL_BCC`, sonst `SMTP_USER`. `ADMIN_LOGIN_MAIL=aus` schaltet den Schritt ab.
-4. **Passkey einrichten:** Verwaltung → Website → Zugang → „Passkey einrichten“.
-5. **Zweiten Passkey anlegen** – nicht auf einem zweiten Apple-Gerät (siehe unten), sondern
+6. **Passkey einrichten:** Verwaltung → Website → Zugang → „Face ID / Touch ID“.
+7. **Zweiten Passkey anlegen** – nicht auf einem zweiten Apple-Gerät (siehe unten), sondern
    über den Knopf „Sicherheitsschlüssel“ mit einem FIDO2-Stick.
+
+### Warum Einladung statt Dauer-Code
+
+Ein dauerhafter Code in der Adresse lässt sich nicht zurückholen: Er steht im
+Browserverlauf, in Lesezeichen, in weitergeleiteten Nachrichten. Ein Einladungslink lebt
+fünf Minuten und stirbt beim ersten Gebrauch – wer ihn später findet, findet nichts mehr.
+
+Der Tür-Keks enthält deshalb auch nicht mehr den Code, sondern nur ein Ablaufdatum und
+dessen Signatur (HMAC-SHA256 mit `ADMIN_GATE_SECRET`, siehe `lib/auth/gate.js`). Wer den
+Keks ausliest, hat damit keinen Link, den er weitergeben könnte. Nebenbei kommt der Proxy
+so ohne Datenbank aus – er läuft vor jeder Anfrage.
+
+In der Datenbank steht von einer Einladung nur der SHA-256 ihres Codes. Ein Blick hinein
+verrät keinen gültigen Link.
 
 ### Ein Apple-Konto ergibt genau einen Passkey
 
@@ -67,7 +88,10 @@ Schlüssel lesen. Nötig ist ein FIDO2-Sicherheitsschlüssel (YubiKey o. ä.).
 
 | Baustein | Datei / Collection |
 |---|---|
-| Tür (404 ohne Code) | `proxy.js`, Cookie `lernsprung_tor` |
+| Tür: Keks prüfen (404 ohne gültigen) | `proxy.js` + `lib/auth/gate.js`, Cookie `lernsprung_tor` |
+| Tür: Keks ausstellen | `app/tor/[code]/route.js` |
+| Einladungen (5 Min., einmalig) | `lib/auth/gateInvites.js`, `admin_gate_invites`; Schalter für den Dauer-Code in `admin_gate` |
+| Tür verwalten | `app/api/admin/tor`, `components/admin/website/TuerAbschnitt.js` |
 | Passkeys | `lib/auth/passkeys.js`, `admin_passkeys`, Aufgaben in `admin_webauthn_challenges` |
 | Bekannte Geräte | `lib/auth/devices.js`, `admin_devices`, Cookie `lernsprung_geraet` |
 | Offene Mail-Bestätigungen (10 Min.) | `lib/auth/loginRequests.js`, `admin_login_requests` |
@@ -107,8 +131,11 @@ Drei Entscheidungen, die man beim Lesen des Codes sonst übersieht:
   ersten Gerät ist das unvermeidlich – danach zählt Schritt 4 der Einrichtung.
 - Ein einzelner iCloud-Passkey ist Reserve nur, solange das Apple-Konto erreichbar ist.
   Gegen ein gesperrtes Konto hilft allein der Sicherheitsschlüssel.
-- Wer den Tür-Code kennt, kann durch Falschraten die **PIN-Anmeldung** zehn Minuten am
+- Wer hinter der Tür steht, kann durch Falschraten die **PIN-Anmeldung** zehn Minuten am
   Stück sperren. Das bekannte Gerät mit Passkey bleibt davon unberührt – siehe unten.
+- Einzelne Geräte lassen sich nicht wieder aussperren: Der Tür-Keks wird gerechnet, nicht
+  nachgeschlagen. Wer alle Geräte auf einmal aussperren will, wechselt `ADMIN_GATE_SECRET`
+  und lädt neu – danach braucht jedes Gerät eine neue Einladung.
 
 ### Warum die PIN-Sperre nicht überall gilt
 
@@ -127,14 +154,26 @@ allein zur Nachschau.
 
 ## Notausgang
 
-Solange **kein** Passkey hinterlegt ist, genügen PIN und Mail-Link – nur so lässt sich der
-erste Passkey anlegen. Kommt keine Mail mehr an, `ADMIN_LOGIN_MAIL=aus` setzen und
-`pm2 reload ecosystem.config.js --update-env`. Ist gar kein Zugang mehr möglich:
+**Kein Gerät kommt mehr durch die Tür** – auf dem Server einen Einladungslink erzeugen:
+
+```bash
+ssh deploy@87.106.37.103 'cd /var/www/lernsprung && npm run tor:einladung'
+```
+
+Der Link gilt fünf Minuten. Alternativ den Dauer-Code in
+`/etc/lernsprung/.env.production` wieder eintragen und in der Verwaltung einschalten.
+
+**Alle Geräte auf einmal aussperren** – `ADMIN_GATE_SECRET` neu setzen:
+
+```bash
+ssh deploy@87.106.37.103 'sudo -u deploy sed -i "s/^ADMIN_GATE_SECRET=.*/ADMIN_GATE_SECRET=$(openssl rand -hex 32)/" /etc/lernsprung/.env.production && cd /var/www/lernsprung && pm2 reload ecosystem.config.js --update-env'
+```
+
+**Anmeldung selbst verfahren** (Passkey weg, keine Mail, PIN vergessen):
 
 ```bash
 ssh deploy@87.106.37.103 'cd /var/www/lernsprung && npm run zugang:zuruecksetzen'
 ```
 
 Das löscht Passkeys, bekannte Geräte, Sitzungen und offene Bestätigungen; danach wieder
-PIN-Anmeldung und neu einrichten. Den Tür-Code ändert man in
-`/etc/lernsprung/.env.production`, gefolgt von `pm2 reload ecosystem.config.js --update-env`.
+PIN-Anmeldung und neu einrichten. Die Tür bleibt davon unberührt.

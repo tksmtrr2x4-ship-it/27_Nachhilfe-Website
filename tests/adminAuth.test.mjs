@@ -249,6 +249,10 @@ function fakeDb() {
           treffer.sort((a, b) => (a[feld] < b[feld] ? -1 : a[feld] > b[feld] ? 1 : 0) * richtung);
           return this;
         },
+        limit(n) {
+          treffer.splice(n);
+          return this;
+        },
         async toArray() {
           return treffer.map((doc) => ({ ...doc }));
         },
@@ -330,4 +334,102 @@ async function loadRateLimit() {
   globalThis[schluessel] = db;
   const mod = await import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
   return { limit: mod, db };
+}
+
+test("Tür-Keks: signiert, mit Ablauf, ohne den Code selbst", async () => {
+  const merken = process.env.ADMIN_GATE_SECRET;
+  try {
+    delete process.env.ADMIN_GATE_SECRET;
+    const aus = await ladeFrisch("../lib/auth/gate.js");
+    assert.equal(aus.gateActive(), false, "ohne Schlüssel ist die Tür aus – sonst sperrt sich die Entwicklung selbst aus");
+
+    process.env.ADMIN_GATE_SECRET = "a".repeat(64);
+    const tuer = await ladeFrisch("../lib/auth/gate.js");
+    assert.equal(tuer.gateActive(), true);
+
+    const keks = tuer.doorCookieValue();
+    assert.equal(tuer.doorCookieValid(keks), true);
+    assert.ok(!keks.includes("a".repeat(64)), "der Schlüssel darf nicht im Keks stehen");
+
+    const [version, ablauf, signatur] = keks.split(".");
+    assert.equal(version, "v1");
+    assert.equal(tuer.doorCookieValid(`v1.${Number(ablauf) + 99999}.${signatur}`), false, "verlängertes Ablaufdatum fällt auf");
+    assert.equal(tuer.doorCookieValid(`v1.${ablauf}.${"0".repeat(64)}`), false, "falsche Signatur");
+    assert.equal(tuer.doorCookieValid("07247546265557"), false, "ein alter Keks aus der Code-Zeit gilt nicht mehr");
+    assert.equal(tuer.doorCookieValid(tuer.doorCookieValue({ days: -1 })), false, "abgelaufen");
+
+    process.env.ADMIN_GATE_SECRET = "b".repeat(64);
+    const andere = await ladeFrisch("../lib/auth/gate.js");
+    assert.equal(andere.doorCookieValid(keks), false, "nach Schlüsselwechsel gilt kein alter Keks mehr");
+  } finally {
+    if (merken === undefined) delete process.env.ADMIN_GATE_SECRET;
+    else process.env.ADMIN_GATE_SECRET = merken;
+  }
+});
+
+test("Einladung zur Tür: fünf Minuten, genau einmal", async () => {
+  const { tor, db } = await loadGateInvites();
+
+  const { code, invite } = await tor.createInvite({ label: "iPhone" });
+  assert.equal(code.length, 16);
+  assert.match(code, /^[0-9]+$/, "Ziffern, damit man sie zur Not abtippen kann");
+  assert.ok(!JSON.stringify(db.docs.get(invite._id)).includes(code), "gespeichert wird nur der Hash");
+
+  const uebrig = Math.round((new Date(invite.verfaelltAm).getTime() - Date.now()) / 60000);
+  assert.equal(uebrig, tor.INVITE_MINUTES);
+
+  assert.equal(await tor.claimInvite("1234567890123456"), false, "falscher Code öffnet nichts");
+  assert.equal(await tor.claimInvite(code, { userAgent: "Safari" }), true);
+  assert.equal(await tor.claimInvite(code, { userAgent: "Safari" }), false, "ein zweites Mal geht nicht");
+
+  const benutzt = (await tor.listInvites()).find((e) => e._id === invite._id);
+  assert.equal(benutzt.benutztVon, "Safari");
+
+  // Abgelaufen zählt wie nicht vorhanden.
+  const alt = await tor.createInvite({});
+  db.docs.get(alt.invite._id).verfaelltAm = new Date(Date.now() - 1000);
+  assert.equal(await tor.claimInvite(alt.code), false);
+
+  // Zurückgezogene Einladung ebenso.
+  const weg = await tor.createInvite({});
+  assert.equal(await tor.revokeInvite(weg.invite._id), true);
+  assert.equal(await tor.claimInvite(weg.code), false);
+});
+
+test("Einladungen: höchstens drei offen, Dauer-Code abschaltbar", async () => {
+  const { tor } = await loadGateInvites();
+
+  const erzeugt = [];
+  for (let i = 0; i < 5; i += 1) {
+    erzeugt.push(await tor.createInvite({ label: `Gerät ${i}` }));
+    await new Promise((fertig) => setTimeout(fertig, 2));
+  }
+  assert.equal(await tor.claimInvite(erzeugt[4].code), true, "die neueste gilt");
+  assert.equal(await tor.claimInvite(erzeugt[0].code), false, "die älteste ist herausgefallen");
+
+  assert.equal(await tor.permanentCodeEnabled(), true, "solange nichts entschieden wurde, gilt der Dauer-Code");
+  await tor.setPermanentCodeEnabled(false);
+  assert.equal(await tor.permanentCodeEnabled(), false);
+  await tor.setPermanentCodeEnabled(true);
+  assert.equal(await tor.permanentCodeEnabled(), true, "wieder einschalten muss gehen – sonst ist es ein Einwegschalter");
+});
+
+// Lädt ein Modul mit dem aktuellen Stand von process.env (Module merken sich
+// sonst die Werte vom ersten Import).
+async function ladeFrisch(relativerPfad) {
+  const fs = await import("node:fs");
+  const quelle = fs.readFileSync(new URL(relativerPfad, import.meta.url), "utf8");
+  return import(`data:text/javascript;base64,${Buffer.from(quelle, "utf8").toString("base64")}`);
+}
+
+async function loadGateInvites() {
+  const fs = await import("node:fs");
+  const db = fakeDb();
+  const schluessel = `__testDb_${crypto.randomUUID()}`;
+  const source = fs
+    .readFileSync(new URL("../lib/auth/gateInvites.js", import.meta.url), "utf8")
+    .replace('import { getDb } from "@/lib/mongo";', `const getDb = async () => globalThis[${JSON.stringify(schluessel)}];`);
+  globalThis[schluessel] = db;
+  const tor = await import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
+  return { tor, db };
 }

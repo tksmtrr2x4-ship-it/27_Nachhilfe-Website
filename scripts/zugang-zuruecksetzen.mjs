@@ -1,6 +1,7 @@
 // Notausgang: Alle Passkeys, bekannten Geräte und Sitzungen löschen. Danach
 // genügt zur Anmeldung wieder der PIN allein (siehe lib/auth.js), und ein
-// neuer Passkey lässt sich einrichten.
+// neuer Passkey lässt sich einrichten. Die Tür bleibt unberührt – kommt kein
+// Gerät mehr hindurch, hilft `npm run tor:einladung`.
 // Aufruf auf dem Server:  npm run zugang:zuruecksetzen
 import { MongoClient } from "mongodb";
 import fs from "fs";

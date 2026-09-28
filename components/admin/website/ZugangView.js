@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
+import TuerAbschnitt from "@/components/admin/website/TuerAbschnitt";
 import { Badge, Button, DataTable, Toolbar, errorText, formatDateTime, input, label as labelClass, useDialogs } from "@/components/admin/ui";
 
 // Zugang: Passkeys einrichten und entfernen.
@@ -108,8 +109,12 @@ export default function ZugangView() {
     <div className="space-y-5">
       <Toolbar
         title="Zugang"
-        hint="An bekannten Geräten genügt Face ID oder Touch ID. An neuen Geräten kommen PIN und der Bestätigungslink per Mail dazu."
+        hint="Zwei Ebenen: die Tür entscheidet, welche Geräte den Bereich überhaupt sehen – Passkey, PIN und Bestätigungsmail entscheiden, wer hereinkommt."
       />
+
+      <TuerAbschnitt />
+
+      <h3 className="pt-2 text-sm font-semibold text-slate-900">Passkeys</h3>
 
       <div
         className={`rounded-2xl border p-4 text-sm ${

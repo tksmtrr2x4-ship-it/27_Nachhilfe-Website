@@ -1,98 +1,177 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { startAuthentication } from "@simplewebauthn/browser";
 import InstallApp from "@/components/admin/InstallApp";
 import { AdminProvider } from "@/components/admin/shell/AdminContext";
 import { DialogProvider } from "@/components/admin/ui/ConfirmDialog";
 import AdminShell from "@/components/admin/shell/AdminShell";
 
-// PIN-Abfrage für alle Admin-Seiten. Der PIN bleibt wie bisher nur im
-// sessionStorage (also bis der Tab geschlossen wird) und geht als Header an
-// jede Admin-Schnittstelle; die Prüfung passiert serverseitig.
+// Anmeldung:
+//   bekanntes Gerät → Passkey allein (Face ID, Touch ID, USB-Schlüssel)
+//   neues Gerät     → Passkey und PIN
+//   noch kein Passkey hinterlegt → PIN allein (Aufbau-Zustand)
+//
+// Nach der Anmeldung spricht der Browser nur noch mit einem Sitzungs-Kennwort.
+const STORAGE_KEY = "admin_session";
+
 export default function AdminGate({ children }) {
   // Erst nach dem Mount lesen: Server und Browser rendern sonst
   // Unterschiedliches (Hydration-Fehler), weil der Server den sessionStorage
   // nicht kennt.
-  const [pin, setPin] = useState("");
+  const [token, setToken] = useState("");
   const [ready, setReady] = useState(false);
+  const [mode, setMode] = useState(null); // pin-only | passkey | passkey-pin
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
   useEffect(() => {
-    // Einmalig beim Start aus dem Browserspeicher übernehmen.
     try {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPin(sessionStorage.getItem("admin_pin") || "");
+      setToken(sessionStorage.getItem(STORAGE_KEY) || "");
     } catch {
       // Privates Fenster ohne Speicher: dann eben jedes Mal anmelden.
     }
     setReady(true);
   }, []);
-  const [loginPin, setLoginPin] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  async function handleLogin(e) {
+  // Beim Öffnen fragen, was dieses Gerät braucht.
+  const askMode = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/auth/start", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Anmeldung gerade nicht möglich.");
+        return null;
+      }
+      setMode(data.mode);
+      return data;
+    } catch {
+      setError("Keine Verbindung zum Server.");
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (ready && !token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      askMode();
+    }
+  }, [ready, token, askMode]);
+
+  function accept(value) {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, value);
+    } catch {
+      // Ohne Speicher gilt die Anmeldung nur für diese Seitenansicht.
+    }
+    setToken(value);
+    setPin("");
+  }
+
+  async function submit(e) {
     e.preventDefault();
-    setLoginError("");
+    setError("");
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/auth", {
+      // Frische Aufgabe holen – die aus dem Seitenaufbau kann abgelaufen sein.
+      const start = await askMode();
+      if (!start) return;
+
+      let response;
+      let challengeId;
+      if (start.mode !== "pin-only") {
+        challengeId = start.challengeId;
+        try {
+          response = await startAuthentication({ optionsJSON: start.options });
+        } catch (err) {
+          setError(
+            err?.name === "NotAllowedError"
+              ? "Abgebrochen oder zu lange gewartet. Bitte noch einmal."
+              : `Passkey nicht verfügbar: ${err.message}`
+          );
+          return;
+        }
+      }
+
+      const res = await fetch("/api/admin/auth/finish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: loginPin }),
+        body: JSON.stringify({ pin, challengeId, response }),
       });
       const data = await res.json();
-      if (data.ok) {
-        sessionStorage.setItem("admin_pin", loginPin);
-        setPin(loginPin);
-      } else {
-        setLoginError("Falscher PIN.");
+      if (!res.ok || !data.ok) {
+        setError(data.error || "Anmeldung fehlgeschlagen.");
+        return;
       }
-    } catch {
-      setLoginError("Anmeldung nicht möglich. Verbindung prüfen.");
+      accept(data.token);
     } finally {
       setBusy(false);
     }
   }
 
-  function logout() {
-    sessionStorage.removeItem("admin_pin");
-    setPin("");
-  }
+  const logout = useCallback(() => {
+    const current = token;
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // egal
+    }
+    setToken("");
+    setMode(null);
+    fetch("/api/admin/auth", { method: "DELETE", headers: { "x-admin-session": current } }).catch(() => {});
+  }, [token]);
 
   if (!ready) {
     return <div className="min-h-screen bg-white" aria-busy="true" />;
   }
 
-  if (!pin) {
+  if (!token) {
+    const needsPin = mode !== "passkey";
+    const needsPasskey = mode !== "pin-only";
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6 text-slate-900">
         <div className="w-full max-w-sm">
           <h1 className="text-xl font-semibold text-slate-900">Anmeldung Verwaltung</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            {mode === "passkey"
+              ? "Dieses Gerät ist bekannt – es genügt Face ID, Touch ID oder dein Sicherheitsschlüssel."
+              : mode === "passkey-pin"
+                ? "Neues Gerät: PIN eingeben und danach den Passkey bestätigen."
+                : "PIN eingeben."}
+          </p>
           {/* Auch vor der Anmeldung: Service Worker registrieren und Installation anbieten. */}
           <InstallApp />
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
-            <label htmlFor="admin-pin" className="sr-only">
-              PIN
-            </label>
-            <input
-              id="admin-pin"
-              type="password"
-              placeholder="PIN"
-              value={loginPin}
-              onChange={(e) => setLoginPin(e.target.value)}
-              aria-describedby={loginError ? "admin-pin-error" : undefined}
-              className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            />
-            {loginError ? (
+
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            {needsPin ? (
+              <>
+                <label htmlFor="admin-pin" className="sr-only">
+                  PIN
+                </label>
+                <input
+                  id="admin-pin"
+                  type="password"
+                  placeholder="PIN"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  aria-describedby={error ? "admin-pin-error" : undefined}
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                />
+              </>
+            ) : null}
+            {error ? (
               <p id="admin-pin-error" role="alert" className="text-sm text-red-600">
-                {loginError}
+                {error}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+              className="w-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {busy ? "Prüft …" : "Anmelden"}
+              {busy ? "Prüft …" : needsPasskey ? "Mit Passkey anmelden" : "Anmelden"}
             </button>
           </form>
         </div>
@@ -101,7 +180,7 @@ export default function AdminGate({ children }) {
   }
 
   return (
-    <AdminProvider pin={pin} onLogout={logout}>
+    <AdminProvider pin={token} onLogout={logout}>
       <DialogProvider>
         {/* useSearchParams in der Hülle braucht eine Suspense-Grenze. */}
         <Suspense fallback={null}>

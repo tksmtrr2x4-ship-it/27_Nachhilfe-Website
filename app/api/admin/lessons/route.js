@@ -7,7 +7,7 @@ import { getStudent } from "@/lib/students/db";
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from");
@@ -24,7 +24,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const body = await request.json();
     const student = await getStudent(String(body.studentId || ""));

@@ -6,7 +6,7 @@ import { MAX_RECEIPT_BYTES, sniffReceiptType } from "@/lib/bookkeeping/validatio
 
 // Beleg hochladen (einmalig je Eintrag, write-once).
 export async function POST(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const entry = await getEntry(id);
@@ -32,7 +32,7 @@ export async function POST(request, { params }) {
 
 // Beleg abrufen – nur mit Admin-PIN, Integrität per SHA-256 geprüft.
 export async function GET(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const entry = await getEntry(id);

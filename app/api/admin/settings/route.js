@@ -2,7 +2,7 @@ import { getSettings, updateSettings } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const settings = await getSettings();
   return Response.json({ settings });
 }
@@ -17,7 +17,7 @@ export async function GET(request) {
 const STEUER_ID_PATTERN = /^\d{2}[\s/.-]?\d{3}[\s/.-]?\d{3}[\s/.-]?\d{3}$/;
 
 export async function PATCH(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const body = await request.json();
   if (typeof body.ustId === "string" && STEUER_ID_PATTERN.test(body.ustId.trim())) {
     return Response.json(

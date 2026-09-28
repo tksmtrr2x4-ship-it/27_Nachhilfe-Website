@@ -7,7 +7,7 @@ import { getBooking } from "@/lib/db";
 import { normalizeDiaryInput } from "@/lib/lessons/diary";
 
 export async function PATCH(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const body = await request.json();
@@ -33,7 +33,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     return Response.json(await deleteManualLesson(id));

@@ -8,7 +8,7 @@ const ALLOWED_STATUSES = ["pending", "confirmed", "paid", "cancelled"];
 const ALLOWED_HELD = ["held", "missed", null];
 
 export async function PATCH(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   const body = await request.json();
 
@@ -64,7 +64,7 @@ export async function PATCH(request, { params }) {
 // confirmationEmailSentAt zurück, da sendOrderConfirmationEmail sonst
 // idempotent ist und nichts erneut verschickt.
 export async function POST(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   const booking = await getBooking(id);
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
@@ -77,7 +77,7 @@ export async function POST(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   // Aufbewahrungs-Sperre: Eine Buchung, die in einer ausgestellten Rechnung
   // abgerechnet wurde, gehört zum Buchungsnachweis (§ 147 AO, 8 Jahre) und

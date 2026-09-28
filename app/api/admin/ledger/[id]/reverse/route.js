@@ -4,7 +4,7 @@ import { getEntry, reverseEntry } from "@/lib/bookkeeping/db";
 
 // Korrektur nach GoBD: Gegenbuchung statt Änderung oder Löschung.
 export async function POST(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const entry = await getEntry(id);

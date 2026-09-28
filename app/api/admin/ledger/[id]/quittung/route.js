@@ -35,7 +35,7 @@ function pdfResponse(pdf, filename) {
 }
 
 export async function POST(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   let number = null;
   let id = null;
   try {
@@ -92,7 +92,7 @@ export async function POST(request, { params }) {
 }
 
 export async function GET(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const entry = await getEntry(id);

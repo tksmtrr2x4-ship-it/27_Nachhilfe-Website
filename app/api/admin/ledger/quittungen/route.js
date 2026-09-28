@@ -5,7 +5,7 @@ import { listQuittungen } from "@/lib/bookkeeping/db";
 // Alle ausgestellten Quittungen eines Jahres – Grundlage der Liste unter
 // Finanzen → Quittungen ("jederzeit abrufbar").
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { searchParams } = new URL(request.url);
     const requested = Number.parseInt(searchParams.get("year"), 10);

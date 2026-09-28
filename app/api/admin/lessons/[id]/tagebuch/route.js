@@ -15,7 +15,7 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 // ohne Eintrag das leere Blatt zum Ausfüllen von Hand. Wird pro Aufruf im
 // Speicher erzeugt und nirgends abgelegt; in Logs landen keine Namen.
 export async function GET(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const lesson = await getBooking(id);

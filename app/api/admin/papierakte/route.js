@@ -10,7 +10,7 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 // im Admin von Hand am Telefon ausgefüllt. Tagebuchblätter gibt es je Stunde
 // unter /api/admin/lessons/[id]/tagebuch.
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const docx = await renderPapierakte();
     return new Response(docx, {

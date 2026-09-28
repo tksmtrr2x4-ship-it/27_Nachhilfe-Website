@@ -5,7 +5,7 @@ import { missingInvoiceEnv } from "@/lib/invoicing/config";
 import { invoiceErrorResponse, isOverdue } from "@/lib/invoicing/api";
 
 export async function GET(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   const invoice = await getInvoice(id);
   if (!invoice) return Response.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
 // Entwurf bearbeiten: Empfänger, Positionen, Schüler:in/Fach. Optional
 // wird die (korrigierte) Anschrift zurück in den Kundendatensatz geschrieben.
 export async function PATCH(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   try {
     const body = await request.json();
@@ -46,7 +46,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   const { id } = await params;
   const ok = await deleteDraftInvoice(id);
   if (!ok) {

@@ -8,7 +8,7 @@ import { euro, toCsv } from "@/lib/csv";
 // kind=journal: alle Einzeleinträge eines Jahres (Aufzeichnungen nach GoBD)
 // kind=summary: Summen je Kategorie und Monat als Grundlage für die Anlage EÜR
 export async function GET(request) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { searchParams } = new URL(request.url);
     const year = Number.parseInt(searchParams.get("year"), 10) || new Date().getFullYear();

@@ -4,7 +4,7 @@ import { deleteStudent, getStudent, getStudentOverview, updateStudent } from "@/
 import { normalizeStudentInput } from "@/lib/students/validation";
 
 export async function GET(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     return Response.json(await getStudentOverview(id));
@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     const existing = await getStudent(id);
@@ -37,7 +37,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!isAdminAuthorized(request)) return forbiddenResponse();
+  if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
     return Response.json(await deleteStudent(id));

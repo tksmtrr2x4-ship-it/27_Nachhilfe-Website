@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { doorCookie, doorCookieValue, gateActive } from "@/lib/auth/gate";
 import { claimInvite, permanentCodeEnabled } from "@/lib/auth/gateInvites";
 
@@ -14,7 +13,7 @@ import { claimInvite, permanentCodeEnabled } from "@/lib/auth/gateInvites";
 // Bewusst als eigene Route und nicht mehr im Proxy: Hier darf die Datenbank
 // befragt werden, dort nicht.
 function notFound() {
-  return new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
+  return new Response("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
 }
 
 function samePermanentCode(given) {
@@ -38,7 +37,13 @@ export async function GET(request, { params }) {
     (await claimInvite(given, { userAgent })) || (samePermanentCode(given) && (await permanentCodeEnabled()));
   if (!erlaubt) return notFound();
 
-  const response = NextResponse.redirect(new URL("/admin", request.url));
-  response.headers.append("Set-Cookie", doorCookie(doorCookieValue()));
-  return response;
+  // Das Ziel steht bewusst relativ da. `new URL("/admin", request.url)" ergab
+  // hier https://localhost:3000/admin: In einer Route-Handler-Funktion baut
+  // Next.js request.url aus der eigenen Adresse, nicht aus dem Host-Kopf, den
+  // nginx durchreicht. Ein relatives Ziel löst der Browser selbst gegen die
+  // aufgerufene Adresse auf und ist damit unabhängig von jeder Konfiguration.
+  return new Response(null, {
+    status: 307,
+    headers: { Location: "/admin", "Set-Cookie": doorCookie(doorCookieValue()) },
+  });
 }

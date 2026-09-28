@@ -433,3 +433,56 @@ async function loadGateInvites() {
   const tor = await import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
   return { tor, db };
 }
+
+test("Tür-Weiterleitung zeigt relativ auf /admin", async () => {
+  const merken = process.env.ADMIN_GATE_CODE;
+  try {
+    process.env.ADMIN_GATE_CODE = "dauercode-12345";
+    const tor = await ladeTorRoute({ aktiv: true });
+    const anfrage = { headers: new Headers({ "user-agent": "Safari" }) };
+
+    const falsch = await tor.GET(anfrage, { params: Promise.resolve({ code: "0000111122223333" }) });
+    assert.equal(falsch.status, 404, "ein unbekannter Code verrät nicht einmal, dass es die Tür gibt");
+
+    const gut = await tor.GET(anfrage, { params: Promise.resolve({ code: "1111222233334444" }) });
+    assert.equal(gut.status, 307);
+    const ziel = gut.headers.get("location");
+    assert.equal(ziel, "/admin");
+    // Der eigentliche Punkt: kein absolutes Ziel. `new URL("/admin",
+    // request.url)` ergab auf dem Server https://localhost:3000/admin, weil
+    // Next.js in Route Handlers die eigene Adresse einsetzt und nicht den
+    // Host-Kopf, den nginx durchreicht.
+    assert.ok(!/^https?:/i.test(ziel), "absolutes Ziel würde hinter nginx auf localhost zeigen");
+    assert.match(gut.headers.get("set-cookie") || "", /^lernsprung_tor=/);
+
+    const dauer = await tor.GET(anfrage, { params: Promise.resolve({ code: "dauercode-12345" }) });
+    assert.equal(dauer.status, 307, "der Dauer-Code öffnet ebenfalls");
+
+    const zu = await ladeTorRoute({ aktiv: false });
+    const ohneTuer = await zu.GET(anfrage, { params: Promise.resolve({ code: "1111222233334444" }) });
+    assert.equal(ohneTuer.status, 404, "ohne ADMIN_GATE_SECRET stellt die Tür keinen Keks aus");
+  } finally {
+    if (merken === undefined) delete process.env.ADMIN_GATE_CODE;
+    else process.env.ADMIN_GATE_CODE = merken;
+  }
+});
+
+// Lädt app/tor/[code]/route.js mit vorgetäuschtem Keks und vorgetäuschter
+// Einladungsverwaltung – ohne Datenbank und ohne Next.js.
+async function ladeTorRoute({ aktiv }) {
+  const fs = await import("node:fs");
+  const quelle = fs
+    .readFileSync(new URL("../app/tor/[code]/route.js", import.meta.url), "utf8")
+    .replace(
+      'import { doorCookie, doorCookieValue, gateActive } from "@/lib/auth/gate";',
+      `const doorCookie = (wert) => \`lernsprung_tor=\${wert}; Path=/; HttpOnly\`;
+       const doorCookieValue = () => "v1.999.abc";
+       const gateActive = () => ${aktiv};`
+    )
+    .replace(
+      'import { claimInvite, permanentCodeEnabled } from "@/lib/auth/gateInvites";',
+      `const claimInvite = async (code) => code === "1111222233334444";
+       const permanentCodeEnabled = async () => true;`
+    );
+  return import(`data:text/javascript;base64,${Buffer.from(quelle, "utf8").toString("base64")}`);
+}

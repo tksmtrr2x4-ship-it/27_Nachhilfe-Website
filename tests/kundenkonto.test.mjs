@@ -368,3 +368,22 @@ test("Vorbelegung der Buchung aus Konto und Akte", () => {
   assert.equal(belegung.locationAddress, "Musterweg 1, 78048 VS", "ohne eigene Unterrichtsadresse gilt die Rechnungsanschrift");
   assert.deepEqual(belegung.faecher, [{ subject: "Mathematik", courseLevel: "" }]);
 });
+
+test("Unterrichtsort steht im Elternformular aus deren Sicht", async () => {
+  const { ORTE_AUS_ELTERNSICHT } = await import("@/lib/kunden/selbstauskunft");
+  const { LOCATION_TYPES } = await import("@/lib/students/validation");
+
+  const ausElternsicht = Object.fromEntries(ORTE_AUS_ELTERNSICHT);
+  // Dieselben Werte wie in der Verwaltung – nur andere Beschriftung.
+  assert.deepEqual(Object.keys(ausElternsicht).sort(), Object.keys(LOCATION_TYPES).sort());
+
+  assert.equal(ausElternsicht.student, "Bei mir zuhause");
+  assert.equal(ausElternsicht.tutor, "Bei der Nachhilfelehrkraft");
+  assert.equal(
+    LOCATION_TYPES.tutor,
+    "Bei mir",
+    "in der Verwaltung ist „Bei mir\" die Lehrkraft – im Elternformular wäre das genau verkehrt herum"
+  );
+  assert.notEqual(ausElternsicht.tutor, LOCATION_TYPES.tutor);
+  assert.notEqual(ausElternsicht.student, LOCATION_TYPES.student);
+});

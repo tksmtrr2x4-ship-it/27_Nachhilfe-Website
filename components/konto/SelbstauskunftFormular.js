@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DEFAULT_SUBJECTS } from "@/lib/subjectRules";
-import { LOCATION_TYPES, SCHOOL_TYPES } from "@/lib/students/validation";
+import { SCHOOL_TYPES } from "@/lib/students/validation";
 import {
   ANREDEN,
   AUFMERKSAM_DURCH,
@@ -10,6 +10,7 @@ import {
   DAUERN,
   HAEUFIGKEITEN,
   MAX_FAECHER,
+  ORTE_AUS_ELTERNSICHT,
   niveausFuer,
 } from "@/lib/kunden/selbstauskunft";
 
@@ -165,9 +166,14 @@ export default function SelbstauskunftFormular({
 
       <Abschnitt titel="Wie soll der Unterricht laufen?">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Auswahl label="Wo am liebsten?" wert={werte.organisation.ort} onChange={setzen("organisation", "ort")} optionen={Object.entries(LOCATION_TYPES)} />
+          <Auswahl
+            label="Wo am liebsten?"
+            wert={werte.organisation.ort}
+            onChange={setzen("organisation", "ort")}
+            optionen={ORTE_AUS_ELTERNSICHT}
+          />
           <Eingabe
-            label="Adresse für den Unterricht (falls abweichend)"
+            label="Adresse für den Unterricht (falls abweichend von oben)"
             wert={werte.organisation.adresse}
             onChange={setzen("organisation", "adresse")}
             maxLength={300}

@@ -70,7 +70,34 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">3. E-Mail-Versand</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">3. Schülerakte (Kundenbereich)</h2>
+          <p className="mt-2">
+            Unter <strong>/konto</strong> können Sie eine Schülerakte anlegen und sich später ohne
+            Passwort anmelden. Dabei verarbeite ich Ihren Namen und Ihre Kontaktdaten einschließlich
+            Anschrift, die Angaben zu Ihrem Kind (Name, Klasse, Schulart, Schule) sowie die von Ihnen
+            gemachten Angaben zum Lernbedarf (Fächer, aktuelle Noten, Ziele, gewünschte Zeiten).
+            Diese Angaben ersetzen den Aufnahmebogen, den wir sonst gemeinsam ausfüllen würden.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nachhilfevertrags bzw.
+            vorvertragliche Maßnahmen auf Ihre Anfrage).
+          </p>
+          <p className="mt-2">
+            Die Anmeldung erfolgt über einen einmaligen Link per E-Mail; ein Passwort wird weder
+            vergeben noch gespeichert. Damit Sie angemeldet bleiben, setze ich einen technisch
+            notwendigen Cookie (<code>lernsprung_konto</code>, 30 Tage, siehe Abschnitt 7). In der
+            Schülerakte sehen Sie Ihre kommenden Termine und kurze Hinweise von mir zur nächsten
+            Stunde; meine eigenen Unterrichtsnotizen sind dort nicht sichtbar.
+          </p>
+          <p className="mt-2">
+            Auch hier bitte ich ausdrücklich darum, keine Angaben zu Gesundheit, Diagnosen oder
+            Nachteilsausgleichen einzutragen — solche besonderen Kategorien personenbezogener Daten
+            nach Art. 9 DSGVO besprechen wir stattdessen persönlich. Ihre Angaben können Sie
+            jederzeit selbst ändern; die Löschung Ihrer Schülerakte können Sie jederzeit formlos per
+            E-Mail verlangen.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-semibold text-slate-900 dark:text-white">4. E-Mail-Versand</h2>
           <p className="mt-2">
             Terminbestätigungen und Rückfragen versende ich über ein eigenes Postfach beim
             E-Mail-/Hosting-Anbieter Strato AG, Pascalstraße 10, 10587 Berlin, als
@@ -83,12 +110,12 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">4. Online-Unterricht</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">5. Online-Unterricht</h2>
           <p className="mt-2">
             Für online stattfindenden Unterricht nutze ich eine selbst betriebene Instanz der
             Videokonferenz-Software Jitsi Meet unter einer eigenen Adresse
             (meet.lernsprung-vs.de), die auf demselben Server wie diese Website läuft (siehe
-            Abschnitt 5). Dabei werden Bild- und Tonübertragung sowie technische
+            Abschnitt 6). Dabei werden Bild- und Tonübertragung sowie technische
             Verbindungsdaten (u.a. IP-Adresse während der Sitzung) verarbeitet, ausschließlich
             zur Durchführung der gebuchten Unterrichtsstunde. Rechtsgrundlage ist Art. 6 Abs. 1
             lit. b DSGVO (Erfüllung des Nachhilfevertrags). Da die Software auf meiner eigenen
@@ -99,7 +126,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">5. Hosting und Server-Logfiles</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">6. Hosting und Server-Logfiles</h2>
           <p className="mt-2">
             Diese Website wird auf einem Server der Strato AG, Pascalstraße 10, 10587 Berlin,
             als Auftragsverarbeiter nach Art. 28 DSGVO betrieben, mit Serverstandort
@@ -122,23 +149,35 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">6. Cookies und lokale Speicherung</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">7. Cookies und lokale Speicherung</h2>
           <p className="mt-2">
             Für Besucher:innen der öffentlichen Seite werden{" "}
             <strong>keine Cookies</strong> gesetzt und
-            keine Daten in localStorage/sessionStorage des Browsers abgelegt. Der einzige
-            Speicherzugriff im gesamten Angebot betrifft ausschließlich mich selbst im
-            passwortgeschützten Admin-Bereich: dort merkt sich der Browser den eingegebenen
-            Zugangs-Code in sessionStorage, damit ich nach einem Neuladen der Seite
-            angemeldet bleibe. Dieser Zugriff ist nach § 25 Abs. 2 Nr. 2 TDDDG unbedingt
-            erforderlich, um die von mir selbst ausdrücklich gewünschte Funktion (angemeldet
-            bleiben) bereitzustellen, und daher von der Einwilligungspflicht ausgenommen.
-            Deshalb gibt es auf dieser Seite bewusst kein Cookie-Consent-Banner.
+            keine Daten in localStorage/sessionStorage des Browsers abgelegt. Solange Sie sich
+            nicht anmelden, ändert sich daran nichts. Zwei Speicherzugriffe betreffen
+            ausschließlich angemeldete Personen:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              In der Schülerakte (Abschnitt 3) setze ich nach Ihrer Anmeldung den Cookie{" "}
+              <code>lernsprung_konto</code> (30 Tage). Er hält allein die Anmeldung aufrecht und
+              enthält kein Passwort.
+            </li>
+            <li>
+              Im passwortgeschützten Verwaltungsbereich merkt sich mein eigener Browser ein
+              Sitzungskennwort sowie ein Merkmal des Geräts, damit ich angemeldet bleibe.
+            </li>
+          </ul>
+          <p className="mt-2">
+            Beide Zugriffe sind nach § 25 Abs. 2 Nr. 2 TDDDG unbedingt erforderlich, um die
+            ausdrücklich gewünschte Funktion (angemeldet bleiben) bereitzustellen, und daher von
+            der Einwilligungspflicht ausgenommen. Eine Analyse des Nutzungsverhaltens findet nicht
+            statt. Deshalb gibt es auf dieser Seite bewusst kein Cookie-Consent-Banner.
           </p>
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">7. Speicherdauer</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">8. Speicherdauer</h2>
           <p className="mt-2">
             Buchungsdaten ohne steuerliche Relevanz (z.B. Name, Kontaktdaten, Termin- und
             Fachangaben) speichere ich für die Dauer der Geschäftsbeziehung und danach für
@@ -161,7 +200,7 @@ export default function DatenschutzPage() {
 
         <section>
           <h2 className="font-semibold text-slate-900 dark:text-white">
-            8. Keine automatisierte Entscheidungsfindung
+            9. Keine automatisierte Entscheidungsfindung
           </h2>
           <p className="mt-2">
             Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling im
@@ -170,12 +209,12 @@ export default function DatenschutzPage() {
         </section>
 
         <section className="rounded-xl border-2 border-amber-300 bg-amber-50 p-5 dark:border-amber-500/40 dark:bg-amber-500/10">
-          <h2 className="font-semibold text-slate-900 dark:text-white">9. Widerspruchsrecht (Art. 21 DSGVO)</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">10. Widerspruchsrecht (Art. 21 DSGVO)</h2>
           <p className="mt-2">
             Soweit die Verarbeitung Ihrer personenbezogenen Daten auf Art. 6 Abs. 1 lit. f
             DSGVO (berechtigtes Interesse) gestützt wird — das betrifft insbesondere die
-            Server-Logfiles nach Abschnitt 5 und die verlängerte Aufbewahrung nach Abschnitt
-            7 — haben Sie das Recht, aus Gründen, die sich aus Ihrer besonderen Situation
+            Server-Logfiles nach Abschnitt 6 und die verlängerte Aufbewahrung nach Abschnitt
+            8 — haben Sie das Recht, aus Gründen, die sich aus Ihrer besonderen Situation
             ergeben, jederzeit gegen diese Verarbeitung Widerspruch einzulegen. Ich verarbeite
             die betroffenen Daten dann nicht mehr, es sei denn, ich kann zwingende
             schutzwürdige Gründe für die Verarbeitung nachweisen, die Ihre Interessen,
@@ -186,9 +225,9 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">10. Weitere Rechte der Betroffenen</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">11. Weitere Rechte der Betroffenen</h2>
           <p className="mt-2">
-            Zusätzlich zum Widerspruchsrecht aus Abschnitt 9 besteht das Recht auf Auskunft
+            Zusätzlich zum Widerspruchsrecht aus Abschnitt 10 besteht das Recht auf Auskunft
             (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO),
             Einschränkung der Verarbeitung (Art. 18 DSGVO) sowie Datenübertragbarkeit (Art. 20
             DSGVO). Anfragen dazu richten Sie bitte an die oben genannte E-Mail-Adresse. Zudem

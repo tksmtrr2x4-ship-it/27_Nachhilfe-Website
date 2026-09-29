@@ -58,8 +58,10 @@ function statusBadge(inv) {
   }
 }
 
-export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceId, onOpened, onBookingsChanged }) {
-  const [view, setView] = useState("list");
+export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceId, onOpened, onBookingsChanged, initialView, onBackFromCustomers }) {
+  // Wird der Bereich als eigener Reiter geöffnet (Finanzen →
+  // Rechnungsempfänger), startet er direkt dort.
+  const [view, setView] = useState(initialView || "list");
   const [invoices, setInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [config, setConfig] = useState(null);
@@ -418,7 +420,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
           setNotice={setNotice}
           onChanged={refresh}
           onCreateInvoice={createDraftForCustomer}
-          onBack={() => setView("list")}
+          onBack={onBackFromCustomers || (() => setView("list"))}
         />
       )}
     </div>
@@ -1126,7 +1128,9 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
   );
 }
 
-function CustomerForm({ initial, onCancel, onSave }) {
+// Auch von der Schülerakte aus benutzt – dort steht die Anschrift, die für
+// Rechnungen fehlt, und dort soll man sie auch ändern können.
+export function CustomerForm({ initial, onCancel, onSave }) {
   const [form, setForm] = useState(initial);
   const fields = [
     ["name", "Name"],

@@ -1,5 +1,6 @@
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { adminErrorResponse, assertValid, AdminError } from "@/lib/adminError";
+import { loescheBuchung } from "@/lib/admin/loeschen";
 import { deleteManualLesson, updateLesson } from "@/lib/lessons/db";
 import { normalizeLessonInput } from "@/lib/lessons/rules";
 import { getStudent } from "@/lib/students/db";
@@ -32,11 +33,16 @@ export async function PATCH(request, { params }) {
   }
 }
 
+// Löschen mit Grund und Protokoll. Die Sperren (Rechnung, Journal, extern
+// abgerechnet, Online-Buchung) halten nur beim ersten Versuch an und werden
+// als Liste zurückgegeben; mit `trotzdem` wird gelöscht. Ein Tippfehler ist
+// kein Geschäftsvorfall – siehe lib/admin/loeschen.js.
 export async function DELETE(request, { params }) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
-    return Response.json(await deleteManualLesson(id));
+    const body = await request.json().catch(() => ({}));
+    return Response.json(await loescheBuchung({ id, grund: body.grund, trotzdem: body.trotzdem === true }));
   } catch (err) {
     return adminErrorResponse(err, "Stunden");
   }

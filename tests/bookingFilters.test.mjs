@@ -13,6 +13,9 @@ const session = (extra = {}) => ({
 
 test("Zeiträume", () => {
   assert.deepEqual(periodRange("thisMonth", TODAY), { from: "2026-09-01", to: "2026-09-30" });
+  // Der neue Standard: ab Monatsbeginn, nach hinten offen – sonst verschwindet
+  // eine Stunde in drei Tagen am Monatsende aus der Unterrichtsliste.
+  assert.deepEqual(periodRange("current", TODAY), { from: "2026-09-01", to: "" });
   assert.deepEqual(periodRange("lastMonth", TODAY), { from: "2026-08-01", to: "2026-08-31" });
   assert.deepEqual(periodRange("upcoming", TODAY), { from: TODAY, to: "" });
   assert.deepEqual(periodRange("year", TODAY), { from: "2026-01-01", to: "2026-12-31" });

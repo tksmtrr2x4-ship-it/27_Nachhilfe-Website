@@ -3,6 +3,8 @@ import { updateBooking, getBooking, deleteBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
 import { setBookingHeldStatus } from "@/lib/invoicing/db";
+import { loescheBuchung } from "@/lib/admin/loeschen";
+import { adminErrorResponse } from "@/lib/adminError";
 
 const ALLOWED_STATUSES = ["pending", "confirmed", "paid", "cancelled"];
 const ALLOWED_HELD = ["held", "missed", null];
@@ -76,21 +78,17 @@ export async function POST(request, { params }) {
   return Response.json({ ok: true });
 }
 
+// Löschen mit Grund und Protokoll – auch dann, wenn die Buchung schon
+// abgerechnet ist. Was dagegen spricht, kommt beim ersten Versuch als Liste
+// zurück; mit `trotzdem` wird gelöscht. Rechnung und Journalbuchung bleiben
+// dabei unberührt, sie tragen eigene Kopien (siehe lib/admin/loeschen.js).
 export async function DELETE(request, { params }) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
-  const { id } = await params;
-  // Aufbewahrungs-Sperre: Eine Buchung, die in einer ausgestellten Rechnung
-  // abgerechnet wurde, gehört zum Buchungsnachweis (§ 147 AO, 8 Jahre) und
-  // wird nicht gelöscht. Die Rechnung selbst hält ohnehin eigene Kopien
-  // (Positionen/Empfänger) und ist nie löschbar – siehe docs/rechnungen.md.
-  const existing = await getBooking(id);
-  if (existing?.invoiceId) {
-    return Response.json(
-      { error: "Diese Buchung ist in einer ausgestellten Rechnung abgerechnet und bleibt wegen der Aufbewahrungspflicht erhalten." },
-      { status: 409 }
-    );
+  try {
+    const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    return Response.json(await loescheBuchung({ id, grund: body.grund, trotzdem: body.trotzdem === true }));
+  } catch (err) {
+    return adminErrorResponse(err, "Buchungen");
   }
-  const ok = await deleteBooking(id);
-  if (!ok) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
-  return Response.json({ ok: true });
 }

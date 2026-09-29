@@ -63,7 +63,12 @@ export function createAdminClient(pin, onUnauthorized) {
       throw new Error("Nicht angemeldet.");
     }
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.error || "Aktion fehlgeschlagen."), { problems: data.problems });
+    // `daten` trägt die vollständige Antwort mit – manche Routen liefern
+    // strukturierte Zusatzangaben (etwa die Gründe gegen ein Löschen), die
+    // ein einzelner Fehlersatz nicht transportieren kann.
+    if (!res.ok) {
+      throw Object.assign(new Error(data.error || "Aktion fehlgeschlagen."), { problems: data.problems, daten: data });
+    }
     return data;
   }
 

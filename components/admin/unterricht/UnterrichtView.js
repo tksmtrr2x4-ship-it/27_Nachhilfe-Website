@@ -37,7 +37,7 @@ import TagebuchDialog from "@/components/admin/management/TagebuchDialog";
 // Unterrichts (lib/bookings/order.js), gruppiert nach Monat.
 export default function UnterrichtView({ filters, onFilters }) {
   const { adminFetch, notify } = useAdmin();
-  const { confirm } = useDialogs();
+  const { confirm, ask } = useDialogs();
   const router = useRouter();
   const today = todayIso();
 
@@ -48,7 +48,7 @@ export default function UnterrichtView({ filters, onFilters }) {
   const [notesDialog, setNotesDialog] = useState(null);
   const [custom, setCustom] = useState({ from: "", to: "" });
 
-  const period = filters.period || "thisMonth";
+  const period = filters.period || "current";
   const range = useMemo(
     () => (period === "custom" ? custom : periodRange(period, today) || { from: "", to: "" }),
     [period, custom, today]
@@ -136,20 +136,51 @@ export default function UnterrichtView({ filters, onFilters }) {
     }
   }
 
+  // Löschen ist immer möglich – ein Tippfehler ist kein Geschäftsvorfall und
+  // gehört nicht per Gegenbuchung „gelöst". Was dagegen spricht, wird aber
+  // gezeigt und muss ausdrücklich bestätigt werden, und der Grund landet im
+  // Löschprotokoll (Finanzen → Gelöschtes).
   async function deleteBooking(booking) {
-    const ok = await confirm({
-      title: "Eintrag endgültig löschen?",
-      message: "Das lässt sich nicht zurücknehmen. Abgerechnete Stunden bleiben wegen der Aufbewahrungspflicht erhalten.",
-      confirmLabel: "Löschen",
-      danger: true,
+    const grund = await ask({
+      title: "Eintrag löschen",
+      message: "Warum? Der Grund steht später im Löschprotokoll – z. B. „doppelt eingetragen“ oder „Termin gab es nie“.",
+      required: true,
+      maxLength: 300,
     });
-    if (!ok) return;
+    if (!grund) return;
+
+    async function senden(trotzdem) {
+      return adminFetch(`/api/admin/bookings/${booking._id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ grund, trotzdem }),
+      });
+    }
+
     try {
-      await adminFetch(`/api/admin/bookings/${booking._id}`, { method: "DELETE" });
+      await senden(false);
       notify("Eintrag gelöscht.");
       load();
+      return;
     } catch (err) {
-      notify(errorText(err));
+      const gruende = err.daten?.gruende;
+      if (!gruende?.length) {
+        notify(errorText(err));
+        return;
+      }
+      const ok = await confirm({
+        title: "Trotzdem löschen?",
+        message: `${gruende.map((g) => `• ${g.text}`).join("\n")}\n\nDie Zeile hier verschwindet, die genannten Dokumente bleiben. Der Vorgang steht mit deinem Grund im Löschprotokoll.`,
+        confirmLabel: "Trotzdem löschen",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await senden(true);
+        notify("Eintrag gelöscht und protokolliert.");
+        load();
+      } catch (zweiter) {
+        notify(errorText(zweiter));
+      }
     }
   }
 
@@ -299,7 +330,9 @@ export default function UnterrichtView({ filters, onFilters }) {
         },
       },
       { label: "Stornieren", tone: "red", hidden: b.status === "cancelled", onClick: () => cancelBooking(b) },
-      { label: "Löschen", tone: "red", hidden: Boolean(b.invoiceId), onClick: () => deleteBooking(b) },
+      // Nicht mehr ausgeblendet, wenn abgerechnet: Der Weg führt dann über
+      // eine zusätzliche Bestätigung, nicht über eine Sackgasse.
+      { label: "Löschen", tone: "red", onClick: () => deleteBooking(b) },
     ];
   }
 

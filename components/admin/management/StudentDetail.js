@@ -12,6 +12,8 @@ import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog, { downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
 import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
+import { useDialogs } from "@/components/admin/ui";
+import { CustomerForm } from "@/components/admin/InvoicesPanel";
 import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 
 const INVOICE_STATUS = { issued: "Ausgestellt", sent: "Versendet", paid: "Bezahlt", cancelled: "Storniert", issuing: "wird ausgestellt" };
@@ -37,6 +39,10 @@ export function billingState(lesson, today) {
 }
 
 export default function StudentDetail({ id, adminFetch, pin, setNotice, customers, onCreateInvoice, onBack, onDeleted }) {
+  const { confirm, ask } = useDialogs();
+  // Rechnungsempfänger:in direkt hier bearbeiten: Die fehlende Anschrift
+  // fällt in dieser Akte auf, also gehört die Korrektur auch hierher.
+  const [kundeBearbeiten, setKundeBearbeiten] = useState(null);
   const [data, setData] = useState(null);
   const [editing, setEditing] = useState(false);
   const [lessonDialog, setLessonDialog] = useState(null); // "new" | lesson
@@ -85,14 +91,47 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
     }
   }
 
+  // Wie im Bereich Unterricht: Löschen geht immer, braucht aber einen Grund
+  // fürs Löschprotokoll; Sperren werden gezeigt und lassen sich bestätigen.
   async function deleteLesson(lesson) {
-    if (!confirm(`Stunde vom ${formatDate(lesson.requestedDate)} löschen?`)) return;
+    const grund = await ask({
+      title: `Stunde vom ${formatDate(lesson.requestedDate)} löschen`,
+      message: "Warum? Der Grund steht später im Löschprotokoll.",
+      required: true,
+      maxLength: 300,
+    });
+    if (!grund) return;
+
+    const senden = (trotzdem) =>
+      adminFetch(`/api/admin/lessons/${lesson._id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ grund, trotzdem }),
+      });
+
     try {
-      await adminFetch(`/api/admin/lessons/${lesson._id}`, { method: "DELETE" });
+      await senden(false);
       setNotice("Stunde gelöscht.");
       refresh();
     } catch (err) {
-      setNotice(errorText(err));
+      const gruende = err.daten?.gruende;
+      if (!gruende?.length) {
+        setNotice(errorText(err));
+        return;
+      }
+      const ok = await confirm({
+        title: "Trotzdem löschen?",
+        message: `${gruende.map((g) => `• ${g.text}`).join("\n")}\n\nDie Stunde verschwindet, die genannten Dokumente bleiben. Der Vorgang steht mit deinem Grund im Löschprotokoll.`,
+        confirmLabel: "Trotzdem löschen",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await senden(true);
+        setNotice("Stunde gelöscht und protokolliert.");
+        refresh();
+      } catch (zweiter) {
+        setNotice(errorText(zweiter));
+      }
     }
   }
 
@@ -232,7 +271,14 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold text-slate-500">Rechnungsempfänger:in</dt>
+              <dt className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-500">
+                <span>Rechnungsempfänger:in</span>
+                {customer ? (
+                  <button type="button" className={link} onClick={() => setKundeBearbeiten({ ...customer })}>
+                    Bearbeiten
+                  </button>
+                ) : null}
+              </dt>
               <dd className="text-slate-800">
                 {customer ? (
                   <>
@@ -285,6 +331,25 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
 
         <SelbstauskunftKarte auskunft={student.selbstauskunft} />
       </div>
+
+      {kundeBearbeiten ? (
+        <Modal title="Rechnungsempfänger:in bearbeiten" onClose={() => setKundeBearbeiten(null)}>
+          <CustomerForm
+            initial={kundeBearbeiten}
+            onCancel={() => setKundeBearbeiten(null)}
+            onSave={async (form) => {
+              try {
+                await adminFetch(`/api/admin/customers/${form._id}`, { method: "PATCH", body: JSON.stringify(form) });
+                setKundeBearbeiten(null);
+                setNotice("Rechnungsempfänger:in gespeichert.");
+                refresh();
+              } catch (err) {
+                setNotice(errorText(err));
+              }
+            }}
+          />
+        </Modal>
+      ) : null}
 
       <div className={`${card} min-w-0`}>
         <div className="flex flex-wrap items-center justify-between gap-3">

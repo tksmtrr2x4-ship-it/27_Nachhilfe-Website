@@ -92,3 +92,20 @@ eigenen Server (siehe [../schueler-buchhaltung.md](../schueler-buchhaltung.md)).
 | Drittland | Nein |
 | Löschfrist | 8 Jahre (§ 147 AO) |
 | TOM | Siehe Nr. 2, ggf. zusätzlich Zugriffsschutz bei der Buchhaltungssoftware |
+
+## 8. Schülerakte für Eltern (Kundenkonto, /konto)
+
+Seit 29.09.2026. Technische Beschreibung: [../kundenkonto.md](../kundenkonto.md).
+
+| Feld | Inhalt |
+|---|---|
+| Zweck | Eltern sehen kommende Nachhilfestunden und kurze Hinweise der Lehrkraft; Schülerakte selbst anlegen, ohne zu buchen |
+| Kategorien betroffener Personen | Erziehungsberechtigte, Schüler:innen (überwiegend minderjährig) |
+| Datenkategorien | Name und E-Mail-Adresse der/des Erziehungsberechtigten, freiwillig Telefon; Name, Klasse und Schulart des Kindes; Termindaten der Stunden; Nachrichtentexte der Lehrkraft; technisch: Sitzungskeks, gekürzte Browserkennung |
+| Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (Durchführung des Nachhilfevertrags bzw. vorvertragliche Maßnahmen auf Anfrage) |
+| Besondere Kategorien (Art. 9) | Nicht vorgesehen. Das Anmeldeformular weist ausdrücklich darauf hin, keine Gesundheitsangaben einzutragen |
+| Empfänger | Keine. Verarbeitung ausschließlich auf dem eigenen V-Server; Mailversand über Strato (Auftragsverarbeiter) |
+| Drittland | Nein |
+| Löschfrist | Konto und Schülerakte: wie Nr. 2/3 bzw. auf Wunsch sofort. Anmeldelinks: 30 Minuten. Bestätigungslinks: 24 Stunden. Sitzungen: 30 Tage. Nachrichten: mit der Schülerakte |
+| TOM | Anmeldung ohne Passwort über einmaligen Link (keine Passwortdatenbank); Sitzungskennwort nur als SHA-256 gespeichert; Keks HttpOnly/Secure/SameSite=Lax; Code steht hinter dem Doppelkreuz und damit in keinem Zugriffsprotokoll; Mailversand nur an bereits hinterlegte Adressen; Mengenbremse gegen Postfachfluten; interne Notizen und Stundentagebuch sind für Eltern **nicht** sichtbar (durch Test abgesichert) |
+

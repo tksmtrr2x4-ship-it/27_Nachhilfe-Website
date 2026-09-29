@@ -14,6 +14,10 @@ Konzepts (siehe letzte Spalte).
 | Datenbank-Backups | `/var/backups/lernsprung/mongo/` auf dem V-Server | 30 Tage | Automatisch durch das Backup-Skript (`find ... -mtime +30 -exec rm -rf`) | Stichprobenartig prüfen, dass alte Ordner tatsächlich verschwinden |
 | Admin-PIN (Session) | `sessionStorage` im Browser der Betreiberin | Bis Tab/Fenster geschlossen oder Abmeldung | Automatisch durch den Browser bzw. "Abmelden"-Funktion | Kein manueller Schritt nötig |
 | Rückmeldungen/Testimonials | MongoDB (Strato-Server), Collection `testimonials` | Keine feste Frist — freiwillig eingereicht, bleibt bis zum Widerruf durch die Person oder Entfernung durch die Betreiberin sichtbar | Manuell im Admin-Bereich löschen | Betreiberin, bei Widerrufswunsch der/des Betroffenen sofort |
+| Kundenkonto: Anmelde- und Bestätigungslinks | MongoDB, `kunden_links` | 30 Minuten bzw. 24 Stunden | **Automatisch** durch MongoDB (TTL-Index auf `verfaelltAm`) | Kein manueller Schritt nötig |
+| Kundenkonto: Sitzungen | MongoDB, `kunden_sitzungen` | 30 Tage | **Automatisch** (TTL-Index); Abmelden löscht sofort | Kein manueller Schritt nötig |
+| Kundenkonto: Mengenbremse | MongoDB, `kunden_bremse` | 1 Stunde | **Automatisch** (TTL-Index) | Kein manueller Schritt nötig |
+| Nachrichten an Eltern | MongoDB, `kunden_nachrichten` | Mit der zugehörigen Schülerakte | Manuell zusammen mit der Akte | Betreiberin, bei Löschung der Akte |
 
 ## Größte Lücke: automatisierte Löschung fehlt noch
 

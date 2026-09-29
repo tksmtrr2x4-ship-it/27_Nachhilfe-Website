@@ -6,6 +6,7 @@ import { COURSE_LEVELS } from "@/lib/subjectRules";
 import { SCHOOL_TYPES, STUDENT_STATUS, LOCATION_TYPES } from "@/lib/students/validation";
 import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import ElternNachricht from "@/components/admin/management/ElternNachricht";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog, { downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
@@ -64,6 +65,15 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
   const selectedBillable = selected.filter((sid) => billable.some((l) => l._id === sid));
   const selectedCents = billable.filter((l) => selectedBillable.includes(l._id)).reduce((s, l) => s + (l.offerSnapshot?.priceCents || 0), 0);
   const selectedAllOld = selectedBillable.length > 0 && billable.filter((l) => selectedBillable.includes(l._id)).every(isBeforeJournalStart);
+
+  async function alsGeprueft() {
+    try {
+      await adminFetch(`/api/admin/students/${id}`, { method: "PATCH", body: JSON.stringify({ geprueft: true }) });
+      refresh();
+    } catch (err) {
+      setNotice(err.message);
+    }
+  }
 
   async function setHeld(lessonId, heldStatus) {
     try {
@@ -190,6 +200,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className={`${card} min-w-0`}>
           <h3 className="font-semibold text-slate-900">Stammdaten</h3>
+          {/* Akten, die Eltern selbst über /konto angelegt haben, hat noch
+              niemand gegengelesen – das soll auffallen. */}
+          {student.selbstAngelegt && !student.geprueft ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-900">
+              <span>Von den Eltern selbst angelegt und noch nicht durchgesehen.</span>
+              <button className={btnSecondary} onClick={alsGeprueft}>
+                Durchgesehen
+              </button>
+            </div>
+          ) : null}
           <dl className="mt-3 space-y-2 text-sm">
             <div>
               <dt className="text-xs font-semibold text-slate-500">Fächer</dt>
@@ -259,6 +279,8 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
             ))}
           </ul>
         </div>
+
+        <ElternNachricht customer={customer} studentName={student.name} adminFetch={adminFetch} setNotice={setNotice} />
       </div>
 
       <div className={`${card} min-w-0`}>

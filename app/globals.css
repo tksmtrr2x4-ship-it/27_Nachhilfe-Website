@@ -196,3 +196,126 @@ button:hover > .arrow-slide {
     transform: none;
   }
 }
+
+/* ---- Maskottchen (components/Monster.js) ----
+   Das Original aus dem Logo, freigestellt als Bild. Bewegt wird die ganze
+   Figur, dazu eine kleine Requisite – kleine Nebenbewegungen unter einer
+   Nachricht, keine Zirkusnummer. Der Block für „prefers-reduced-motion"
+   weiter oben schaltet all das automatisch ab. */
+.mon {
+  position: relative;
+  display: inline-block;
+}
+.mon-figur {
+  display: block;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: lernsprung-mon-atmen 3.4s ease-in-out infinite;
+}
+.mon-bild {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mon-ball,
+.mon-puck,
+.mon-buch,
+.mon-schlaeger {
+  position: absolute;
+  overflow: visible;
+}
+
+@keyframes lernsprung-mon-atmen {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-2%) scale(1.015, 0.985); }
+}
+
+/* Lachen: kurzes Wippen mit leichtem Kippen. */
+.mon-lachen .mon-figur {
+  animation: lernsprung-mon-lachen 1.2s ease-in-out infinite;
+}
+@keyframes lernsprung-mon-lachen {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4%) rotate(-3deg); }
+  60% { transform: translateY(-1%) rotate(3deg); }
+}
+
+/* Hüpfen: mit Stauchen beim Absprung und bei der Landung. */
+.mon-huepfen .mon-figur {
+  animation: lernsprung-mon-huepfen 1.6s cubic-bezier(0.3, 0.1, 0.4, 1) infinite;
+}
+@keyframes lernsprung-mon-huepfen {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(1%) scale(1.07, 0.93); }
+  42% { transform: translateY(-18%) scale(0.96, 1.05); }
+  72% { transform: translateY(0) scale(1.05, 0.95); }
+  86% { transform: translateY(0) scale(1, 1); }
+}
+
+/* Fußball: das Monster holt aus, der Ball fliegt weg und kommt zurück. */
+.mon-fussball .mon-figur {
+  animation: lernsprung-mon-ausholen 2.1s ease-in-out infinite;
+}
+.mon-ball {
+  left: 60%;
+  bottom: -6%;
+  width: 26%;
+  animation: lernsprung-mon-ball 2.1s ease-in-out infinite;
+}
+@keyframes lernsprung-mon-ausholen {
+  0%, 55%, 100% { transform: rotate(0deg) translateY(0); }
+  70% { transform: rotate(-6deg) translateY(-3%); }
+  82% { transform: rotate(3deg) translateY(0); }
+}
+@keyframes lernsprung-mon-ball {
+  0%, 62% { transform: translate(0, 0) rotate(0deg); }
+  80% { transform: translate(60%, -55%) rotate(180deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
+}
+
+/* Eishockey: Schläger holt aus, der Puck rutscht davon. */
+.mon-schlaeger {
+  right: -12%;
+  bottom: 0;
+  width: 40%;
+  transform-origin: 20% 10%;
+  animation: lernsprung-mon-schlagen 2.4s ease-in-out infinite;
+}
+.mon-puck {
+  right: -22%;
+  bottom: -2%;
+  width: 22%;
+  animation: lernsprung-mon-puck 2.4s ease-in-out infinite;
+}
+.mon-hockey .mon-figur {
+  animation: lernsprung-mon-atmen 2.4s ease-in-out infinite;
+}
+@keyframes lernsprung-mon-schlagen {
+  0%, 48%, 100% { transform: rotate(0deg); }
+  62% { transform: rotate(-16deg); }
+  74% { transform: rotate(9deg); }
+}
+@keyframes lernsprung-mon-puck {
+  0%, 72% { transform: translateX(0); opacity: 1; }
+  92% { transform: translateX(90%); opacity: 0; }
+  93%, 100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Lernen: das Buch vor dem Bauch, der Kopf wiegt leicht mit. */
+.mon-buch {
+  left: 26%;
+  bottom: 10%;
+  width: 50%;
+  animation: lernsprung-mon-blaettern 4.2s ease-in-out infinite;
+}
+.mon-lernen .mon-figur {
+  animation: lernsprung-mon-lesen 4.2s ease-in-out infinite;
+}
+@keyframes lernsprung-mon-lesen {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2.5deg); }
+}
+@keyframes lernsprung-mon-blaettern {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2.5deg) translateY(-2%); }
+}

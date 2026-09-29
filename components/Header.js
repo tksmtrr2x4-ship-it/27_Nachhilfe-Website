@@ -7,6 +7,8 @@ import Picture from "@/components/Picture";
 const NAV_LINKS = [
   { href: "/ueber-mich", label: "Über mich" },
   { href: "/faq", label: "FAQ" },
+  // Die Schülerakte für Eltern: nächste Stunde und Nachrichten.
+  { href: "/konto", label: "Schülerakte" },
 ];
 
 export default function Header({ siteName, logo }) {

@@ -15,7 +15,8 @@
     "invoice:sample": "node --import ./tests/register-alias.mjs scripts/invoice-sample.mjs",
     "images:optimize": "node scripts/optimize-images.mjs",
     "zugang:zuruecksetzen": "node scripts/zugang-zuruecksetzen.mjs",
-    "tor:einladung": "node scripts/tor-einladung.mjs"
+    "tor:einladung": "node scripts/tor-einladung.mjs",
+    "monster:freistellen": "node scripts/monster-freistellen.mjs"
   },
   "dependencies": {
     "@e-invoice-eu/core": "^3.3.0",

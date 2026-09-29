@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import OrderSummary from "@/components/OrderSummary";
@@ -37,11 +37,19 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     subject: allSubjects[0] || "",
     courseLevel: "",
   });
-  const allowedLocations =
-    offer.mode === "online" ? ["online"] : offer.mode === "both" ? ["tutor", "student", "online"] : ["tutor", "student"];
+  // useMemo, damit die Liste nicht bei jedem Rendern neu entsteht – sie hängt
+  // an der Vorbelegung aus dem Konto (useEffect weiter unten).
+  const allowedLocations = useMemo(
+    () =>
+      offer.mode === "online" ? ["online"] : offer.mode === "both" ? ["tutor", "student", "online"] : ["tutor", "student"],
+    [offer.mode]
+  );
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Wer in der Schülerakte angemeldet ist, muss nichts doppelt eintippen.
+  const [konto, setKonto] = useState(null);
+  const [gewaehltesKind, setGewaehltesKind] = useState("");
   const [form, setForm] = useState({
     studentName: "",
     studentClass: classOptions[0] || "",
@@ -63,6 +71,60 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     locationType: allowedLocations[0],
     locationAddress: "",
   });
+
+  // Angemeldet? Dann Name, Anschrift und die Angaben zum Kind übernehmen.
+  // Nicht angemeldet heißt 401 – dann bleibt alles wie bisher leer.
+  useEffect(() => {
+    let aktiv = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/konto/vorbelegung", { cache: "no-store" });
+        if (!res.ok) return;
+        const daten = await res.json();
+        if (!aktiv || !daten.schueler?.length) return;
+        setKonto(daten);
+        setGewaehltesKind(daten.schueler[0]._id);
+      } catch {
+        // Ohne Konto ändert sich nichts.
+      }
+    })();
+    return () => {
+      aktiv = false;
+    };
+  }, []);
+
+  // Übernommen wird nur, was zu diesem Angebot passt: eine Klasse, die hier
+  // buchbar ist, ein erlaubter Ort, ein Fach aus dem Angebot. Sonst bliebe
+  // ein Feld vorbelegt, das die Prüfung anschließend ablehnt.
+  useEffect(() => {
+    if (!konto || !gewaehltesKind) return;
+    const kind = konto.schueler.find((k) => k._id === gewaehltesKind);
+    if (!kind) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm((alt) => {
+      const klasse = classOptions.includes(kind.studentClass) ? kind.studentClass : alt.studentClass;
+      const fachAusAkte = (kind.faecher || []).map((f) => f.subject).find((f) => allSubjects.includes(f));
+      const auswahl = normalizeSelection({
+        subjects: allSubjects,
+        studentClass: klasse,
+        subject: fachAusAkte || alt.subject,
+        courseLevel: fachAusAkte ? (kind.faecher.find((f) => f.subject === fachAusAkte)?.courseLevel || "") : alt.courseLevel,
+      });
+      const ort = allowedLocations.includes(kind.locationType) ? kind.locationType : alt.locationType;
+      return {
+        ...alt,
+        parentName: kind.parentName || alt.parentName,
+        parentEmail: kind.parentEmail || alt.parentEmail,
+        parentPhone: kind.parentPhone || alt.parentPhone,
+        studentName: kind.name || alt.studentName,
+        studentClass: klasse,
+        subject: auswahl.subject,
+        courseLevel: auswahl.courseLevel,
+        locationType: ort,
+        locationAddress: ort === "student" ? kind.locationAddress || alt.locationAddress : alt.locationAddress,
+      };
+    });
+  }, [konto, gewaehltesKind, classOptions, allSubjects, allowedLocations]);
 
   // Nur zeigen, wenn der Leistungsbeginn innerhalb der 14-tägigen
   // Widerrufsfrist liegen kann – bei Einzelstunden aus dem gewählten
@@ -146,6 +208,37 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
       noValidate
     >
+      {konto ? (
+        <div className="mb-5 rounded-2xl border border-brand-200 bg-brand-50/60 p-4 text-sm dark:border-brand-800 dark:bg-brand-950/40">
+          <p className="font-semibold text-slate-900 dark:text-white">
+            Angemeldet als {konto.kunde.name || konto.kunde.email}
+          </p>
+          <p className="mt-1 text-slate-600 dark:text-slate-300">
+            Deine Angaben sind schon eingetragen. Ändern kannst du sie hier oder dauerhaft in der{" "}
+            <a className="underline" href="/konto">
+              Schülerakte
+            </a>
+            .
+          </p>
+          {konto.schueler.length > 1 ? (
+            <label className="mt-3 block">
+              <span className={labelClass}>Für wen ist die Stunde?</span>
+              <select
+                className={inputClass}
+                value={gewaehltesKind}
+                onChange={(e) => setGewaehltesKind(e.target.value)}
+              >
+                {konto.schueler.map((k) => (
+                  <option key={k._id} value={k._id}>
+                    {k.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </div>
+      ) : null}
+
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Angaben zur Schülerin / zum Schüler</h2>
       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
         Mit * gekennzeichnete Angaben sind für den Vertragsschluss erforderlich. Ohne sie

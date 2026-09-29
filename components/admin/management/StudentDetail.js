@@ -7,6 +7,7 @@ import { SCHOOL_TYPES, STUDENT_STATUS, LOCATION_TYPES } from "@/lib/students/val
 import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
 import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import ElternNachricht from "@/components/admin/management/ElternNachricht";
+import SelbstauskunftKarte from "@/components/admin/management/SelbstauskunftKarte";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog, { downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
@@ -281,6 +282,8 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
         </div>
 
         <ElternNachricht customer={customer} studentName={student.name} adminFetch={adminFetch} setNotice={setNotice} />
+
+        <SelbstauskunftKarte auskunft={student.selbstauskunft} />
       </div>
 
       <div className={`${card} min-w-0`}>

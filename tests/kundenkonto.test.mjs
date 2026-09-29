@@ -249,3 +249,122 @@ function fakeDb() {
   }
   return { collection, docs };
 }
+
+// --- Selbstauskunft: dieselben Angaben wie auf dem Aufnahmebogen ---
+
+const { pruefeSelbstauskunft, kundeAusSelbstauskunft, schuelerAusSelbstauskunft, vorbelegungAus } = await import(
+  "@/lib/kunden/selbstauskunft"
+);
+
+function vollstaendig(aenderung = {}) {
+  return {
+    eltern: {
+      anrede: "Frau",
+      name: "Alex Beispiel",
+      beziehung: "Mutter",
+      email: "Alex@Example.DE",
+      telefon: "07721 123456",
+      strasse: "Musterweg 1",
+      plz: "78048",
+      ort: "Villingen-Schwenningen",
+    },
+    schueler: { name: "Mira Beispiel", klasse: "9", schulart: "gymnasium", schule: "Gymnasium am Hoptbühl" },
+    bedarf: [{ fach: "Mathematik", note: "4", ziel: "auf eine 3 kommen" }],
+    organisation: { ort: "online", haeufigkeit: "wöchentlich", dauer: "60 Minuten" },
+    sonstiges: { aufmerksamDurch: "Empfehlung" },
+    ...aenderung,
+  };
+}
+
+test("Selbstauskunft: Pflichtangaben und Formate", () => {
+  const { probleme } = pruefeSelbstauskunft(vollstaendig());
+  assert.deepEqual(probleme, [], "vollständige Angaben laufen durch");
+
+  assert.match(pruefeSelbstauskunft({}).probleme.join(" "), /Namen angeben/);
+  assert.match(
+    pruefeSelbstauskunft(vollstaendig({ eltern: { ...vollstaendig().eltern, email: "keine-adresse" } })).probleme.join(" "),
+    /gültige E-Mail/
+  );
+  assert.match(
+    pruefeSelbstauskunft(vollstaendig({ eltern: { ...vollstaendig().eltern, plz: "780" } })).probleme.join(" "),
+    /Postleitzahl/
+  );
+  assert.match(
+    pruefeSelbstauskunft(vollstaendig({ schueler: { name: "Mira", klasse: "14" } })).probleme.join(" "),
+    /Klasse muss zwischen 1 und 13/
+  );
+});
+
+test("Selbstauskunft: Fächer gegen dieselben Regeln wie die Buchung", () => {
+  // Wirtschaft gibt es erst in der Oberstufe – in der Akte soll nichts
+  // stehen, was so gar nicht buchbar wäre.
+  const zuFrueh = pruefeSelbstauskunft(
+    vollstaendig({ schueler: { name: "Mira", klasse: "9" }, bedarf: [{ fach: "Wirtschaft" }] })
+  );
+  assert.match(zuFrueh.probleme.join(" "), /Wirtschaft ist erst ab Klasse 11/);
+
+  // Physik kennt in der Oberstufe nur das Basisfach.
+  const falschesNiveau = pruefeSelbstauskunft(
+    vollstaendig({ schueler: { name: "Mira", klasse: "12" }, bedarf: [{ fach: "Physik", niveau: "leistung" }] })
+  );
+  assert.equal(falschesNiveau.probleme.length, 1);
+
+  // Erfundene Werte fallen still weg, statt gespeichert zu werden.
+  const erfunden = pruefeSelbstauskunft(
+    vollstaendig({ bedarf: [{ fach: "Zauberei" }], schueler: { name: "Mira", klasse: "9", schulart: "hogwarts" } })
+  );
+  assert.deepEqual(erfunden.daten.bedarf, []);
+  assert.equal(erfunden.daten.schueler.schulart, "");
+});
+
+test("Selbstauskunft: Unterricht zu Hause braucht eine Anschrift", () => {
+  const ohne = pruefeSelbstauskunft(
+    vollstaendig({
+      eltern: { ...vollstaendig().eltern, strasse: "", plz: "", ort: "" },
+      organisation: { ort: "student" },
+    })
+  );
+  assert.match(ohne.probleme.join(" "), /Anschrift/);
+
+  const mit = pruefeSelbstauskunft(vollstaendig({ organisation: { ort: "student" } }));
+  assert.deepEqual(mit.probleme, [], "die Rechnungsanschrift genügt");
+});
+
+test("Selbstauskunft wird zu Kunde und Schülerakte", () => {
+  const { daten } = pruefeSelbstauskunft(vollstaendig());
+
+  const kunde = kundeAusSelbstauskunft(daten);
+  assert.equal(kunde.email, "alex@example.de", "Adresse wird kleingeschrieben gespeichert");
+  assert.equal(kunde.street, "Musterweg 1");
+  assert.equal(kunde.zip, "78048");
+
+  const akte = schuelerAusSelbstauskunft(daten, "kunde-1");
+  assert.equal(akte.customerId, "kunde-1");
+  assert.equal(akte.studentClass, "9");
+  assert.equal(akte.schoolType, "gymnasium");
+  assert.deepEqual(akte.subjects, [{ subject: "Mathematik", courseLevel: "" }]);
+  assert.equal(akte.defaultLocationType, "online");
+  assert.equal(akte.geprueft, false, "eine selbst angelegte Akte ist zunächst ungeprüft");
+  assert.equal(akte.selbstAngelegt, true);
+  // Was kein eigenes Feld hat, geht trotzdem nicht verloren.
+  assert.equal(akte.selbstauskunft.bedarf[0].ziel, "auf eine 3 kommen");
+  assert.equal(akte.selbstauskunft.eltern.erreichbarkeit, "");
+});
+
+test("Vorbelegung der Buchung aus Konto und Akte", () => {
+  const belegung = vorbelegungAus({
+    kunde: { name: "Alex Beispiel", email: "a@example.de", phone: "07721 1", street: "Musterweg 1", zip: "78048", city: "VS" },
+    schueler: {
+      name: "Mira",
+      studentClass: "9",
+      subjects: [{ subject: "Mathematik", courseLevel: "" }],
+      defaultLocationType: "student",
+      locationAddress: "",
+    },
+  });
+  assert.equal(belegung.parentName, "Alex Beispiel");
+  assert.equal(belegung.studentName, "Mira");
+  assert.equal(belegung.locationType, "student");
+  assert.equal(belegung.locationAddress, "Musterweg 1, 78048 VS", "ohne eigene Unterrichtsadresse gilt die Rechnungsanschrift");
+  assert.deepEqual(belegung.faecher, [{ subject: "Mathematik", courseLevel: "" }]);
+});

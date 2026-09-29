@@ -34,6 +34,56 @@ Die einzige Mail an eine noch unbekannte Adresse ist die Bestätigung einer Neua
 also genau eine, die man ignorieren kann. Gebremst wird beides: höchstens drei Mails je
 Adresse und zwanzig insgesamt pro Stunde (`lib/kunden/konto.js`, `darfMailSenden`).
 
+## Die Selbstauskunft
+
+Was neue Familien eintragen, ist dasselbe, was sonst auf dem Aufnahmebogen steht
+(`lib/papierakte/papierakte.cjs`) oder in der Verwaltung abgetippt wird:
+
+| Abschnitt | Felder |
+|---|---|
+| Wer meldet an? | Anrede, Name, Verhältnis zum Kind, E-Mail, zwei Telefonnummern, Erreichbarkeit, **Rechnungsanschrift** |
+| Um wen geht es? | Name, Klasse, Schulart, Schule, E-Mail und Handy des Kindes (freiwillig) |
+| Fachlich | bis zu vier Fächer, je mit Kursniveau, aktueller Note, Ziel, nächster Prüfung, Lehrwerk |
+| Organisation | gewünschter Ort, abweichende Unterrichtsadresse, Häufigkeit, Dauer, mögliche Zeiten |
+| Sonstiges | wie aufmerksam geworden, Absprachen |
+
+Geprüft wird gegen dieselben Listen wie in der Verwaltung und in der Buchungsstrecke
+(`lib/kunden/selbstauskunft.js`): Klasse 1–13, Schularten aus `SCHOOL_TYPES`, Fächer und
+Kursniveaus aus `lib/subjectRules.js`. Sonst entstünde eine Akte, die sich im
+Verwaltungsformular nicht mehr speichern lässt oder ein Fach nennt, das für diese Klasse
+gar nicht buchbar ist. Erfundene Werte fallen still weg statt gespeichert zu werden.
+
+Was ein eigenes Feld hat, landet dort (`customers.street/zip/city/phone`,
+`students.studentClass/schoolType/school/subjects/defaultLocationType/…`). Alles Weitere
+bleibt als Block `selbstauskunft` an der Schülerakte und steht in der Verwaltung als
+eigene Karte – so bleibt das Datenmodell, wie es ist, und trotzdem geht nichts verloren.
+
+## Selbst pflegen
+
+Angemeldet lässt sich die Akte jederzeit ändern („Angaben ändern") und ein weiteres Kind
+anlegen („+ weiteres Kind"). Für ein weiteres Kind braucht es keine neue Mailbestätigung –
+die Adresse ist ja schon bestätigt.
+
+Nach jeder Änderung durch die Familie springt das Kennzeichen `geprueft` zurück auf
+`false`, die Akte ist in der Verwaltung also wieder als „noch nicht durchgesehen"
+markiert, und eine kurze Mail geht an die Lehrkraft.
+
+Nicht änderbar sind: die Anmeldeadresse (sie zu verschieben hieße, den Zugang zu
+verschieben – das gehört bestätigt und macht die Lehrkraft), der Status der Akte, Notizen,
+Stunden und Preise. Eine fremde Akte lässt sich auch mit passender Kennung nicht ändern:
+Die Schnittstelle prüft, dass sie zum angemeldeten Konto gehört.
+
+## Buchen ohne alles noch einmal einzutippen
+
+Wer angemeldet ist, sieht in der Buchungsstrecke oben „Angemeldet als …", und Name,
+Anschrift, Telefon sowie die Angaben zum Kind sind bereits ausgefüllt. Bei mehreren
+Kindern steht dort eine Auswahl.
+
+Übernommen wird nur, was zum Angebot passt: eine Klasse, die dort buchbar ist, ein
+erlaubter Unterrichtsort, ein Fach aus dem Angebot. Sonst bliebe ein Feld vorbelegt, das
+die Prüfung anschließend ablehnt. Ohne Anmeldung antwortet `/api/konto/vorbelegung` mit
+401 und die Strecke bleibt genau wie vorher.
+
 ## Neuanmeldung: erst bestätigen, dann speichern
 
 Beim Absenden des Formulars entsteht **kein** Datensatz. Die Angaben liegen bis zur
@@ -94,8 +144,11 @@ das Betriebssystem weniger Bewegung verlangt.
 | Was die Kundenansicht zeigt | `lib/kunden/uebersicht.js` |
 | Nachrichten | `lib/kunden/nachrichten.js`, `kunden_nachrichten` |
 | Mailtexte | `lib/kunden/mail.js` |
-| Schnittstellen | `app/api/konto/{anmelden,registrieren,bestaetigen}`, `app/api/konto` |
-| Seite | `app/konto/`, `components/konto/KontoSeite.js` |
+| Selbstauskunft: Felder, Prüfung, Abbildung | `lib/kunden/selbstauskunft.js` |
+| Schnittstellen | `app/api/konto/{anmelden,registrieren,bestaetigen,daten,vorbelegung}`, `app/api/konto` |
+| Seite | `app/konto/`, `components/konto/{KontoSeite,SelbstauskunftFormular,AkteBearbeiten}.js` |
+| Vorbelegung der Buchung | `components/BookingFlow.js` |
+| Verwaltung: Selbstauskunft ansehen | `components/admin/management/SelbstauskunftKarte.js` |
 | Maskottchen | `components/Monster.js`, `scripts/monster-freistellen.mjs` |
 | Verwaltung: Nachrichten | `app/api/admin/nachrichten`, `components/admin/management/ElternNachricht.js` |
 

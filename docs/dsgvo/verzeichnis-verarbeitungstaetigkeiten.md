@@ -101,7 +101,7 @@ Seit 29.09.2026. Technische Beschreibung: [../kundenkonto.md](../kundenkonto.md)
 |---|---|
 | Zweck | Eltern sehen kommende Nachhilfestunden und kurze Hinweise der Lehrkraft; Schülerakte selbst anlegen, ohne zu buchen |
 | Kategorien betroffener Personen | Erziehungsberechtigte, Schüler:innen (überwiegend minderjährig) |
-| Datenkategorien | Name und E-Mail-Adresse der/des Erziehungsberechtigten, freiwillig Telefon; Name, Klasse und Schulart des Kindes; Termindaten der Stunden; Nachrichtentexte der Lehrkraft; technisch: Sitzungskeks, gekürzte Browserkennung |
+| Datenkategorien | Selbstauskunft wie auf dem Aufnahmebogen: Anrede, Name, Verhältnis zum Kind, E-Mail, Telefonnummern, Erreichbarkeit und Anschrift der/des Erziehungsberechtigten; Name, Klasse, Schulart, Schule sowie freiwillig E-Mail und Handy des Kindes; Fächer mit Note, Ziel, nächster Prüfung und Lehrwerk; gewünschter Ort, Häufigkeit, Dauer, mögliche Zeiten; Termindaten der Stunden; Nachrichtentexte der Lehrkraft; technisch: Sitzungskeks, gekürzte Browserkennung |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (Durchführung des Nachhilfevertrags bzw. vorvertragliche Maßnahmen auf Anfrage) |
 | Besondere Kategorien (Art. 9) | Nicht vorgesehen. Das Anmeldeformular weist ausdrücklich darauf hin, keine Gesundheitsangaben einzutragen |
 | Empfänger | Keine. Verarbeitung ausschließlich auf dem eigenen V-Server; Mailversand über Strato (Auftragsverarbeiter) |

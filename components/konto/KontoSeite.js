@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Monster from "@/components/Monster";
 import { formatDate, locationLabelForCustomer } from "@/lib/format";
-import { SCHOOL_TYPES } from "@/lib/students/validation";
+import SelbstauskunftFormular from "@/components/konto/SelbstauskunftFormular";
+import AkteBearbeiten from "@/components/konto/AkteBearbeiten";
 
 // Schülerakte für Eltern.
 //
@@ -45,6 +46,8 @@ export default function KontoSeite() {
   const [hinweis, setHinweis] = useState("");
   const [fehler, setFehler] = useState("");
   const [busy, setBusy] = useState(false);
+  // null = Übersicht, sonst { studentId } – studentId null heißt „weiteres Kind".
+  const [bearbeiten, setBearbeiten] = useState(null);
 
   const laden = useCallback(async () => {
     try {
@@ -162,8 +165,34 @@ export default function KontoSeite() {
     return <Rahmen><div className="h-40" aria-busy="true" /></Rahmen>;
   }
 
+  if (stand === "angemeldet" && bearbeiten) {
+    return (
+      <Rahmen>
+        <AkteBearbeiten
+          studentId={bearbeiten.studentId}
+          onAbbrechen={() => setBearbeiten(null)}
+          onFertig={(meldung) => {
+            setBearbeiten(null);
+            setHinweis(meldung);
+            laden();
+          }}
+        />
+      </Rahmen>
+    );
+  }
+
   if (stand === "angemeldet" && daten) {
-    return <Uebersicht daten={daten} hinweis={hinweis} onAbmelden={abmelden} />;
+    return (
+      <Uebersicht
+        daten={daten}
+        hinweis={hinweis}
+        onAbmelden={abmelden}
+        onBearbeiten={(studentId) => {
+          setHinweis("");
+          setBearbeiten({ studentId });
+        }}
+      />
+    );
   }
 
   return (
@@ -186,7 +215,7 @@ export default function KontoSeite() {
       {ansicht === "anmelden" ? (
         <AnmeldeFormular busy={busy} onSenden={(email) => schicken("/api/konto/anmelden", { email })} />
       ) : (
-        <RegistrierFormular busy={busy} onSenden={(werte) => schicken("/api/konto/registrieren", werte)} />
+        <SelbstauskunftFormular busy={busy} onSenden={(werte) => schicken("/api/konto/registrieren", werte)} />
       )}
 
       {hinweis ? (
@@ -209,7 +238,7 @@ export default function KontoSeite() {
   );
 }
 
-function Uebersicht({ daten, hinweis, onAbmelden }) {
+function Uebersicht({ daten, hinweis, onAbmelden, onBearbeiten }) {
   const { kunde, naechste, weitere, nachrichten, schueler } = daten;
   const vorname = (kunde.name || "").split(" ")[0];
 
@@ -319,20 +348,37 @@ function Uebersicht({ daten, hinweis, onAbmelden }) {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           {schueler.length === 1 ? "Schülerakte" : "Schülerakten"}
         </h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
+        <ul className="mt-3 space-y-2">
           {schueler.map((s) => (
             <li
               key={s._id}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:bg-slate-900"
             >
-              {s.name}
-              {s.klasse ? ` · Klasse ${s.klasse}` : ""}
+              <span className="text-slate-800 dark:text-slate-100">
+                {s.name}
+                {s.klasse ? ` · Klasse ${s.klasse}` : ""}
+                {s.faecher?.length ? ` · ${s.faecher.map((f) => f.subject).join(", ")}` : ""}
+              </span>
+              <button
+                type="button"
+                onClick={() => onBearbeiten(s._id)}
+                className="text-xs font-semibold text-brand-700 hover:underline"
+              >
+                Angaben ändern
+              </button>
             </li>
           ))}
         </ul>
+        <button
+          type="button"
+          onClick={() => onBearbeiten(null)}
+          className="mt-3 text-sm font-semibold text-brand-700 hover:underline"
+        >
+          + weiteres Kind anlegen
+        </button>
         <p className="mt-3 text-xs text-slate-500">
-          Etwas stimmt nicht oder ein Termin fehlt? Schreib einfach eine Mail – geändert wird das von
-          Hand.
+          Termine trage ich ein – dafür genügt eine kurze Mail. Alles andere kannst du hier selbst
+          ändern.
         </p>
       </section>
     </Rahmen>
@@ -366,89 +412,6 @@ function AnmeldeFormular({ busy, onSenden }) {
         className="w-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
       >
         {busy ? "Schickt …" : "Link schicken"}
-      </button>
-    </form>
-  );
-}
-
-function RegistrierFormular({ busy, onSenden }) {
-  const [werte, setWerte] = useState({
-    elternName: "",
-    email: "",
-    telefon: "",
-    schuelerName: "",
-    klasse: "",
-    schulart: "",
-    nachricht: "",
-  });
-  const setzen = (feld) => (e) => setWerte((alt) => ({ ...alt, [feld]: e.target.value }));
-  const feld = "mt-1 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
-  const beschriftung = "text-xs font-semibold text-slate-600 dark:text-slate-300";
-
-  return (
-    <form
-      className="mt-5 space-y-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSenden(werte);
-      }}
-    >
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className={beschriftung}>Dein Name</span>
-          <input required value={werte.elternName} onChange={setzen("elternName")} maxLength={100} className={feld} />
-        </label>
-        <label className="block">
-          <span className={beschriftung}>E-Mail-Adresse</span>
-          <input type="email" required value={werte.email} onChange={setzen("email")} maxLength={200} autoComplete="email" className={feld} />
-        </label>
-        <label className="block">
-          <span className={beschriftung}>Telefon (freiwillig)</span>
-          <input value={werte.telefon} onChange={setzen("telefon")} maxLength={40} className={feld} />
-        </label>
-        <label className="block">
-          <span className={beschriftung}>Name des Kindes</span>
-          <input required value={werte.schuelerName} onChange={setzen("schuelerName")} maxLength={100} className={feld} />
-        </label>
-        <label className="block">
-          <span className={beschriftung}>Klasse</span>
-          {/* Auswahl statt Freitext: Die Verwaltung prüft dieselbe Liste, und
-              eine Akte mit „5b" ließe sich dort nicht mehr speichern. */}
-          <select value={werte.klasse} onChange={setzen("klasse")} className={feld}>
-            <option value="">bitte wählen</option>
-            {Array.from({ length: 13 }, (_, i) => String(i + 1)).map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className={beschriftung}>Schulart</span>
-          <select value={werte.schulart} onChange={setzen("schulart")} className={feld}>
-            <option value="">bitte wählen</option>
-            {Object.entries(SCHOOL_TYPES).map(([wert, name]) => (
-              <option key={wert} value={wert}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <label className="block">
-        <span className={beschriftung}>Worum geht es? (freiwillig)</span>
-        <textarea rows={3} value={werte.nachricht} onChange={setzen("nachricht")} maxLength={500} className={feld} />
-      </label>
-      <p className="text-xs text-slate-500">
-        Bitte hier keine Gesundheitsangaben eintragen – wenn etwas Medizinisches wichtig ist,
-        besprechen wir das persönlich.
-      </p>
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
-      >
-        {busy ? "Schickt …" : "Schülerakte anlegen"}
       </button>
     </form>
   );

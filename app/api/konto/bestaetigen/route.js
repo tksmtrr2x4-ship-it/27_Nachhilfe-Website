@@ -1,6 +1,7 @@
-import { createCustomer, getCustomer } from "@/lib/invoicing/db";
+import { createCustomer, getCustomer, updateCustomer } from "@/lib/invoicing/db";
 import { createStudent } from "@/lib/students/db";
-import { claimLink, createKontoSession, kontoCookie, kurz } from "@/lib/kunden/konto";
+import { claimLink, createKontoSession, kontoCookie } from "@/lib/kunden/konto";
+import { kundeAusSelbstauskunft, schuelerAusSelbstauskunft } from "@/lib/kunden/selbstauskunft";
 import { benachrichtigeLehrkraft } from "@/lib/kunden/mail";
 
 // Einlösen eines Links aus der Mail – für die Anmeldung wie für die
@@ -24,41 +25,33 @@ export async function POST(request) {
 
   if (link.art === "registrierung") {
     const daten = link.daten || {};
+    const stamm = kundeAusSelbstauskunft(daten);
+
     // Zwischen Anforderung und Bestätigung kann die Kundin/der Kunde schon
     // angelegt worden sein (z. B. durch eine Buchung) – dann anhängen statt
-    // doppelt anlegen.
+    // doppelt anlegen. Vorhandene Angaben werden nur ergänzt, nie überschrieben:
+    // Was in der Verwaltung gepflegt wurde, wiegt schwerer.
     const vorhanden = customerId ? await getCustomer(customerId) : null;
-    const kunde =
-      vorhanden ||
-      (await createCustomer({
-        name: kurz(daten.elternName, 100),
-        email: kurz(daten.email, 200),
-        phone: kurz(daten.telefon, 40),
-        studentName: kurz(daten.schuelerName, 100),
-        notes: "Über die Website selbst angelegt.",
-      }));
-    customerId = kunde._id;
+    if (vorhanden) {
+      const ergaenzung = Object.fromEntries(
+        Object.entries(stamm).filter(([feld, wert]) => wert && !vorhanden[feld])
+      );
+      if (Object.keys(ergaenzung).length > 0) await updateCustomer(vorhanden._id, ergaenzung);
+      customerId = vorhanden._id;
+    } else {
+      const kunde = await createCustomer({ ...stamm, notes: "Über die Website selbst angelegt." });
+      customerId = kunde._id;
+    }
 
-    await createStudent({
-      name: kurz(daten.schuelerName, 100),
-      studentClass: kurz(daten.klasse, 20),
-      schoolType: kurz(daten.schulart, 40),
-      customerId,
-      email: "",
-      phone: kurz(daten.telefon, 40),
-      // Kennzeichen für die Verwaltung: Diese Akte hat niemand geprüft.
-      selbstAngelegt: true,
-      geprueft: false,
-      notes: daten.nachricht ? `Anmerkung bei der Anmeldung: ${kurz(daten.nachricht, 500)}` : "",
-    });
+    await createStudent(schuelerAusSelbstauskunft(daten, customerId));
     neu = true;
 
     await benachrichtigeLehrkraft({
-      elternName: daten.elternName,
-      email: daten.email,
-      schuelerName: daten.schuelerName,
-      klasse: daten.klasse,
-      nachricht: daten.nachricht,
+      elternName: daten.eltern.name,
+      email: daten.eltern.email,
+      schuelerName: daten.schueler.name,
+      klasse: daten.schueler.klasse,
+      nachricht: daten.sonstiges?.absprachen,
     });
   }
 

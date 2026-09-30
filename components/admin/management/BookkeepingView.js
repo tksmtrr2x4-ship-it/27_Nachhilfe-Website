@@ -23,7 +23,7 @@ import {
 
 const MONTHS = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 const LIMIT_TEXT = { ok: "im Rahmen", warning: "über 80 % der Grenze", exceeded: "Grenze überschritten" };
-const LIMIT_BAR = { ok: "bg-emerald-500", warning: "bg-amber-500", exceeded: "bg-red-500" };
+const LIMIT_BAR = { ok: "bg-[var(--ck-pos)]", warning: "bg-[var(--ck-warn)]", exceeded: "bg-[var(--ck-neg)]" };
 
 async function uploadReceipt(pin, entryId, file) {
   const body = new FormData();
@@ -91,7 +91,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
     }
   }
 
-  if (!data) return <p className="text-sm text-slate-500">Lädt …</p>;
+  if (!data) return <p className="text-sm text-[var(--ck-muted)]">Lädt …</p>;
   const { report, kleinunternehmer: ku, receivables, unbilled, entries } = data;
 
   const q = filter.q.trim().toLowerCase();
@@ -135,7 +135,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
       </div>
 
       {!data.receiptStorage.ok && (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p className="rounded-xl border border-[var(--ck-neg)]/35 bg-[var(--ck-neg-soft)] p-3 text-sm text-[var(--ck-neg)]">
           Der Speicherort für Belege ist auf dem Server nicht beschreibbar – Beleg-Uploads schlagen fehl.
         </p>
       )}
@@ -155,23 +155,23 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
       </div>
 
       <div className={card}>
-        <h3 className="font-semibold text-slate-900">Kleinunternehmerregelung (§ 19 UStG)</h3>
+        <h3 className="font-semibold text-[var(--ck-text)]">Kleinunternehmerregelung (§ 19 UStG)</h3>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           {[ku.previousYear, ku.currentYear].map((row, i) => (
             <div key={row.year}>
               <div className="flex flex-wrap justify-between gap-2 text-sm">
-                <span className="text-slate-700">
+                <span className="text-[var(--ck-text)]">
                   {i === 0 ? "Vorjahr" : "Laufendes Jahr"} {row.year}: <strong>{formatPrice(row.turnoverCents)}</strong> von {formatPrice(row.limitCents)}
                 </span>
-                <span className={row.status === "ok" ? "text-emerald-700" : row.status === "warning" ? "text-amber-700" : "font-semibold text-red-700"}>{LIMIT_TEXT[row.status]}</span>
+                <span className={row.status === "ok" ? "text-[var(--ck-pos)]" : row.status === "warning" ? "text-[var(--ck-warn)]" : "font-semibold text-[var(--ck-neg)]"}>{LIMIT_TEXT[row.status]}</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--ck-surface2)]">
                 <div className={`h-full ${LIMIT_BAR[row.status]}`} style={{ width: `${Math.min(100, (row.turnoverCents / row.limitCents) * 100)}%` }} />
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-[var(--ck-muted)]">
           Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 €. Vereinfachte Prüfung anhand der verbuchten Einnahmen aus
           Nachhilfe – bei Annäherung an eine Grenze bitte mit der Steuerberatung klären.
         </p>
@@ -179,14 +179,14 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
 
       <div className={card}>
         <button className="flex w-full items-center justify-between text-left" onClick={() => setShowSummary((v) => !v)}>
-          <h3 className="font-semibold text-slate-900">Auswertung nach Monat und Kategorie</h3>
-          <span className="text-sm text-slate-500">{showSummary ? "ausblenden" : "anzeigen"}</span>
+          <h3 className="font-semibold text-[var(--ck-text)]">Auswertung nach Monat und Kategorie</h3>
+          <span className="text-sm text-[var(--ck-muted)]">{showSummary ? "ausblenden" : "anzeigen"}</span>
         </button>
         {showSummary && (
           <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-2">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[320px] text-sm">
-                <thead className="text-left text-xs uppercase text-slate-500">
+                <thead className="text-left text-xs uppercase text-[var(--ck-muted)]">
                   <tr>
                     <th className="py-1">Monat</th>
                     <th className="py-1 text-right">Einnahmen</th>
@@ -195,7 +195,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
                 </thead>
                 <tbody>
                   {report.months.map((m, i) => (
-                    <tr key={m.month} className="border-t border-slate-100">
+                    <tr key={m.month} className="border-t border-[var(--ck-line)]">
                       <td className="py-1">{MONTHS[i]}</td>
                       <td className="py-1 text-right">{formatPrice(m.incomeCents)}</td>
                       <td className="py-1 text-right">{formatPrice(m.expenseCents)}</td>
@@ -206,7 +206,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[320px] text-sm">
-                <thead className="text-left text-xs uppercase text-slate-500">
+                <thead className="text-left text-xs uppercase text-[var(--ck-muted)]">
                   <tr>
                     <th className="py-1">Kategorie</th>
                     <th className="py-1 text-right">Summe</th>
@@ -218,9 +218,9 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
                     .map(([key, cents]) => {
                       const [type, category] = key.split(":");
                       return (
-                        <tr key={key} className="border-t border-slate-100">
+                        <tr key={key} className="border-t border-[var(--ck-line)]">
                           <td className="py-1">
-                            <span className="text-xs text-slate-500">{ENTRY_TYPES[type]} · </span>
+                            <span className="text-xs text-[var(--ck-muted)]">{ENTRY_TYPES[type]} · </span>
                             {categoryLabel(type, category)}
                           </td>
                           <td className="py-1 text-right">{formatPrice(cents)}</td>
@@ -236,7 +236,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
 
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-end gap-3">
-          <h3 className="mr-auto font-semibold text-slate-900">Journal {year}</h3>
+          <h3 className="mr-auto font-semibold text-[var(--ck-text)]">Journal {year}</h3>
           <select className={`${input} mt-0 w-auto`} value={filter.type} onChange={(e) => setFilter((f) => ({ ...f, type: e.target.value }))}>
             <option value="all">Alle Arten</option>
             <option value="income">Einnahmen</option>
@@ -260,9 +260,9 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
           </select>
           <input className={`${input} mt-0 w-full sm:w-56`} placeholder="Suchen" value={filter.q} onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))} />
         </div>
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--ck-line)]">
           <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>
                 <th className="px-3 py-3">Nr.</th>
                 <th className="px-3 py-3">Datum</th>
@@ -277,7 +277,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
             <tbody>
               {shown.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-6 text-slate-500">
+                  <td colSpan={8} className="px-3 py-6 text-[var(--ck-muted)]">
                     Keine Einträge.
                   </td>
                 </tr>
@@ -285,19 +285,19 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
               {shown.map((e) => {
                 const inactive = e.reversedBy || e.reverses;
                 return (
-                  <tr key={e._id} className={`border-t border-slate-100 align-top ${inactive ? "text-slate-400" : ""}`}>
+                  <tr key={e._id} className={`border-t border-[var(--ck-line)] align-top ${inactive ? "text-[var(--ck-faint)]" : ""}`}>
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{e.entryNumber}</td>
                     <td className="whitespace-nowrap px-3 py-2">{formatDate(e.date)}</td>
                     <td className="px-3 py-2">
-                      <span className={`text-xs font-semibold ${e.type === "income" ? "text-emerald-700" : "text-slate-600"}`}>{ENTRY_TYPES[e.type]}</span>
+                      <span className={`text-xs font-semibold ${e.type === "income" ? "text-[var(--ck-pos)]" : "text-[var(--ck-muted)]"}`}>{ENTRY_TYPES[e.type]}</span>
                       <span className="block">{categoryLabel(e.type, e.category)}</span>
                     </td>
                     <td className="max-w-sm px-3 py-2">
                       {e.description}
-                      {e.counterparty ? <span className="block text-xs text-slate-500">{e.counterparty}</span> : null}
-                      {e.km ? <span className="block text-xs text-slate-500">{String(e.km).replace(".", ",")} km × {(KM_RATE_CENTS / 100).toFixed(2).replace(".", ",")} €</span> : null}
+                      {e.counterparty ? <span className="block text-xs text-[var(--ck-muted)]">{e.counterparty}</span> : null}
+                      {e.km ? <span className="block text-xs text-[var(--ck-muted)]">{String(e.km).replace(".", ",")} km × {(KM_RATE_CENTS / 100).toFixed(2).replace(".", ",")} €</span> : null}
                       {e.studentId ? (
-                        <button className="block text-xs text-indigo-600 hover:underline" onClick={() => onShowStudent(e.studentId)}>
+                        <button className="block text-xs text-[var(--ck-accent)] hover:underline" onClick={() => onShowStudent(e.studentId)}>
                           Schülerprofil
                         </button>
                       ) : null}
@@ -305,14 +305,14 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
                       {e.reverses ? <span className="block text-xs">Grund: {e.reversalReason}</span> : null}
                     </td>
                     <td className="px-3 py-2">{PAYMENT_METHODS[e.method]}</td>
-                    <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold ${e.amountCents < 0 ? "text-red-700" : ""}`}>{formatPrice(e.amountCents)}</td>
+                    <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold ${e.amountCents < 0 ? "text-[var(--ck-neg)]" : ""}`}>{formatPrice(e.amountCents)}</td>
                     <td className="px-3 py-2">
                       {e.receipt ? (
                         <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/receipt`).catch((err) => setNotice(err.message))}>
                           anzeigen
                         </button>
                       ) : e.source === "invoice" ? (
-                        <span className="text-xs text-slate-500">Rechnung {e.invoiceNumber}</span>
+                        <span className="text-xs text-[var(--ck-muted)]">Rechnung {e.invoiceNumber}</span>
                       ) : !e.reverses ? (
                         <ReceiptUpload onFile={(file) => attach(e, file)} />
                       ) : null}
@@ -351,7 +351,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--ck-muted)]">
           Einträge sind nach GoBD unveränderlich. Korrekturen erfolgen per Storno (Gegenbuchung). Zahlungen zu Rechnungen entstehen automatisch
           beim Markieren als bezahlt im Tab „Rechnungen“ und werden dort auch zurückgenommen.
         </p>
@@ -379,7 +379,7 @@ function ReceiptUpload({ onFile }) {
   const ref = useRef(null);
   return (
     <>
-      <button className="text-sm text-amber-700 hover:text-indigo-600" onClick={() => ref.current?.click()}>
+      <button className="text-sm text-[var(--ck-warn)] hover:text-[var(--ck-accent)]" onClick={() => ref.current?.click()}>
         hochladen
       </button>
       <input ref={ref} type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -451,7 +451,7 @@ function EntryDialog({ preset, students, adminFetch, pin, setNotice, onClose, on
         {travel ? (
           <Field label={`Gefahrene Kilometer * (× ${(KM_RATE_CENTS / 100).toFixed(2).replace(".", ",")} €)`}>
             <input className={input} inputMode="decimal" value={form.km} onChange={(e) => set("km", e.target.value)} required placeholder="z. B. 12,4" />
-            {kmCents ? <span className="mt-1 block text-xs text-slate-500">= {formatPrice(kmCents)}</span> : null}
+            {kmCents ? <span className="mt-1 block text-xs text-[var(--ck-muted)]">= {formatPrice(kmCents)}</span> : null}
           </Field>
         ) : (
           <Field label="Betrag in € *">
@@ -489,12 +489,12 @@ function EntryDialog({ preset, students, adminFetch, pin, setNotice, onClose, on
           </Field>
         )}
         {form.type === "income" && form.category === "tutoring_direct" && (
-          <p className="text-xs text-slate-500 sm:col-span-2">
+          <p className="text-xs text-[var(--ck-muted)] sm:col-span-2">
             Tipp: Stunden ohne Rechnung besser im Schülerprofil über „Als bezahlt verbuchen“ erfassen – dann gelten die Stunden automatisch als
             bezahlt und landen nicht mehr in einer Rechnung.
           </p>
         )}
-        <p className="text-xs text-slate-500 sm:col-span-2">Nach dem Speichern ist der Eintrag unveränderlich; Fehler werden per Storno korrigiert.</p>
+        <p className="text-xs text-[var(--ck-muted)] sm:col-span-2">Nach dem Speichern ist der Eintrag unveränderlich; Fehler werden per Storno korrigiert.</p>
         <div className="flex flex-wrap gap-2 sm:col-span-2">
           <button className={btnPrimary} disabled={saving}>
             {saving ? "Bucht …" : "Buchen"}

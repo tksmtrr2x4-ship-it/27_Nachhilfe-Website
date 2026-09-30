@@ -29,15 +29,15 @@ export function DataTable({
 }) {
   const groups = buildGroups(rows, groupBy);
   if (!rows?.length) {
-    return <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">{empty}</p>;
+    return <p className="rounded-2xl border border-dashed border-[var(--ck-line)] p-6 text-center text-sm text-[var(--ck-muted)]">{empty}</p>;
   }
 
   return (
     <div>
-      {caption ? <p className="mb-2 text-xs text-slate-500">{caption}</p> : null}
+      {caption ? <p className="mb-2 text-xs text-[var(--ck-muted)]">{caption}</p> : null}
 
       {/* Tabelle ab lg – darunter Karten, damit nichts seitlich scrollt */}
-      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 lg:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[var(--ck-line)] lg:block">
         <table className="w-full table-fixed text-left text-sm">
           <colgroup>
             {columns.map((col) => (
@@ -45,7 +45,7 @@ export function DataTable({
             ))}
             {actions ? <col style={{ width: "6.5rem" }} /> : null}
           </colgroup>
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
             <tr>
               {columns.map((col) => (
                 <th
@@ -60,23 +60,23 @@ export function DataTable({
             </tr>
           </thead>
           {groups.map((group) => (
-            <tbody key={group.key} className="divide-y divide-slate-100">
+            <tbody key={group.key} className="divide-y divide-[var(--ck-line)]">
               {group.label ? (
-                <tr className="bg-white">
+                <tr className="bg-[var(--ck-surface)]">
                   <th
                     colSpan={columns.length + (actions ? 1 : 0)}
                     scope="colgroup"
-                    className="border-t border-slate-200 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    className="border-t border-[var(--ck-line)] px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-[var(--ck-muted)]"
                   >
                     {group.label}
-                    {group.summary ? <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">{group.summary}</span> : null}
+                    {group.summary ? <span className="ml-2 font-normal normal-case tracking-normal text-[var(--ck-faint)]">{group.summary}</span> : null}
                   </th>
                 </tr>
               ) : null}
               {group.rows.map((row) => (
                 <tr
                   key={getRowKey(row)}
-                  className={`align-top ${rowTone?.(row) === "red" ? "bg-red-50/40" : "bg-white"} ${onRowClick ? "hover:bg-slate-50" : ""}`}
+                  className={`align-top ${rowTone?.(row) === "red" ? "bg-[var(--ck-neg-soft)]" : "bg-[var(--ck-surface)]"} ${onRowClick ? "hover:bg-[var(--ck-surface2)]" : ""}`}
                 >
                   {columns.map((col, i) => (
                     <td
@@ -84,7 +84,7 @@ export function DataTable({
                       className={`px-4 py-3 ${col.align === "right" ? "text-right tabular-nums" : ""} ${col.hideBelowXl ? "hidden xl:table-cell" : ""}`}
                     >
                       {onRowClick && i === 0 ? (
-                        <button type="button" onClick={() => onRowClick(row)} className="text-left font-semibold text-slate-900 hover:text-indigo-600">
+                        <button type="button" onClick={() => onRowClick(row)} className="text-left font-semibold text-[var(--ck-text)] hover:text-[var(--ck-accent)]">
                           {col.cell(row)}
                         </button>
                       ) : (
@@ -109,20 +109,20 @@ export function DataTable({
         {groups.map((group) => (
           <li key={group.key}>
             {group.label ? (
-              <p className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <p className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-[var(--ck-muted)]">
                 {group.label}
-                {group.summary ? <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">{group.summary}</span> : null}
+                {group.summary ? <span className="ml-2 font-normal normal-case tracking-normal text-[var(--ck-faint)]">{group.summary}</span> : null}
               </p>
             ) : null}
             <ul className="space-y-3">
               {group.rows.map((row) => (
-                <li key={getRowKey(row)} className={`rounded-2xl border p-4 ${rowTone?.(row) === "red" ? "border-red-200 bg-red-50/40" : "border-slate-200 bg-white"}`}>
+                <li key={getRowKey(row)} className={`rounded-2xl border p-4 ${rowTone?.(row) === "red" ? "border-[var(--ck-neg)]/35 bg-[var(--ck-neg-soft)]" : "border-[var(--ck-line)] bg-[var(--ck-surface)]"}`}>
                   {columns
                     .filter((col) => col.priority === "primary")
                     .map((col) => (
-                      <div key={col.key} className="text-sm font-semibold text-slate-900">
+                      <div key={col.key} className="text-sm font-semibold text-[var(--ck-text)]">
                         {onRowClick ? (
-                          <button type="button" onClick={() => onRowClick(row)} className="text-left hover:text-indigo-600">
+                          <button type="button" onClick={() => onRowClick(row)} className="text-left hover:text-[var(--ck-accent)]">
                             {col.cell(row)}
                           </button>
                         ) : (
@@ -135,13 +135,13 @@ export function DataTable({
                       .filter((col) => !col.priority || col.priority === "secondary")
                       .map((col) => (
                         <div key={col.key} className="col-span-2 grid grid-cols-[7.5rem_1fr] gap-x-3">
-                          <dt className="text-xs font-semibold text-slate-500">{col.header}</dt>
-                          <dd className="min-w-0 text-slate-800">{col.cell(row)}</dd>
+                          <dt className="text-xs font-semibold text-[var(--ck-muted)]">{col.header}</dt>
+                          <dd className="min-w-0 text-[var(--ck-text)]">{col.cell(row)}</dd>
                         </div>
                       ))}
                   </dl>
                   {columns.some((col) => col.priority === "meta") ? (
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--ck-muted)]">
                       {columns
                         .filter((col) => col.priority === "meta")
                         .map((col) => (
@@ -152,7 +152,7 @@ export function DataTable({
                     </p>
                   ) : null}
                   {actions ? (
-                    <div className="mt-3 border-t border-slate-100 pt-3">
+                    <div className="mt-3 border-t border-[var(--ck-line)] pt-3">
                       <RowActions actions={actions(row)} />
                     </div>
                   ) : null}
@@ -181,7 +181,7 @@ function buildGroups(rows, groupBy) {
 // Bis zu zwei Aktionen direkt, der Rest hinter „…“.
 export function RowActions({ actions, align = "start" }) {
   const visible = (actions || []).filter((a) => a && !a.hidden);
-  if (visible.length === 0) return <span className="text-xs text-slate-400">–</span>;
+  if (visible.length === 0) return <span className="text-xs text-[var(--ck-faint)]">–</span>;
   const inline = visible.slice(0, 2);
   const rest = visible.slice(2);
   return (
@@ -203,10 +203,10 @@ function ActionLink({ action }) {
       title={action.title}
       className={`rounded-full px-2 py-1 text-xs font-semibold disabled:opacity-40 ${
         action.tone === "red"
-          ? "text-red-700 hover:bg-red-50"
+          ? "text-[var(--ck-neg)] hover:bg-[var(--ck-neg-soft)]"
           : action.tone === "emerald"
-            ? "text-emerald-700 hover:bg-emerald-50"
-            : "text-indigo-600 hover:bg-indigo-50"
+            ? "text-[var(--ck-pos)] hover:bg-[var(--ck-pos-soft)]"
+            : "text-[var(--ck-accent)] hover:bg-[var(--ck-accent-soft)]"
       }`}
     >
       {action.label}
@@ -239,12 +239,12 @@ function ActionMenu({ actions }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Weitere Aktionen"
-        className="rounded-full px-2 py-1 text-sm font-semibold text-slate-500 hover:bg-slate-100"
+        className="rounded-full px-2 py-1 text-sm font-semibold text-[var(--ck-muted)] hover:bg-[var(--ck-surface2)]"
       >
         …
       </button>
       {open ? (
-        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-1 shadow-lg">
           {actions.map((action) => (
             <button
               key={action.label}
@@ -256,7 +256,7 @@ function ActionMenu({ actions }) {
               disabled={action.disabled}
               title={action.title}
               className={`block w-full rounded-lg px-3 py-2 text-left text-sm disabled:opacity-40 ${
-                action.tone === "red" ? "text-red-700 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+                action.tone === "red" ? "text-[var(--ck-neg)] hover:bg-[var(--ck-neg-soft)]" : "text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
               }`}
             >
               {action.label}

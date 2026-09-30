@@ -51,7 +51,7 @@ export default function LoeschprotokollView() {
             priority: "primary",
             cell: (e) => (
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-[var(--ck-text)]">
                   {[e.daten?.requestedDate, e.daten?.studentName, e.daten?.subject || e.daten?.subjectName]
                     .filter(Boolean)
                     .join(" · ") || e.datensatzId}
@@ -66,26 +66,26 @@ export default function LoeschprotokollView() {
       />
 
       {offen ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-slate-900">Kopie des gelöschten Datensatzes</h3>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <h3 className="font-semibold text-[var(--ck-text)]">Kopie des gelöschten Datensatzes</h3>
+              <p className="mt-0.5 text-xs text-[var(--ck-muted)]">
                 Gelöscht {formatDateTime(offen.geloeschtAm)} · Grund: {offen.grund}
               </p>
             </div>
-            <button type="button" onClick={() => setOffen(null)} className="text-sm text-slate-500 hover:underline">
+            <button type="button" onClick={() => setOffen(null)} className="text-sm text-[var(--ck-muted)] hover:underline">
               schließen
             </button>
           </div>
           {offen.hinweise?.length ? (
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-800">
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--ck-warn)]">
               {offen.hinweise.map((h, i) => (
                 <li key={i}>{h}</li>
               ))}
             </ul>
           ) : null}
-          <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-700">
+          <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-[var(--ck-surface2)] p-3 text-xs text-[var(--ck-text)]">
             {JSON.stringify(offen.daten, null, 2)}
           </pre>
         </div>

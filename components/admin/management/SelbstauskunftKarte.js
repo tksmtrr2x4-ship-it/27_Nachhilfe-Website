@@ -12,8 +12,8 @@ function Zeile({ label, wert }) {
   if (!wert) return null;
   return (
     <div className="flex gap-3">
-      <dt className="w-40 shrink-0 text-xs font-semibold text-slate-500">{label}</dt>
-      <dd className="min-w-0 break-words text-slate-800">{wert}</dd>
+      <dt className="w-40 shrink-0 text-xs font-semibold text-[var(--ck-muted)]">{label}</dt>
+      <dd className="min-w-0 break-words text-[var(--ck-text)]">{wert}</dd>
     </div>
   );
 }
@@ -24,8 +24,8 @@ export default function SelbstauskunftKarte({ auskunft }) {
 
   return (
     <div className={`${card} min-w-0`}>
-      <h3 className="font-semibold text-slate-900">Selbstauskunft</h3>
-      <p className="mt-0.5 text-xs text-slate-500">Von der Familie über die Schülerakte eingetragen.</p>
+      <h3 className="font-semibold text-[var(--ck-text)]">Selbstauskunft</h3>
+      <p className="mt-0.5 text-xs text-[var(--ck-muted)]">Von der Familie über die Schülerakte eingetragen.</p>
 
       <dl className="mt-3 space-y-1.5 text-sm">
         <Zeile label="Anrede" wert={eltern.anrede} />
@@ -44,8 +44,8 @@ export default function SelbstauskunftKarte({ auskunft }) {
       {bedarf.length > 0 ? (
         <ul className="mt-4 space-y-2">
           {bedarf.map((f, i) => (
-            <li key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
-              <p className="font-semibold text-slate-900">
+            <li key={i} className="rounded-xl bg-[var(--ck-surface2)] p-3 text-sm">
+              <p className="font-semibold text-[var(--ck-text)]">
                 {f.fach}
                 {f.niveau ? ` (${f.niveau === "basis" ? "Basisfach" : "Leistungsfach"})` : ""}
                 {f.note ? ` · aktuell ${f.note}` : ""}

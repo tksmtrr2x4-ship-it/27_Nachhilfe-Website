@@ -8,9 +8,11 @@ import InvoicesPanel from "@/components/admin/InvoicesPanel";
 import BookkeepingView from "@/components/admin/management/BookkeepingView";
 import QuittungenView from "@/components/admin/finanzen/QuittungenView";
 import LoeschprotokollView from "@/components/admin/finanzen/LoeschprotokollView";
+import UmsatzView from "@/components/admin/umsatz/UmsatzView";
+import { SubNav } from "@/components/admin/ui";
 
-// Bereich "Finanzen": Rechnungen, Rechnungsempfänger:innen, Journal (EÜR),
-// Quittungen und das Löschprotokoll.
+// Bereich "Finanzen": Rechnungen, Umsatzrechner, Rechnungsempfänger:innen,
+// Journal (EÜR), Quittungen und das Löschprotokoll.
 function FinanzenPage() {
   const { adminFetch, pin, notify } = useAdmin();
   const params = useSearchParams();
@@ -23,20 +25,12 @@ function FinanzenPage() {
 
   return (
     <div className="space-y-6">
-      <nav className="flex flex-wrap gap-2" aria-label="Finanz-Ansichten">
-        {SUB_VIEWS.finanzen.map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => router.replace(`/admin/finanzen?ansicht=${key}`, { scroll: false })}
-            aria-current={view === key ? "page" : undefined}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              view === key ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <SubNav
+        views={SUB_VIEWS.finanzen}
+        aktiv={view}
+        label="Finanz-Ansichten"
+        onWaehlen={(key) => router.replace(`/admin/finanzen?ansicht=${key}`, { scroll: false })}
+      />
 
       {view === "rechnungen" ? (
         <InvoicesPanel
@@ -61,6 +55,8 @@ function FinanzenPage() {
       {view === "journal" ? (
         <BookkeepingView adminFetch={adminFetch} pin={pin} setNotice={notify} onShowStudent={showStudent} />
       ) : null}
+
+      {view === "umsatz" ? <UmsatzView /> : null}
 
       {view === "quittungen" ? <QuittungenView /> : null}
 

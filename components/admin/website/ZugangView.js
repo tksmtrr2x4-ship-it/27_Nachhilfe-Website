@@ -114,15 +114,15 @@ export default function ZugangView() {
 
       <TuerAbschnitt />
 
-      <h3 className="pt-2 text-sm font-semibold text-slate-900">Passkeys</h3>
+      <h3 className="pt-2 text-sm font-semibold text-[var(--ck-text)]">Passkeys</h3>
 
       <div
         className={`rounded-2xl border p-4 text-sm ${
           passkeys.length > 1
-            ? "border-emerald-200 bg-emerald-50/70 text-emerald-900"
+            ? "border-[var(--ck-pos)]/35 bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]"
             : passkeys.length === 1 || mail?.aktiv
-              ? "border-amber-200 bg-amber-50/70 text-amber-900"
-              : "border-red-200 bg-red-50/70 text-red-900"
+              ? "border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]"
+              : "border-[var(--ck-neg)]/35 bg-[var(--ck-neg-soft)] text-[var(--ck-neg)]"
         }`}
       >
         {passkeys.length === 0
@@ -138,7 +138,7 @@ export default function ZugangView() {
 
       <form
         onSubmit={(e) => addPasskey(e, "geraet")}
-        className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+        className="flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4"
       >
         <label className="block min-w-48 flex-1">
           <span className={labelClass}>Bezeichnung</span>
@@ -163,7 +163,7 @@ export default function ZugangView() {
         </Button>
       </form>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--ck-muted)]">
         „Face ID / Touch ID“ legt den Passkey im Schlüsselbund deines Apple- oder Google-Kontos ab –
         von dort gilt er auf allen Geräten dieses Kontos, ein zweiter geht dann nicht mehr.
         „Sicherheitsschlüssel“ fragt gezielt nach einem Stick: einstecken, tippen, fertig. Nötig ist
@@ -171,7 +171,7 @@ export default function ZugangView() {
         weil kein Browser Dateien von einem Stick als Anmeldung lesen darf.
       </p>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--ck-muted)]">
         {mail?.aktiv
           ? `Anmeldungen an neuen Geräten werden zusätzlich per Mail an ${mail.adresse} bestätigt. Bekannte Geräte brauchen das nicht. Kommt keine Mail an, lässt sich der Schritt auf dem Server mit ADMIN_LOGIN_MAIL=aus abschalten.`
           : "Der Bestätigungslink per Mail ist abgeschaltet – es fehlt entweder das Postfach (ADMIN_LOGIN_MAIL) oder der Mailversand (SMTP)."}
@@ -188,7 +188,7 @@ export default function ZugangView() {
             priority: "primary",
             cell: (p) => (
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-slate-900 dark:text-white">{p.label}</span>
+                <span className="font-semibold text-[var(--ck-text)] dark:text-white">{p.label}</span>
                 <Badge tone={p.kind === "geräteübergreifend" ? "sky" : "slate"}>{p.kind}</Badge>
               </span>
             ),
@@ -204,9 +204,9 @@ export default function ZugangView() {
         actions={(p) => [{ label: "Entfernen", tone: "red", onClick: () => remove(p) }]}
       />
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--ck-muted)]">
         Kommst du gar nicht mehr hinein, lässt sich auf dem Server mit{" "}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">npm run zugang:zuruecksetzen</code> auf
+        <code className="rounded bg-[var(--ck-surface2)] px-1 ">npm run zugang:zuruecksetzen</code> auf
         reine PIN-Anmeldung zurückschalten.
       </p>
     </div>

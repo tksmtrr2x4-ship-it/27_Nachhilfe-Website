@@ -174,7 +174,7 @@ export default function WebsiteView({ view: viewParam, onView }) {
             onClick={() => onView(key)}
             aria-current={view === key ? "page" : undefined}
             className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              view === key ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+              view === key ? "bg-[var(--ck-text)] text-black" : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
             }`}
           >
             {label}
@@ -207,7 +207,7 @@ export default function WebsiteView({ view: viewParam, onView }) {
                   priority: "primary",
                   cell: (o) => (
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-slate-900">{o.title}</span>
+                      <span className="font-semibold text-[var(--ck-text)]">{o.title}</span>
                       <Badge tone="indigo">{o.type === "session" ? "Einzelstunde" : "Paket"}</Badge>
                       {o.active ? null : <Badge tone="slate">inaktiv</Badge>}
                     </span>
@@ -255,13 +255,13 @@ export default function WebsiteView({ view: viewParam, onView }) {
                   priority: "primary",
                   cell: (t) => (
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-slate-900">{t.name}</span>
-                      {t.role ? <span className="text-xs text-slate-500">{t.role}</span> : null}
+                      <span className="font-semibold text-[var(--ck-text)]">{t.name}</span>
+                      {t.role ? <span className="text-xs text-[var(--ck-muted)]">{t.role}</span> : null}
                       {t.active ? null : <Badge tone="slate">inaktiv</Badge>}
                     </span>
                   ),
                 },
-                { key: "text", header: "Text", cell: (t) => <span className="text-slate-700">„{t.text}“</span> },
+                { key: "text", header: "Text", cell: (t) => <span className="text-[var(--ck-text)]">„{t.text}“</span> },
               ]}
               actions={(t) => [
                 { label: "Bearbeiten", onClick: () => setEditingTestimonial(t) },
@@ -290,7 +290,7 @@ export default function WebsiteView({ view: viewParam, onView }) {
       {view === "einstellungen" && (
         <div className="space-y-4">
           <Toolbar title="Einstellungen" hint="Texte, Kontaktdaten und Buchungsfenster der Website." />
-          {settings ? <SettingsForm settings={settings} onSave={(patch) => saveSettings(patch)} /> : <p className="text-sm text-slate-500">Lädt …</p>}
+          {settings ? <SettingsForm settings={settings} onSave={(patch) => saveSettings(patch)} /> : <p className="text-sm text-[var(--ck-muted)]">Lädt …</p>}
         </div>
       )}
     </div>

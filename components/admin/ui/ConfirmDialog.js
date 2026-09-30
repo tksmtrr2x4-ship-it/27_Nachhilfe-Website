@@ -59,10 +59,10 @@ export function DialogProvider({ children }) {
               finish(request.kind === "ask" ? value.trim() : true);
             }}
           >
-            {request.message ? <p className="text-sm text-slate-600">{request.message}</p> : null}
+            {request.message ? <p className="text-sm text-[var(--ck-muted)]">{request.message}</p> : null}
             {request.kind === "ask" ? (
               <label className="mt-3 block">
-                <span className="text-xs font-semibold text-slate-600">{request.label || "Begründung"}</span>
+                <span className="text-xs font-semibold text-[var(--ck-muted)]">{request.label || "Begründung"}</span>
                 <textarea
                   className={`${input} min-h-24`}
                   value={value}
@@ -71,7 +71,7 @@ export function DialogProvider({ children }) {
                   placeholder={request.placeholder || ""}
                   autoFocus
                 />
-                <span className="mt-1 block text-xs text-slate-400">
+                <span className="mt-1 block text-xs text-[var(--ck-faint)]">
                   {value.length} / {request.maxLength || 300} Zeichen
                   {request.required ? " · Pflichtangabe" : ""}
                 </span>

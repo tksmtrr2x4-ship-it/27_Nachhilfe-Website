@@ -109,3 +109,19 @@ Seit 29.09.2026. Technische Beschreibung: [../kundenkonto.md](../kundenkonto.md)
 | Löschfrist | Konto und Schülerakte: wie Nr. 2/3 bzw. auf Wunsch sofort. Anmeldelinks: 30 Minuten. Bestätigungslinks: 24 Stunden. Sitzungen: 30 Tage. Nachrichten: mit der Schülerakte |
 | TOM | Anmeldung ohne Passwort über einmaligen Link (keine Passwortdatenbank); Sitzungskennwort nur als SHA-256 gespeichert; Keks HttpOnly/Secure/SameSite=Lax; Code steht hinter dem Doppelkreuz und damit in keinem Zugriffsprotokoll; Mailversand nur an bereits hinterlegte Adressen; Mengenbremse gegen Postfachfluten; interne Notizen und Stundentagebuch sind für Eltern **nicht** sichtbar (durch Test abgesichert) |
 
+
+## 9. Umsatzrechner und Notizen im Cockpit
+
+Seit 30.09.2026. Technische Beschreibung: [../cockpit.md](../cockpit.md).
+
+| Feld | Inhalt |
+|---|---|
+| Zweck | Eigene Übersicht über Einnahmen und Auslastung; Notizzettel für die tägliche Arbeit. **Keine steuerliche Aufzeichnung** – die bleibt das Journal (Nr. 7) |
+| Kategorien betroffener Personen | Schüler:innen (als Bezugspunkt der Einheiten), keine Angaben zu Erziehungsberechtigten |
+| Datenkategorien | Datum, Name der Schülerin / des Schülers (Auswahl aus der Akte oder frei eingetippt), Fach, Anzahl und Dauer der Einheiten, Preis, Status (bezahlt/offen/geplant), Zahlungsart, freie Notiz. Eigene To-dos: freier Text |
+| Rechtsgrundlage | Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer eigenen Planungsübersicht); die Angaben stammen aus dem ohnehin bestehenden Vertragsverhältnis |
+| Besondere Kategorien (Art. 9) | Nicht vorgesehen. Das Notizfeld ist auf 300 Zeichen begrenzt und ausdrücklich für Organisatorisches gedacht |
+| Empfänger | Keine. Die Daten verlassen den eigenen V-Server nicht; der CSV-Export wird nur lokal heruntergeladen |
+| Drittland | Nein |
+| Löschfrist | Jederzeit einzeln löschbar; spätestens mit der Schülerakte. Keine Aufbewahrungspflicht, da keine Buchführungsunterlage |
+| TOM | Nur hinter dem Admin-Zugang (versteckte Tür, Passkey/PIN, serverseitige Prüfung in jeder Route); Beträge als Ganzzahl in Cent; Eingabeprüfung serverseitig; keine Namen in Server-Protokollen |

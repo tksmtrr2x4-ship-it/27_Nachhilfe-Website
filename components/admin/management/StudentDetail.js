@@ -19,23 +19,23 @@ import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/
 const INVOICE_STATUS = { issued: "Ausgestellt", sent: "Versendet", paid: "Bezahlt", cancelled: "Storniert", issuing: "wird ausgestellt" };
 
 export function lessonState(lesson, today) {
-  if (lesson.status === "cancelled") return { text: "Storniert", cls: "bg-slate-200 text-slate-600" };
-  if (lesson.status === "pending") return { text: "Anfrage offen", cls: "bg-amber-100 text-amber-800" };
-  if (lesson.heldStatus === "missed") return { text: "Ausgefallen", cls: "bg-slate-200 text-slate-600" };
-  if (lesson.heldStatus === "held" || (lesson.requestedDate && lesson.requestedDate <= today)) return { text: "Abgehalten", cls: "bg-emerald-100 text-emerald-800" };
-  return { text: "Geplant", cls: "bg-sky-100 text-sky-800" };
+  if (lesson.status === "cancelled") return { text: "Storniert", cls: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]" };
+  if (lesson.status === "pending") return { text: "Anfrage offen", cls: "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]" };
+  if (lesson.heldStatus === "missed") return { text: "Ausgefallen", cls: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]" };
+  if (lesson.heldStatus === "held" || (lesson.requestedDate && lesson.requestedDate <= today)) return { text: "Abgehalten", cls: "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]" };
+  return { text: "Geplant", cls: "bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" };
 }
 
 export function billingState(lesson, today) {
-  if (lesson.invoiceId) return { text: "Rechnung", cls: "text-slate-600" };
+  if (lesson.invoiceId) return { text: "Rechnung", cls: "text-[var(--ck-muted)]" };
   if (lesson.paymentLedgerEntryId) {
     const how = { cash: "bar", bank: "per Überweisung", card: "per Karte" }[lesson.paymentMethod] || "";
-    return { text: `Bezahlt ${how}`.trim(), cls: "text-emerald-700" };
+    return { text: `Bezahlt ${how}`.trim(), cls: "text-[var(--ck-pos)]" };
   }
-  if (lesson.settledExternally) return { text: "Vor Einführung abgerechnet", cls: "text-slate-600", note: lesson.settledExternally.note };
-  if (lesson.status === "paid") return { text: "Online bezahlt", cls: "text-emerald-700" };
-  if (isBillableSession(lesson, today)) return { text: "Offen", cls: "font-semibold text-amber-700" };
-  return { text: "–", cls: "text-slate-400" };
+  if (lesson.settledExternally) return { text: "Vor Einführung abgerechnet", cls: "text-[var(--ck-muted)]", note: lesson.settledExternally.note };
+  if (lesson.status === "paid") return { text: "Online bezahlt", cls: "text-[var(--ck-pos)]" };
+  if (isBillableSession(lesson, today)) return { text: "Offen", cls: "font-semibold text-[var(--ck-warn)]" };
+  return { text: "–", cls: "text-[var(--ck-faint)]" };
 }
 
 export default function StudentDetail({ id, adminFetch, pin, setNotice, customers, onCreateInvoice, onBack, onDeleted }) {
@@ -66,7 +66,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
     refresh();
   }, [refresh]);
 
-  if (!data) return <p className="text-sm text-slate-500">Lädt …</p>;
+  if (!data) return <p className="text-sm text-[var(--ck-muted)]">Lädt …</p>;
   const { student, customer, lessons, invoices, entries, stats } = data;
   const billable = lessons.filter((l) => isBillableSession(l, today));
   const selectedBillable = selected.filter((sid) => billable.some((l) => l._id === sid));
@@ -191,8 +191,8 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-2xl font-semibold text-slate-900">{student.name}</h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <h2 className="text-2xl font-semibold text-[var(--ck-text)]">{student.name}</h2>
+          <p className="mt-1 text-sm text-[var(--ck-muted)]">
             {STUDENT_STATUS[student.status]}
             {student.studentClass ? ` · Klasse ${student.studentClass}` : ""}
             {student.schoolType ? ` · ${SCHOOL_TYPES[student.schoolType]}` : ""}
@@ -239,11 +239,11 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className={`${card} min-w-0`}>
-          <h3 className="font-semibold text-slate-900">Stammdaten</h3>
+          <h3 className="font-semibold text-[var(--ck-text)]">Stammdaten</h3>
           {/* Akten, die Eltern selbst über /konto angelegt haben, hat noch
               niemand gegengelesen – das soll auffallen. */}
           {student.selbstAngelegt && !student.geprueft ? (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-900">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-3 text-sm text-[var(--ck-warn)]">
               <span>Von den Eltern selbst angelegt und noch nicht durchgesehen.</span>
               <button className={btnSecondary} onClick={alsGeprueft}>
                 Durchgesehen
@@ -252,26 +252,26 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
           ) : null}
           <dl className="mt-3 space-y-2 text-sm">
             <div>
-              <dt className="text-xs font-semibold text-slate-500">Fächer</dt>
-              <dd className="text-slate-800">
+              <dt className="text-xs font-semibold text-[var(--ck-muted)]">Fächer</dt>
+              <dd className="text-[var(--ck-text)]">
                 {student.subjects?.length
                   ? student.subjects.map((s) => (s.courseLevel ? `${s.subject} (${COURSE_LEVELS[s.courseLevel]})` : s.subject)).join(", ")
                   : "–"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold text-slate-500">Kontakt Schüler:in</dt>
-              <dd className="text-slate-800">{[student.email, student.phone].filter(Boolean).join(" · ") || "–"}</dd>
+              <dt className="text-xs font-semibold text-[var(--ck-muted)]">Kontakt Schüler:in</dt>
+              <dd className="text-[var(--ck-text)]">{[student.email, student.phone].filter(Boolean).join(" · ") || "–"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold text-slate-500">Unterrichtsort</dt>
-              <dd className="text-slate-800">
+              <dt className="text-xs font-semibold text-[var(--ck-muted)]">Unterrichtsort</dt>
+              <dd className="text-[var(--ck-text)]">
                 {LOCATION_TYPES[student.defaultLocationType] || "–"}
                 {student.locationAddress ? ` – ${student.locationAddress}` : ""}
               </dd>
             </div>
             <div>
-              <dt className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-500">
+              <dt className="flex items-center justify-between gap-2 text-xs font-semibold text-[var(--ck-muted)]">
                 <span>Rechnungsempfänger:in</span>
                 {customer ? (
                   <button type="button" className={link} onClick={() => setKundeBearbeiten({ ...customer })}>
@@ -279,31 +279,31 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                   </button>
                 ) : null}
               </dt>
-              <dd className="text-slate-800">
+              <dd className="text-[var(--ck-text)]">
                 {customer ? (
                   <>
                     {customer.name} · {customer.email}
                     {customer.phone ? ` · ${customer.phone}` : ""}
-                    <span className="block text-slate-600">
+                    <span className="block text-[var(--ck-muted)]">
                       {customer.street ? `${customer.street}, ${customer.zip} ${customer.city}` : "Anschrift fehlt noch (für Rechnungen nötig)"}
                     </span>
                   </>
                 ) : (
-                  <span className="text-amber-700">Noch nicht verknüpft – für Rechnungen nötig.</span>
+                  <span className="text-[var(--ck-warn)]">Noch nicht verknüpft – für Rechnungen nötig.</span>
                 )}
               </dd>
             </div>
             {student.notes ? (
               <div>
-                <dt className="text-xs font-semibold text-slate-500">Allgemeine Notizen</dt>
-                <dd className="whitespace-pre-wrap text-slate-800">{student.notes}</dd>
+                <dt className="text-xs font-semibold text-[var(--ck-muted)]">Allgemeine Notizen</dt>
+                <dd className="whitespace-pre-wrap text-[var(--ck-text)]">{student.notes}</dd>
               </div>
             ) : null}
           </dl>
         </div>
 
         <div className={`${card} min-w-0`}>
-          <h3 className="font-semibold text-slate-900">Notizen</h3>
+          <h3 className="font-semibold text-[var(--ck-text)]">Notizen</h3>
           <form onSubmit={addNote} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
             <input type="date" className={`${input} mt-0 sm:w-40`} value={note.date} onChange={(e) => setNote((n) => ({ ...n, date: e.target.value }))} />
             <input className={`${input} mt-0 flex-1`} placeholder="z. B. Klassenarbeit Bruchrechnung am Freitag" value={note.text} onChange={(e) => setNote((n) => ({ ...n, text: e.target.value }))} maxLength={5000} />
@@ -312,16 +312,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
             </button>
           </form>
           <ul className="mt-4 max-h-80 space-y-3 overflow-y-auto">
-            {(student.noteLog || []).length === 0 && <li className="text-sm text-slate-500">Noch keine Notizen.</li>}
+            {(student.noteLog || []).length === 0 && <li className="text-sm text-[var(--ck-muted)]">Noch keine Notizen.</li>}
             {(student.noteLog || []).map((n) => (
-              <li key={n._id} className="rounded-xl bg-slate-50 p-3 text-sm">
+              <li key={n._id} className="rounded-xl bg-[var(--ck-surface2)] p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs font-semibold text-slate-500">{formatDate(n.date)}</span>
-                  <button className="text-xs text-slate-400 hover:text-red-600" onClick={() => removeNote(n._id)}>
+                  <span className="text-xs font-semibold text-[var(--ck-muted)]">{formatDate(n.date)}</span>
+                  <button className="text-xs text-[var(--ck-faint)] hover:text-[var(--ck-neg)]" onClick={() => removeNote(n._id)}>
                     löschen
                   </button>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-slate-800">{n.text}</p>
+                <p className="mt-1 whitespace-pre-wrap text-[var(--ck-text)]">{n.text}</p>
               </li>
             ))}
           </ul>
@@ -353,13 +353,13 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
 
       <div className={`${card} min-w-0`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-semibold text-slate-900">Stunden ({lessons.length})</h3>
+          <h3 className="font-semibold text-[var(--ck-text)]">Stunden ({lessons.length})</h3>
           {billable.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <button className={link} onClick={() => setSelected(billable.map((l) => l._id))}>
                 Alle offenen auswählen
               </button>
-              <span className="text-slate-500">
+              <span className="text-[var(--ck-muted)]">
                 {selectedBillable.length} ausgewählt · {formatPrice(selectedCents)}
               </span>
               <button
@@ -386,7 +386,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
         </div>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[880px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-500">
+            <thead className="text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>
                 <th className="py-2 pr-2"></th>
                 <th className="py-2 pr-3">Datum</th>
@@ -401,7 +401,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
             <tbody>
               {lessons.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-4 text-slate-500">
+                  <td colSpan={8} className="py-4 text-[var(--ck-muted)]">
                     Noch keine Stunden.
                   </td>
                 </tr>
@@ -413,21 +413,21 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                 const locked = isLessonLocked(l);
                 const cancelled = l.status === "cancelled";
                 return (
-                  <tr key={l._id} className={`border-t border-slate-100 align-top ${cancelled ? "opacity-50" : ""}`}>
+                  <tr key={l._id} className={`border-t border-[var(--ck-line)] align-top ${cancelled ? "opacity-50" : ""}`}>
                     <td className="py-2 pr-2">
                       {canSelect && <input type="checkbox" checked={selected.includes(l._id)} onChange={() => toggle(l._id)} aria-label="Stunde auswählen" />}
                     </td>
                     <td className="py-2 pr-3 whitespace-nowrap">
                       {formatDate(l.requestedDate)}
-                      {l.requestedTime ? <span className="block text-xs text-slate-500">{l.requestedTime} Uhr</span> : null}
-                      {l.source !== "admin" ? <span className="block text-xs text-slate-400">online gebucht</span> : null}
+                      {l.requestedTime ? <span className="block text-xs text-[var(--ck-muted)]">{l.requestedTime} Uhr</span> : null}
+                      {l.source !== "admin" ? <span className="block text-xs text-[var(--ck-faint)]">online gebucht</span> : null}
                     </td>
                     <td className="py-2 pr-3">
                       {l.subject}
-                      {l.diary?.topic ? <span className="mt-1 block max-w-xs text-xs font-semibold text-slate-600">{l.diary.topic}</span> : null}
-                      {l.lessonNotes ? <span className="mt-1 block max-w-xs whitespace-pre-wrap text-xs text-slate-500">{l.lessonNotes}</span> : null}
+                      {l.diary?.topic ? <span className="mt-1 block max-w-xs text-xs font-semibold text-[var(--ck-muted)]">{l.diary.topic}</span> : null}
+                      {l.lessonNotes ? <span className="mt-1 block max-w-xs whitespace-pre-wrap text-xs text-[var(--ck-muted)]">{l.lessonNotes}</span> : null}
                     </td>
-                    <td className="py-2 pr-3 text-slate-600">
+                    <td className="py-2 pr-3 text-[var(--ck-muted)]">
                       {l.offerSnapshot?.durationMinutes ? `${l.offerSnapshot.durationMinutes} min` : l.offerSnapshot?.durationLabel}
                       <span className="block text-xs">{locationLabel(l)}</span>
                     </td>
@@ -437,7 +437,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                     </td>
                     <td className={`py-2 pr-3 ${bill.cls}`}>
                       {bill.text}
-                      {bill.note ? <span className="block max-w-[14rem] text-xs text-slate-500">{bill.note}</span> : null}
+                      {bill.note ? <span className="block max-w-[14rem] text-xs text-[var(--ck-muted)]">{bill.note}</span> : null}
                     </td>
                     <td className="py-2">
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
@@ -471,7 +471,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                             <button className={link} onClick={() => setLessonDialog(l)}>
                               bearbeiten
                             </button>
-                            <button className="text-sm text-slate-400 hover:text-red-600" onClick={() => deleteLesson(l)}>
+                            <button className="text-sm text-[var(--ck-faint)] hover:text-[var(--ck-neg)]" onClick={() => deleteLesson(l)}>
                               löschen
                             </button>
                           </>
@@ -488,16 +488,16 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className={`${card} min-w-0`}>
-          <h3 className="font-semibold text-slate-900">Rechnungen</h3>
+          <h3 className="font-semibold text-[var(--ck-text)]">Rechnungen</h3>
           <ul className="mt-3 space-y-2 text-sm">
-            {invoices.length === 0 && <li className="text-slate-500">Keine ausgestellten Rechnungen.</li>}
+            {invoices.length === 0 && <li className="text-[var(--ck-muted)]">Keine ausgestellten Rechnungen.</li>}
             {invoices.map((i) => (
               <li key={i._id} className="flex flex-wrap justify-between gap-2">
                 <span>
                   {i.type === "storno" ? "Storno " : ""}
                   {i.number} · {formatDate(i.issueDate)}
                 </span>
-                <span className="text-slate-600">
+                <span className="text-[var(--ck-muted)]">
                   {formatPrice(i.totalCents)} · {INVOICE_STATUS[i.status] || i.status}
                 </span>
               </li>
@@ -505,11 +505,11 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
           </ul>
         </div>
         <div className={`${card} min-w-0`}>
-          <h3 className="font-semibold text-slate-900">Zahlungen im Journal</h3>
+          <h3 className="font-semibold text-[var(--ck-text)]">Zahlungen im Journal</h3>
           <ul className="mt-3 space-y-2 text-sm">
-            {entries.length === 0 && <li className="text-slate-500">Noch keine Zahlungen verbucht.</li>}
+            {entries.length === 0 && <li className="text-[var(--ck-muted)]">Noch keine Zahlungen verbucht.</li>}
             {entries.map((e) => (
-              <li key={e._id} className={`flex flex-wrap items-center justify-between gap-2 ${e.reversedBy || e.reverses ? "text-slate-400" : ""}`}>
+              <li key={e._id} className={`flex flex-wrap items-center justify-between gap-2 ${e.reversedBy || e.reverses ? "text-[var(--ck-faint)]" : ""}`}>
                 <span className="min-w-0">
                   {formatDate(e.date)} · {e.entryNumber} · {PAYMENT_METHODS[e.method]}
                   {e.reverses ? " · Storno" : e.reversedBy ? " · storniert" : ""}
@@ -638,15 +638,15 @@ function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin
     const canQuittung = action.kind !== "none";
     return (
       <Modal title="Zahlung verbucht" onClose={onSaved}>
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-[var(--ck-text)]">
           {formatPrice(entry.amountCents)} wurden als <strong>{entry.entryNumber}</strong> mit Zahlungsdatum {formatDate(entry.date)} im Journal
           verbucht. Die Stunden gelten als bezahlt und erscheinen nicht mehr bei den offenen Rechnungsposten.
         </p>
         {entry.method === "cash" && !canQuittung && action.reason ? (
-          <p className="mt-2 text-sm text-amber-700">{action.reason}</p>
+          <p className="mt-2 text-sm text-[var(--ck-warn)]">{action.reason}</p>
         ) : null}
         {canQuittung ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--ck-muted)]">
             Die Quittung bekommt eine eigene Nummer, wird unveränderbar gespeichert und enthält Original und Durchschlag.
           </p>
         ) : null}
@@ -674,19 +674,19 @@ function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin
   const backdated = date < todayIso();
   return (
     <Modal title="Als bezahlt verbuchen" onClose={onClose}>
-      <ul className="space-y-1 text-sm text-slate-700">
+      <ul className="space-y-1 text-sm text-[var(--ck-text)]">
         {lessons.map((l) => (
           <li key={l._id}>
             {formatDate(l.requestedDate)} · {l.subject} · {formatPrice(l.offerSnapshot?.priceCents || 0)}
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-lg font-semibold text-slate-900">Summe: {formatPrice(totalCents)}</p>
+      <p className="mt-3 text-lg font-semibold text-[var(--ck-text)]">Summe: {formatPrice(totalCents)}</p>
       <fieldset className="mt-4">
-        <legend className="text-xs font-semibold text-slate-600">Zahlungsart</legend>
+        <legend className="text-xs font-semibold text-[var(--ck-muted)]">Zahlungsart</legend>
         <div className="mt-1 flex flex-wrap gap-2">
           {METHODS.map(([key, text]) => (
-            <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-300 text-slate-700"}`}>
+            <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
               <input type="radio" name="lesson-payment-method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
               {text}
             </label>
@@ -702,12 +702,12 @@ function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin
         </Field>
       </div>
       {backdated && (
-        <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+        <p className="mt-3 rounded-lg bg-[var(--ck-warn-soft)] p-2 text-xs text-[var(--ck-warn)]">
           Nachgetragene Zahlung: Gebucht wird im Jahr {date.slice(0, 4)} (Zahlungsdatum). Eine Quittung trägt das heutige Ausstellungsdatum und
           zusätzlich das Zahlungsdatum – sie wird nicht rückdatiert.
         </p>
       )}
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-[var(--ck-muted)]">
         Die Buchung ist danach unveränderlich (GoBD). Ein Fehler wird im Journal per Gegenbuchung korrigiert.
       </p>
       <div className="mt-4 flex gap-2">
@@ -742,11 +742,11 @@ function SettleDialog({ student, lessons, adminFetch, setNotice, onClose, onSave
   }
   return (
     <Modal title="Vor Einführung abgerechnet" onClose={onClose}>
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-[var(--ck-text)]">
         Für Stunden, deren Bezahlung <strong>schon anderswo erfasst</strong> ist – z. B. in einer früheren Einnahmenüberschussrechnung oder deiner
         bisherigen Liste. Es entsteht <strong>keine Buchung</strong> im Journal; die Stunden erscheinen nur nicht mehr als offen.
       </p>
-      <ul className="mt-3 space-y-1 text-sm text-slate-700">
+      <ul className="mt-3 space-y-1 text-sm text-[var(--ck-text)]">
         {lessons.map((l) => (
           <li key={l._id}>
             {formatDate(l.requestedDate)} · {l.subject} · {formatPrice(l.offerSnapshot?.priceCents || 0)}
@@ -756,7 +756,7 @@ function SettleDialog({ student, lessons, adminFetch, setNotice, onClose, onSave
       <Field label="Wo ist die Bezahlung erfasst? *" className="mt-4">
         <input className={input} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="z. B. bar bezahlt 2025, in EÜR 2025 enthalten" />
       </Field>
-      <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+      <p className="mt-3 rounded-lg bg-[var(--ck-warn-soft)] p-2 text-xs text-[var(--ck-warn)]">
         Geld, das 2026 eingegangen und noch nirgends erfasst ist, bitte stattdessen mit „Als bezahlt verbuchen“ ins Journal übernehmen.
       </p>
       <div className="mt-4 flex gap-2">

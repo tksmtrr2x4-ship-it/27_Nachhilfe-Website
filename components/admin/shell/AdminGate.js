@@ -173,26 +173,26 @@ export default function AdminGate({ children }) {
   }, [token]);
 
   if (!ready) {
-    return <div className="min-h-screen bg-white" aria-busy="true" />;
+    return <div className="cockpit min-h-screen" aria-busy="true" />;
   }
 
   if (pending) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6 text-slate-900">
+      <div className="cockpit flex min-h-screen w-full flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-semibold text-slate-900">Noch die Mail bestätigen</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-[var(--ck-text)]">Noch die Mail bestätigen</h1>
+          <p className="mt-2 text-sm text-[var(--ck-muted)]">
             PIN und Passkey haben gestimmt. Eine Mail an <strong>{pending.mail}</strong> enthält den
             Bestätigungslink – nach dem Klick geht es hier von selbst weiter.
           </p>
           <div
-            className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600"
+            className="mt-6 flex items-center gap-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface2)] p-4 text-sm text-[var(--ck-muted)]"
             role="status"
           >
-            <span className="size-2 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
+            <span className="size-2 animate-pulse rounded-full bg-[var(--ck-accent)]" aria-hidden="true" />
             Wartet auf die Bestätigung …
           </div>
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-[var(--ck-muted)]">
             Der Link gilt {pending.minutes || 10} Minuten. Du kannst ihn auch auf dem Handy öffnen.
           </p>
           <button
@@ -201,7 +201,7 @@ export default function AdminGate({ children }) {
               setPending(null);
               setError("");
             }}
-            className="mt-5 w-full rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700"
+            className="mt-5 w-full rounded-full border border-[var(--ck-line)] px-6 py-3 text-sm font-semibold text-[var(--ck-text)]"
           >
             Abbrechen
           </button>
@@ -214,10 +214,10 @@ export default function AdminGate({ children }) {
     const needsPin = mode !== "passkey";
     const needsPasskey = mode !== "pin-only";
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-6 text-slate-900">
+      <div className="cockpit flex min-h-screen w-full flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
-          <h1 className="text-xl font-semibold text-slate-900">Anmeldung Verwaltung</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-[var(--ck-text)]">Anmeldung Verwaltung</h1>
+          <p className="mt-2 text-sm text-[var(--ck-muted)]">
             {mode === "passkey"
               ? "Dieses Gerät ist bekannt – es genügt Face ID, Touch ID oder dein Sicherheitsschlüssel."
               : mode === "passkey-pin"
@@ -244,19 +244,19 @@ export default function AdminGate({ children }) {
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   aria-describedby={error ? "admin-pin-error" : undefined}
-                  className="w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  className="w-full rounded-[14px] border border-[var(--ck-line)] bg-[var(--ck-surface2)] px-3.5 py-3 text-sm text-[var(--ck-text)] placeholder:text-[var(--ck-faint)] focus:border-[var(--ck-accent)] focus:outline-none"
                 />
               </>
             ) : null}
             {error ? (
-              <p id="admin-pin-error" role="alert" className="text-sm text-red-600">
+              <p id="admin-pin-error" role="alert" className="text-sm text-[var(--ck-neg)]">
                 {error}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="w-full rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-60"
             >
               {busy ? "Prüft …" : needsPasskey ? "Mit Passkey anmelden" : "Anmelden"}
             </button>

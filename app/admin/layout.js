@@ -1,3 +1,4 @@
+import "./cockpit.css";
 import AdminGate from "@/components/admin/shell/AdminGate";
 
 export const metadata = {
@@ -17,7 +18,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#4f46e5",
+  themeColor: "#000000",
 };
 
 // Die PIN-Abfrage und der Rahmen (Navigation, Meldungen) liegen im Layout,

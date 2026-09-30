@@ -206,8 +206,8 @@ export default function UnterrichtView({ filters, onFilters }) {
         const source = lessonDateSource(b);
         return (
           <span className="block">
-            <span className="font-semibold text-slate-900">{formatDate(lessonDateOf(b))}</span>
-            <span className="block text-xs text-slate-500">
+            <span className="font-semibold text-[var(--ck-text)]">{formatDate(lessonDateOf(b))}</span>
+            <span className="block text-xs text-[var(--ck-muted)]">
               {source === "lesson"
                 ? b.requestedTime
                   ? `${b.requestedTime} Uhr`
@@ -228,14 +228,14 @@ export default function UnterrichtView({ filters, onFilters }) {
           {b.studentId ? (
             <button
               onClick={() => router.push(`/admin/schueler?id=${b.studentId}`)}
-              className="text-left font-semibold text-indigo-700 hover:underline"
+              className="text-left font-semibold text-[var(--ck-accent)] hover:underline"
             >
               {b.studentName}
             </button>
           ) : (
-            <span className="font-semibold text-slate-900">{b.studentName}</span>
+            <span className="font-semibold text-[var(--ck-text)]">{b.studentName}</span>
           )}
-          <span className="block truncate text-xs text-slate-500">
+          <span className="block truncate text-xs text-[var(--ck-muted)]">
             {b.studentClass ? `Klasse ${b.studentClass}` : ""}
             {b.studentId ? "" : " · kein Profil"}
           </span>
@@ -247,8 +247,8 @@ export default function UnterrichtView({ filters, onFilters }) {
       header: "Fach / Angebot",
       cell: (b) => (
         <span className="block min-w-0">
-          <span className="block truncate text-slate-800">{b.subject || b.offerSnapshot?.subject || "–"}</span>
-          <span className="block truncate text-xs text-slate-500">
+          <span className="block truncate text-[var(--ck-text)]">{b.subject || b.offerSnapshot?.subject || "–"}</span>
+          <span className="block truncate text-xs text-[var(--ck-muted)]">
             {[b.offerSnapshot?.title, b.offerSnapshot?.durationLabel].filter(Boolean).join(" · ")}
           </span>
         </span>
@@ -260,8 +260,8 @@ export default function UnterrichtView({ filters, onFilters }) {
       hideBelowXl: true,
       cell: (b) => (
         <span className="block min-w-0">
-          <span className="block truncate text-slate-700">{locationLabel(b) || "–"}</span>
-          <span className="block text-xs text-slate-500">{b.offerSnapshot?.durationLabel || ""}</span>
+          <span className="block truncate text-[var(--ck-text)]">{locationLabel(b) || "–"}</span>
+          <span className="block text-xs text-[var(--ck-muted)]">{b.offerSnapshot?.durationLabel || ""}</span>
         </span>
       ),
     },
@@ -276,10 +276,10 @@ export default function UnterrichtView({ filters, onFilters }) {
         return (
           <span className="block">
             <Badge tone={state.tone}>{state.label}</Badge>
-            <span className={`mt-1 block text-xs ${billing.key === "open" ? "font-semibold text-amber-700" : "text-slate-500"}`}>
+            <span className={`mt-1 block text-xs ${billing.key === "open" ? "font-semibold text-[var(--ck-warn)]" : "text-[var(--ck-muted)]"}`}>
               {billing.label}
             </span>
-            {billing.note ? <span className="block text-xs text-slate-400">{billing.note}</span> : null}
+            {billing.note ? <span className="block text-xs text-[var(--ck-faint)]">{billing.note}</span> : null}
           </span>
         );
       },
@@ -366,7 +366,7 @@ export default function UnterrichtView({ filters, onFilters }) {
         <Stat title="Offene Anfragen" value={pending.length} tone={pending.length ? "amber" : "slate"} />
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="space-y-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
         <FilterRow>
           <SelectFilter label="Zeitraum" value={period} onChange={(v) => setFilter({ period: v })} options={Object.entries(PERIODS)} />
           {period === "custom" ? (

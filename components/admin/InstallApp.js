@@ -48,7 +48,7 @@ export default function InstallApp() {
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--ck-accent)]/40 bg-[var(--ck-accent-soft)] px-4 py-3 text-sm text-[var(--ck-accent)]">
       <span className="min-w-0 flex-1">
         {promptEvent
           ? "Die Verwaltung lässt sich als eigene App auf diesem Computer installieren – mit Symbol im Dock bzw. Startmenü."
@@ -56,7 +56,7 @@ export default function InstallApp() {
       </span>
       {promptEvent && (
         <button
-          className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-500"
+          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 font-semibold text-black hover:brightness-110"
           onClick={async () => {
             promptEvent.prompt();
             const choice = await promptEvent.userChoice.catch(() => null);
@@ -67,7 +67,7 @@ export default function InstallApp() {
           Als App installieren
         </button>
       )}
-      <button className="text-indigo-700 hover:underline" onClick={dismiss}>
+      <button className="text-[var(--ck-accent)] hover:underline" onClick={dismiss}>
         Nicht mehr anzeigen
       </button>
     </div>

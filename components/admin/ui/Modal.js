@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { tone as tones } from "@/components/admin/ui/tokens";
 
 export function Modal({ title, onClose, children, wide = false }) {
   useEffect(() => {
@@ -10,15 +11,21 @@ export function Modal({ title, onClose, children, wide = false }) {
   }, [onClose]);
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-[3px] sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div className={`w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-2xl bg-white p-5 shadow-xl sm:p-6`}>
+      <div
+        className={`w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[#0b0b0c] p-5 shadow-2xl sm:p-6`}
+      >
         <div className="flex items-start justify-between gap-4">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="text-2xl leading-none text-slate-400 hover:text-slate-600" aria-label="Schließen">
+          <h3 className="text-lg font-semibold tracking-[-0.3px]">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-2xl leading-none text-[var(--ck-faint)] transition hover:text-[var(--ck-text)]"
+            aria-label="Schließen"
+          >
             ×
           </button>
         </div>
@@ -31,7 +38,7 @@ export function Modal({ title, onClose, children, wide = false }) {
 export function Field({ label: text, children, className = "" }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-xs font-semibold text-slate-600">{text}</span>
+      <span className="text-xs font-semibold text-[var(--ck-muted)]">{text}</span>
       {children}
     </label>
   );
@@ -39,29 +46,22 @@ export function Field({ label: text, children, className = "" }) {
 
 // Kennzahl-Kachel. Töne wie im Farbverzeichnis (tokens.js).
 export function Stat({ title, value, hint, tone = "slate" }) {
-  const rings = {
-    slate: "border-slate-200",
-    emerald: "border-emerald-200 bg-emerald-50/50",
-    green: "border-emerald-200 bg-emerald-50/50",
-    amber: "border-amber-200 bg-amber-50/60",
-    red: "border-red-200 bg-red-50/60",
-    sky: "border-sky-200 bg-sky-50/60",
-    indigo: "border-indigo-200 bg-indigo-50/60",
-  };
+  const t = tones[tone] || tones.slate;
+  const valueColor = tone === "slate" ? "" : t.text;
   return (
-    <div className={`min-w-0 rounded-2xl border p-4 ${rings[tone] || rings.slate}`}>
-      <p className="text-xs font-semibold text-slate-500">{title}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+    <div className="min-w-0 rounded-[16px] bg-[var(--ck-surface2)] px-4 py-3.5">
+      <p className="text-[13px] font-medium text-[var(--ck-muted)]">{title}</p>
+      <p className={`mt-1 text-[22px] font-semibold tracking-[-0.5px] tabular-nums ${valueColor}`}>{value}</p>
+      {hint ? <p className="mt-1 text-xs text-[var(--ck-muted)]">{hint}</p> : null}
     </div>
   );
 }
 
 export function EmptyState({ title, hint, children }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-      <p className="text-sm font-semibold text-slate-700">{title}</p>
-      {hint ? <p className="mx-auto mt-1 max-w-prose text-sm text-slate-500">{hint}</p> : null}
+    <div className="rounded-[18px] border border-dashed border-[var(--ck-line)] p-8 text-center">
+      <p className="text-sm font-semibold">{title}</p>
+      {hint ? <p className="mx-auto mt-1 max-w-prose text-sm text-[var(--ck-muted)]">{hint}</p> : null}
       {children ? <div className="mt-4 flex justify-center gap-2">{children}</div> : null}
     </div>
   );

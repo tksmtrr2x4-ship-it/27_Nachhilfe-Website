@@ -28,33 +28,33 @@ const FILTERS = [
   ["cancelled", "Storniert"],
 ];
 
-const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900";
-const label = "text-xs font-semibold text-slate-600";
+const input = "mt-1 w-full rounded-lg border border-[var(--ck-line)] px-3 py-2 text-sm text-[var(--ck-text)]";
+const label = "text-xs font-semibold text-[var(--ck-muted)]";
 // whitespace-nowrap: auf dem Handy sollen Pill-Buttons als Ganzes in die
 // nächste Zeile rutschen, nicht mitten in der Beschriftung umbrechen.
-const btnPrimary = "whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50";
-const btnSecondary = "whitespace-nowrap rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50";
-const link = "text-sm text-slate-600 hover:text-indigo-600";
+const btnPrimary = "whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 text-sm font-semibold text-black hover:brightness-110 disabled:opacity-50";
+const btnSecondary = "whitespace-nowrap rounded-full border border-[var(--ck-line)] px-4 py-2 text-sm font-semibold text-[var(--ck-text)] hover:bg-[var(--ck-surface2)] disabled:opacity-50";
+const link = "text-sm text-[var(--ck-muted)] hover:text-[var(--ck-accent)]";
 
 function centsToEuroInput(cents) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
 }
 
 function statusBadge(inv) {
-  if (inv.overdue) return "bg-red-100 text-red-800";
+  if (inv.overdue) return "bg-[var(--ck-neg-soft)] text-[var(--ck-neg)]";
   switch (inv.status) {
     case "draft":
-      return "bg-slate-100 text-slate-700";
+      return "bg-[var(--ck-surface2)] text-[var(--ck-text)]";
     case "issued":
-      return "bg-amber-100 text-amber-800";
+      return "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]";
     case "sent":
-      return "bg-sky-100 text-sky-800";
+      return "bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]";
     case "paid":
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]";
     case "cancelled":
-      return "bg-slate-200 text-slate-600 line-through";
+      return "bg-[var(--ck-surface2)] text-[var(--ck-muted)] line-through";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-[var(--ck-surface2)] text-[var(--ck-text)]";
   }
 }
 
@@ -271,7 +271,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface2)] text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"}`}
                 >
                   {text}
                   {key === "overdue" && invoices.some((i) => i.overdue) ? ` (${invoices.filter((i) => i.overdue).length})` : ""}
@@ -291,8 +291,8 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="text-slate-500">
-                <tr className="border-b border-slate-200">
+              <thead className="text-[var(--ck-muted)]">
+                <tr className="border-b border-[var(--ck-line)]">
                   <th className="py-2 pr-4">Nummer</th>
                   <th className="py-2 pr-4">Datum</th>
                   <th className="py-2 pr-4">Empfänger:in</th>
@@ -304,16 +304,16 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
               </thead>
               <tbody>
                 {visible.map((inv) => (
-                  <tr key={inv._id} className={`border-b border-slate-100 align-top ${inv.overdue ? "bg-red-50" : ""}`}>
-                    <td className="whitespace-nowrap py-2.5 pr-4 font-semibold text-slate-900">
-                      {inv.number || <span className="font-normal text-slate-400">Entwurf</span>}
-                      {inv.type === "storno" && <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-600">Storno</span>}
+                  <tr key={inv._id} className={`border-b border-[var(--ck-line)] align-top ${inv.overdue ? "bg-[var(--ck-neg-soft)]" : ""}`}>
+                    <td className="whitespace-nowrap py-2.5 pr-4 font-semibold text-[var(--ck-text)]">
+                      {inv.number || <span className="font-normal text-[var(--ck-faint)]">Entwurf</span>}
+                      {inv.type === "storno" && <span className="ml-1 rounded-full bg-[var(--ck-surface2)] px-2 py-0.5 text-xs font-normal text-[var(--ck-muted)]">Storno</span>}
                     </td>
                     <td className="whitespace-nowrap py-2.5 pr-4">{inv.issueDate ? formatDate(inv.issueDate) : "–"}</td>
                     <td className="py-2.5 pr-4">
                       {inv.recipient?.name}
                       <br />
-                      <span className="text-slate-500">{inv.recipient?.email}</span>
+                      <span className="text-[var(--ck-muted)]">{inv.recipient?.email}</span>
                     </td>
                     <td className="py-2.5 pr-4 text-right">{formatPrice(inv.totalCents || 0)}</td>
                     <td className="py-2.5 pr-4">{inv.dueDate && inv.type !== "storno" ? formatDate(inv.dueDate) : "–"}</td>
@@ -322,9 +322,9 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                         {inv.overdue ? "Überfällig" : STATUS_LABEL[inv.status] || inv.status}
                       </span>
                       {inv.sentCount > 0 ? (
-                        <span className="ml-1 text-xs text-slate-500">{inv.sentCount}× gesendet</span>
+                        <span className="ml-1 text-xs text-[var(--ck-muted)]">{inv.sentCount}× gesendet</span>
                       ) : inv.status === "issued" ? (
-                        <span className="mt-1 block text-xs font-semibold text-amber-700">noch nicht versendet</span>
+                        <span className="mt-1 block text-xs font-semibold text-[var(--ck-warn)]">noch nicht versendet</span>
                       ) : null}
                     </td>
                     <td className="py-2.5 pr-4">
@@ -333,30 +333,30 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                           {inv.status === "draft" ? "Bearbeiten" : "Details"}
                         </button>
                         {inv.status === "draft" && (
-                          <button onClick={() => issue(inv._id)} disabled={busy} className="text-sm text-emerald-700 hover:text-emerald-800">
+                          <button onClick={() => issue(inv._id)} disabled={busy} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
                             Ausstellen
                           </button>
                         )}
                         {["issued", "sent", "paid", "cancelled"].includes(inv.status) && (
                           <button
                             onClick={() => openSend(inv._id)}
-                            className={inv.sentCount > 0 ? link : "text-sm font-semibold text-amber-700 hover:text-amber-800"}
+                            className={inv.sentCount > 0 ? link : "text-sm font-semibold text-[var(--ck-warn)] hover:text-[var(--ck-warn)]"}
                           >
                             {inv.sentCount > 0 ? "Erneut senden" : "Jetzt versenden"}
                           </button>
                         )}
                         {["issued", "sent"].includes(inv.status) && inv.type !== "storno" && (
-                          <button onClick={() => markPaid(inv)} className="text-sm text-emerald-700 hover:text-emerald-800">
+                          <button onClick={() => markPaid(inv)} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
                             Bezahlt
                           </button>
                         )}
                         {["issued", "sent", "paid"].includes(inv.status) && inv.type !== "storno" && (
-                          <button onClick={() => cancelInvoice(inv)} disabled={busy} className="text-sm text-red-600 hover:text-red-700">
+                          <button onClick={() => cancelInvoice(inv)} disabled={busy} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
                             Stornieren
                           </button>
                         )}
                         {inv.status === "draft" && (
-                          <button onClick={() => deleteDraft(inv)} className="text-sm text-red-600 hover:text-red-700">
+                          <button onClick={() => deleteDraft(inv)} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
                             Löschen
                           </button>
                         )}
@@ -366,7 +366,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                 ))}
                 {visible.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center text-slate-500">
+                    <td colSpan={7} className="py-6 text-center text-[var(--ck-muted)]">
                       Keine Rechnungen in dieser Ansicht.
                     </td>
                   </tr>
@@ -445,13 +445,13 @@ function ConfigBanner({ config }) {
   ];
   if (problems.length === 0) {
     return (
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[var(--ck-muted)]">
         Nummernformat {config.numberFormat} · Zahlungsziel {config.paymentTermDays} Tage · Ablage {config.storage?.path}
       </p>
     );
   }
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+    <div className="rounded-xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-4 text-sm text-[var(--ck-warn)]">
       <p className="font-semibold">Rechnungsstellung noch nicht vollständig eingerichtet</p>
       <ul className="mt-1 list-disc pl-5">
         {problems.map((p) => (
@@ -474,8 +474,8 @@ function NewInvoiceMenu({ customers, onCreate, onNewCustomer }) {
     );
   }
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-slate-200 p-2">
-      <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="max-w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-[var(--ck-line)] p-2">
+      <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="max-w-full rounded-lg border border-[var(--ck-line)] px-2 py-1.5 text-sm">
         <option value="">Kund:in wählen…</option>
         {customers.map((c) => (
           <option key={c._id} value={c._id}>
@@ -499,7 +499,7 @@ function NewInvoiceMenu({ customers, onCreate, onNewCustomer }) {
       <button onClick={() => setOpen(false)} className={link}>
         Abbrechen
       </button>
-      <p className="w-full text-xs text-slate-500 sm:ml-2 sm:w-auto">Tipp: Direkt aus einer Buchung geht es über „Rechnung“ im Tab Buchungen.</p>
+      <p className="w-full text-xs text-[var(--ck-muted)] sm:ml-2 sm:w-auto">Tipp: Direkt aus einer Buchung geht es über „Rechnung“ im Tab Buchungen.</p>
     </div>
   );
 }
@@ -585,7 +585,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
   function removeButton(i) {
     if (!isDraft) return null;
     return (
-      <button onClick={() => removeLine(i)} className="text-xs text-red-600" title="Position entfernen">
+      <button onClick={() => removeLine(i)} className="text-xs text-[var(--ck-neg)]" title="Position entfernen">
         ✕ entfernen
       </button>
     );
@@ -630,14 +630,14 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
           <button onClick={onBack} className={link}>
             ← Zurück zur Übersicht
           </button>
-          <h2 className="mt-1 text-xl font-semibold text-slate-900">
+          <h2 className="mt-1 text-xl font-semibold text-[var(--ck-text)]">
             {invoice.type === "storno" ? "Stornorechnung" : "Rechnung"} {invoice.number || "(Entwurf)"}
             <span className={`ml-2 align-middle rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadge(invoice)}`}>
               {invoice.overdue ? "Überfällig" : STATUS_LABEL[invoice.status]}
             </span>
           </h2>
           {!isDraft && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--ck-muted)]">
               Ausgestellt am {formatDate(invoice.issueDate)}
               {invoice.dueDate && invoice.type !== "storno" ? ` · fällig ${formatDate(invoice.dueDate)}` : ""}
               {invoice.paidAt ? ` · bezahlt am ${formatDate(invoice.paidAt)}` : ""}
@@ -660,7 +660,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
               <button onClick={saveAndIssue} className={btnPrimary} disabled={busy || problems.length > 0 && !dirty}>
                 Rechnung ausstellen
               </button>
-              <button onClick={onDelete} className="text-sm text-red-600">
+              <button onClick={onDelete} className="text-sm text-[var(--ck-neg)]">
                 Entwurf löschen
               </button>
             </>
@@ -685,7 +685,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
                 </button>
               )}
               {["issued", "sent", "paid"].includes(invoice.status) && invoice.type !== "storno" && (
-                <button onClick={onCancel} className="text-sm text-red-600" disabled={busy}>
+                <button onClick={onCancel} className="text-sm text-[var(--ck-neg)]" disabled={busy}>
                   Stornieren
                 </button>
               )}
@@ -695,7 +695,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
       </div>
 
       {!isDraft && invoice.status === "issued" && !invoice.sentCount && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-4 text-sm text-[var(--ck-warn)]">
           <p>
             <span className="font-semibold">Noch nicht versendet.</span> Das Ausstellen vergibt Nummer und PDF – die
             Mail an {invoice.recipient?.email || "die Kundin/den Kunden"} geht erst mit „Versenden“ raus.
@@ -707,7 +707,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
       )}
 
       {isDraft && problems.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-4 text-sm text-[var(--ck-warn)]">
           <p className="font-semibold">Vor dem Ausstellen fehlt noch:</p>
           <ul className="mt-1 list-disc pl-5">
             {problems.map((p) => (
@@ -718,7 +718,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
       )}
 
       {!consent?.given && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+        <div className="rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface2)] p-3 text-xs text-[var(--ck-muted)]">
           Für diese:n Kund:in ist keine Einwilligung in elektronische Rechnungen dokumentiert. Vor dem Mailversand wird gewarnt; manuell nachtragen unter „Kund:innen“.
         </div>
       )}
@@ -728,8 +728,8 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
           Inhalt werden – die Positionstabelle dehnte dadurch auf dem Handy
           den ganzen Rahmen über das Display, statt intern zu scrollen. */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <fieldset className="min-w-0 rounded-2xl border border-slate-200 p-4 lg:col-span-1" disabled={!isDraft}>
-          <legend className="px-1 text-sm font-semibold text-slate-800">Rechnungsempfänger:in</legend>
+        <fieldset className="min-w-0 rounded-2xl border border-[var(--ck-line)] p-4 lg:col-span-1" disabled={!isDraft}>
+          <legend className="px-1 text-sm font-semibold text-[var(--ck-text)]">Rechnungsempfänger:in</legend>
           {[
             ["name", "Name (Vertragspartner:in, i.d.R. Elternteil)"],
             ["street", "Straße und Hausnummer"],
@@ -751,8 +751,8 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
             </label>
           ))}
           {isDraft && (
-            <label className="mt-3 flex items-center gap-2 text-xs text-slate-600">
-              <input type="checkbox" checked={saveToCustomer} onChange={(e) => setSaveToCustomer(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
+            <label className="mt-3 flex items-center gap-2 text-xs text-[var(--ck-muted)]">
+              <input type="checkbox" checked={saveToCustomer} onChange={(e) => setSaveToCustomer(e.target.checked)} className="h-4 w-4 rounded border-[var(--ck-line)]" />
               Adresse im Kundendatensatz speichern
             </label>
           )}
@@ -768,16 +768,16 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
 
         <div className="min-w-0 space-y-4 lg:col-span-2">
           {isDraft && unbilled.length > 0 && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <p className="text-sm font-semibold text-emerald-900">Abgehaltene, noch nicht abgerechnete Stunden</p>
+            <div className="rounded-2xl border border-[var(--ck-pos)]/35 bg-[var(--ck-pos-soft)] p-4">
+              <p className="text-sm font-semibold text-[var(--ck-pos)]">Abgehaltene, noch nicht abgerechnete Stunden</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {unbilled.map((s) => (
                   <li key={s._id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <span>
                       {formatDate(s.requestedDate)} {s.requestedTime} Uhr · {s.subject} · {s.offerSnapshot?.durationLabel} · {formatPrice(s.offerSnapshot?.priceCents || 0)}
-                      {s.heldStatus !== "held" && <span className="ml-1 text-xs text-emerald-700">(automatisch: Termin vergangen)</span>}
+                      {s.heldStatus !== "held" && <span className="ml-1 text-xs text-[var(--ck-pos)]">(automatisch: Termin vergangen)</span>}
                     </span>
-                    <button onClick={() => addLine(s)} className="text-sm font-semibold text-emerald-800 hover:underline">
+                    <button onClick={() => addLine(s)} className="text-sm font-semibold text-[var(--ck-pos)] hover:underline">
                       + Hinzufügen
                     </button>
                   </li>
@@ -786,13 +786,13 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
             </div>
           )}
 
-          <div className="min-w-0 rounded-2xl border border-slate-200 p-4">
-            <p className="text-sm font-semibold text-slate-800">Positionen</p>
+          <div className="min-w-0 rounded-2xl border border-[var(--ck-line)] p-4">
+            <p className="text-sm font-semibold text-[var(--ck-text)]">Positionen</p>
 
             {/* ab sm: kompakte Tabelle (scrollt bei Bedarf innerhalb des Rahmens) */}
             <div className="hidden overflow-x-auto sm:block">
               <table className="mt-2 w-full text-sm">
-                <thead className="text-left text-xs text-slate-500">
+                <thead className="text-left text-xs text-[var(--ck-muted)]">
                   <tr>
                     <th className="py-1 pr-2">Datum</th>
                     <th className="py-1 pr-2">Leistung</th>
@@ -823,8 +823,8 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
                 7-spaltige Eingabetabelle nicht bedienbar */}
             <div className="mt-2 space-y-3 sm:hidden">
               {lines.map((l, i) => (
-                <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                <div key={i} className="rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface2)] p-3">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[var(--ck-muted)]">
                     <span>Position {i + 1}</span>
                     {removeButton(i)}
                   </div>
@@ -850,26 +850,26 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
                       {lineInput(i, "unitPrice", "w-full")}
                     </label>
                   </div>
-                  <p className="mt-2 text-right text-sm font-semibold text-slate-900">Gesamt {formatPrice(lineTotalCents(l))}</p>
+                  <p className="mt-2 text-right text-sm font-semibold text-[var(--ck-text)]">Gesamt {formatPrice(lineTotalCents(l))}</p>
                 </div>
               ))}
-              {lines.length === 0 && <p className="text-sm text-slate-500">Noch keine Positionen.</p>}
+              {lines.length === 0 && <p className="text-sm text-[var(--ck-muted)]">Noch keine Positionen.</p>}
             </div>
 
             {isDraft && (
-              <button onClick={() => addLine(null)} className="mt-2 text-sm font-semibold text-indigo-600">
+              <button onClick={() => addLine(null)} className="mt-2 text-sm font-semibold text-[var(--ck-accent)]">
                 + Freie Position
               </button>
             )}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3">
-              <span className="text-xs text-slate-500">Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</span>
-              <span className="text-base font-semibold text-slate-900">Gesamt {formatPrice(isDraft ? total : invoice.totalCents || 0)}</span>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--ck-line)] pt-3">
+              <span className="text-xs text-[var(--ck-muted)]">Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</span>
+              <span className="text-base font-semibold text-[var(--ck-text)]">Gesamt {formatPrice(isDraft ? total : invoice.totalCents || 0)}</span>
             </div>
           </div>
 
           {invoice.sendLog?.length > 0 && (
-            <div className="rounded-2xl border border-slate-200 p-4 text-xs text-slate-600">
-              <p className="font-semibold text-slate-800">Versandprotokoll</p>
+            <div className="rounded-2xl border border-[var(--ck-line)] p-4 text-xs text-[var(--ck-muted)]">
+              <p className="font-semibold text-[var(--ck-text)]">Versandprotokoll</p>
               <ul className="mt-1 space-y-0.5">
                 {invoice.sendLog.map((e, i) => (
                   <li key={i}>
@@ -883,9 +883,9 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
       </div>
 
       {pdfUrl && (
-        <div className="rounded-2xl border border-slate-200 p-2">
+        <div className="rounded-2xl border border-[var(--ck-line)] p-2">
           <div className="flex items-center justify-between px-2 py-1">
-            <p className="text-sm font-semibold text-slate-800">{isDraft ? "Vorschau (Entwurf, ohne Nummer)" : invoice.pdf?.filename}</p>
+            <p className="text-sm font-semibold text-[var(--ck-text)]">{isDraft ? "Vorschau (Entwurf, ohne Nummer)" : invoice.pdf?.filename}</p>
             <div className="flex gap-3">
               <a href={pdfUrl} download={invoice.pdf?.filename || "Entwurf.pdf"} className={link}>
                 Herunterladen
@@ -895,7 +895,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
               </button>
             </div>
           </div>
-          <iframe title="Rechnungs-PDF" src={pdfUrl} className="h-[80vh] w-full rounded-xl border border-slate-100" />
+          <iframe title="Rechnungs-PDF" src={pdfUrl} className="h-[80vh] w-full rounded-xl border border-[var(--ck-line)]" />
         </div>
       )}
       <button onClick={onReload} className="hidden" aria-hidden="true" />
@@ -933,24 +933,24 @@ function SendDialog({ invoice, adminFetch, setNotice, fetchPdfBlobUrl, onDone, o
     }
   }
 
-  if (!form) return <p className="text-sm text-slate-500">Lade Vorschau…</p>;
+  if (!form) return <p className="text-sm text-[var(--ck-muted)]">Lade Vorschau…</p>;
 
   return (
     <div className="space-y-4">
       <button onClick={onBack} className={link}>
         ← Zurück
       </button>
-      <h2 className="text-xl font-semibold text-slate-900">
+      <h2 className="text-xl font-semibold text-[var(--ck-text)]">
         {invoice.type === "storno" ? "Stornorechnung" : "Rechnung"} {invoice.number} versenden
       </h2>
       {!invoice.sentCount && (
-        <p className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900">
+        <p className="rounded-xl bg-[var(--ck-accent-soft)] p-3 text-sm text-[var(--ck-accent)]">
           Die Rechnung ist ausgestellt, aber noch nicht verschickt. Text bei Bedarf anpassen und unten auf
           <span className="font-semibold"> „Jetzt senden“</span> klicken – erst dann geht die Mail mit dem PDF raus.
         </p>
       )}
       {form.warnings?.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-3 text-sm text-[var(--ck-warn)]">
           <ul className="list-disc pl-5">
             {form.warnings.map((w) => (
               <li key={w}>{w}</li>
@@ -972,7 +972,7 @@ function SendDialog({ invoice, adminFetch, setNotice, fetchPdfBlobUrl, onDone, o
             <span className={label}>Text</span>
             <textarea value={form.text} rows={18} onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))} className={`${input} font-mono text-xs`} />
           </label>
-          <p className="text-xs text-slate-500">Anhang: {form.attachment}</p>
+          <p className="text-xs text-[var(--ck-muted)]">Anhang: {form.attachment}</p>
           <div className="flex flex-wrap gap-2">
             <button onClick={send} disabled={sending} className={btnPrimary}>
               {sending ? "Wird gesendet…" : "Jetzt senden"}
@@ -991,7 +991,7 @@ function SendDialog({ invoice, adminFetch, setNotice, fetchPdfBlobUrl, onDone, o
             </button>
           </div>
         </div>
-        {pdfUrl && <iframe title="Anhang" src={pdfUrl} className="h-[70vh] w-full rounded-xl border border-slate-200" />}
+        {pdfUrl && <iframe title="Anhang" src={pdfUrl} className="h-[70vh] w-full rounded-xl border border-[var(--ck-line)]" />}
       </div>
     </div>
   );
@@ -1075,33 +1075,33 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
       )}
       <div className="space-y-2">
         {customers.map((c) => (
-          <div key={c._id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-200 p-4 text-sm">
+          <div key={c._id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[var(--ck-line)] p-4 text-sm">
             <div>
-              <p className="font-semibold text-slate-900">
-                {c.name || <span className="text-slate-400">(ohne Name)</span>}
-                {c.studentName && <span className="font-normal text-slate-500"> · Schüler:in {c.studentName}</span>}
+              <p className="font-semibold text-[var(--ck-text)]">
+                {c.name || <span className="text-[var(--ck-faint)]">(ohne Name)</span>}
+                {c.studentName && <span className="font-normal text-[var(--ck-muted)]"> · Schüler:in {c.studentName}</span>}
               </p>
-              <p className="text-slate-600">
-                {[c.street, `${c.zip || ""} ${c.city || ""}`.trim()].filter(Boolean).join(", ") || <span className="text-amber-700">Anschrift fehlt</span>}
+              <p className="text-[var(--ck-muted)]">
+                {[c.street, `${c.zip || ""} ${c.city || ""}`.trim()].filter(Boolean).join(", ") || <span className="text-[var(--ck-warn)]">Anschrift fehlt</span>}
               </p>
-              <p className="text-slate-500">
+              <p className="text-[var(--ck-muted)]">
                 {c.email}
                 {c.phone ? ` · ${c.phone}` : ""}
               </p>
               <p className="mt-1 text-xs">
                 {c.eInvoiceConsent?.given ? (
-                  <span className="text-emerald-700">
+                  <span className="text-[var(--ck-pos)]">
                     E-Rechnung: Einwilligung {c.eInvoiceConsent.source === "booking" ? "im Buchungsformular" : "manuell"} am{" "}
                     {new Date(c.eInvoiceConsent.at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}
                     {c.eInvoiceConsent.note ? ` (${c.eInvoiceConsent.note})` : ""}
                   </span>
                 ) : (
-                  <span className="text-amber-700">E-Rechnung: keine Einwilligung dokumentiert</span>
+                  <span className="text-[var(--ck-warn)]">E-Rechnung: keine Einwilligung dokumentiert</span>
                 )}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <button onClick={() => onCreateInvoice(c._id)} className="text-sm font-semibold text-indigo-600">
+              <button onClick={() => onCreateInvoice(c._id)} className="text-sm font-semibold text-[var(--ck-accent)]">
                 Rechnung erstellen
               </button>
               <button onClick={() => setEditing({ ...c })} className={link}>
@@ -1112,17 +1112,17 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
                   Einwilligung entfernen
                 </button>
               ) : (
-                <button onClick={() => markConsent(c, true)} className="text-sm text-emerald-700">
+                <button onClick={() => markConsent(c, true)} className="text-sm text-[var(--ck-pos)]">
                   Einwilligung dokumentieren
                 </button>
               )}
-              <button onClick={() => remove(c)} className="text-sm text-red-600 hover:text-red-700">
+              <button onClick={() => remove(c)} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
                 Löschen
               </button>
             </div>
           </div>
         ))}
-        {customers.length === 0 && <p className="text-sm text-slate-500">Noch keine Kund:innen – entstehen automatisch beim ersten „Rechnung“ aus einer Buchung.</p>}
+        {customers.length === 0 && <p className="text-sm text-[var(--ck-muted)]">Noch keine Kund:innen – entstehen automatisch beim ersten „Rechnung“ aus einer Buchung.</p>}
       </div>
     </div>
   );
@@ -1148,7 +1148,7 @@ export function CustomerForm({ initial, onCancel, onSave }) {
         e.preventDefault();
         onSave(form);
       }}
-      className="grid gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-2"
+      className="grid gap-3 rounded-2xl border border-[var(--ck-line)] p-4 sm:grid-cols-2"
     >
       {fields.map(([key, text]) => (
         <label key={key} className="block">
@@ -1180,10 +1180,10 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
   const [method, setMethod] = useState("bank");
   const [saving, setSaving] = useState(false);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" role="dialog" aria-modal="true" aria-label="Zahlungseingang erfassen">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-900">Zahlungseingang {invoice.number}</h3>
-        <p className="mt-1 text-sm text-slate-600">{formatPrice(invoice.totalCents)} · {invoice.recipient?.name}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Zahlungseingang erfassen">
+      <div className="w-full max-w-md rounded-2xl bg-[var(--ck-surface)] p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-[var(--ck-text)]">Zahlungseingang {invoice.number}</h3>
+        <p className="mt-1 text-sm text-[var(--ck-muted)]">{formatPrice(invoice.totalCents)} · {invoice.recipient?.name}</p>
         <div className="mt-4 grid gap-3">
           <label className="block">
             <span className={label}>Bezahlt am</span>
@@ -1193,14 +1193,14 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
             <legend className={label}>Zahlungsart</legend>
             <div className="mt-1 flex flex-wrap gap-2">
               {PAYMENT_METHODS.map(([key, text]) => (
-                <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-300 text-slate-700"}`}>
+                <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
                   <input type="radio" name="method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
                   {text}
                 </label>
               ))}
             </div>
           </fieldset>
-          <p className="text-xs text-slate-500">Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht (Tab „Schüler &amp; Buchhaltung“).</p>
+          <p className="text-xs text-[var(--ck-muted)]">Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht (Tab „Schüler &amp; Buchhaltung“).</p>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <button

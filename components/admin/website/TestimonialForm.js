@@ -22,11 +22,11 @@ export function TestimonialForm({ initial, onCancel, onSave }) {
         e.preventDefault();
         onSave(form);
       }}
-      className="rounded-2xl border border-slate-200 p-6"
+      className="rounded-2xl border border-[var(--ck-line)] p-6"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="t-name" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="t-name" className="text-sm font-semibold text-[var(--ck-text)]">
             Name *
           </label>
           <input
@@ -35,11 +35,11 @@ export function TestimonialForm({ initial, onCancel, onSave }) {
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
             placeholder="z.B. Anna M."
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            className="mt-1.5 w-full rounded-lg border border-[var(--ck-line)] px-3.5 py-2.5 text-sm"
           />
         </div>
         <div>
-          <label htmlFor="t-role" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="t-role" className="text-sm font-semibold text-[var(--ck-text)]">
             Rolle/Bezug (optional)
           </label>
           <input
@@ -47,11 +47,11 @@ export function TestimonialForm({ initial, onCancel, onSave }) {
             value={form.role}
             onChange={(e) => update("role", e.target.value)}
             placeholder="z.B. Mutter von Max, Klasse 9"
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            className="mt-1.5 w-full rounded-lg border border-[var(--ck-line)] px-3.5 py-2.5 text-sm"
           />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="t-text" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="t-text" className="text-sm font-semibold text-[var(--ck-text)]">
             Text der Rückmeldung *
           </label>
           <textarea
@@ -60,15 +60,15 @@ export function TestimonialForm({ initial, onCancel, onSave }) {
             value={form.text}
             onChange={(e) => update("text", e.target.value)}
             rows={4}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm"
+            className="mt-1.5 w-full rounded-lg border border-[var(--ck-line)] px-3.5 py-2.5 text-sm"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-[var(--ck-text)]">
           <input
             type="checkbox"
             checked={form.active}
             onChange={(e) => update("active", e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            className="h-4 w-4 rounded border-[var(--ck-line)] text-[var(--ck-accent)]"
           />
           Sofort sichtbar auf &quot;Über mich&quot; (aktiv)
         </label>
@@ -77,11 +77,11 @@ export function TestimonialForm({ initial, onCancel, onSave }) {
       <div className="mt-6 flex gap-3">
         <button
           type="submit"
-          className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500"
+          className="rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-black hover:brightness-110"
         >
           Speichern
         </button>
-        <button type="button" onClick={onCancel} className="text-sm text-slate-500">
+        <button type="button" onClick={onCancel} className="text-sm text-[var(--ck-muted)]">
           Abbrechen
         </button>
       </div>

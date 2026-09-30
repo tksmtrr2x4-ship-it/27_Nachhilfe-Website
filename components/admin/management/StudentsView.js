@@ -8,9 +8,9 @@ import StudentDetail from "@/components/admin/management/StudentDetail";
 import { btnPrimary, btnSecondary, card, errorText, input } from "@/components/admin/management/ui";
 
 const STATUS_BADGE = {
-  active: "bg-emerald-100 text-emerald-800",
-  paused: "bg-amber-100 text-amber-800",
-  ended: "bg-slate-200 text-slate-600",
+  active: "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]",
+  paused: "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]",
+  ended: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]",
 };
 
 export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoice, openStudentId, onOpened }) {
@@ -92,7 +92,7 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
   if (creating) {
     return (
       <div className={card}>
-        <h2 className="text-lg font-semibold text-slate-900">Neues Schülerprofil</h2>
+        <h2 className="text-lg font-semibold text-[var(--ck-text)]">Neues Schülerprofil</h2>
         <div className="mt-4">
           <StudentForm
             adminFetch={adminFetch}
@@ -133,13 +133,13 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
       </div>
 
       {data.unassignedBookings.length > 0 && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-semibold text-amber-900">
+        <div className="rounded-2xl border border-[var(--ck-warn)]/35 bg-[var(--ck-warn-soft)] p-4">
+          <p className="text-sm font-semibold text-[var(--ck-warn)]">
             {data.unassignedBookings.length === 1 ? "1 Stunde ist" : `${data.unassignedBookings.length} Stunden sind`} noch keinem Profil zugeordnet
           </p>
           <ul className="mt-3 space-y-2">
             {data.unassignedBookings.map((b) => (
-              <li key={b._id} className="flex flex-wrap items-center gap-2 text-sm text-slate-800">
+              <li key={b._id} className="flex flex-wrap items-center gap-2 text-sm text-[var(--ck-text)]">
                 <span className="min-w-0 flex-1">
                   <strong>{b.studentName}</strong> · Klasse {b.studentClass} · {b.subject} · {formatDate(b.requestedDate)} · {b.parentName}
                 </span>
@@ -148,7 +148,7 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
                 </button>
                 {data.students.length > 0 && (
                   <span className="flex items-center gap-2">
-                    <select className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm" value={assign[b._id] || ""} onChange={(e) => setAssign((a) => ({ ...a, [b._id]: e.target.value }))}>
+                    <select className="rounded-lg border border-[var(--ck-line)] px-2 py-1.5 text-sm" value={assign[b._id] || ""} onChange={(e) => setAssign((a) => ({ ...a, [b._id]: e.target.value }))}>
                       <option value="">Profil wählen …</option>
                       {data.students.map((s) => (
                         <option key={s._id} value={s._id}>
@@ -168,11 +168,11 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
       )}
 
       {loaded && students.length === 0 ? (
-        <p className="text-sm text-slate-500">Keine Profile{status !== "all" ? " mit diesem Status" : ""}.</p>
+        <p className="text-sm text-[var(--ck-muted)]">Keine Profile{status !== "all" ? " mit diesem Status" : ""}.</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--ck-line)]">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Klasse / Schule</th>
@@ -185,27 +185,27 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
             </thead>
             <tbody>
               {students.map((s) => (
-                <tr key={s._id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => setSelectedId(s._id)}>
-                  <td className="px-4 py-3 font-semibold text-indigo-700">{s.name}</td>
-                  <td className="px-4 py-3 text-slate-600">
+                <tr key={s._id} className="cursor-pointer border-t border-[var(--ck-line)] hover:bg-[var(--ck-surface2)]" onClick={() => setSelectedId(s._id)}>
+                  <td className="px-4 py-3 font-semibold text-[var(--ck-accent)]">{s.name}</td>
+                  <td className="px-4 py-3 text-[var(--ck-muted)]">
                     {s.studentClass ? `Klasse ${s.studentClass}` : "–"}
                     {s.schoolType ? ` · ${SCHOOL_TYPES[s.schoolType]}` : ""}
-                    {s.school ? <span className="block text-xs text-slate-500">{s.school}</span> : null}
+                    {s.school ? <span className="block text-xs text-[var(--ck-muted)]">{s.school}</span> : null}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-[var(--ck-muted)]">
                     {s.subjects?.length ? s.subjects.map((x) => (x.courseLevel ? `${x.subject} (${x.courseLevel === "leistung" ? "LF" : "BF"})` : x.subject)).join(", ") : "–"}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-[var(--ck-muted)]">
                     {s.stats.held} abgehalten{s.stats.upcoming ? ` · ${s.stats.upcoming} geplant` : ""}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{s.stats.lastLesson ? formatDate(s.stats.lastLesson) : "–"}</td>
+                  <td className="px-4 py-3 text-[var(--ck-muted)]">{s.stats.lastLesson ? formatDate(s.stats.lastLesson) : "–"}</td>
                   <td className="px-4 py-3">
                     {s.stats.billable > 0 ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                      <span className="rounded-full bg-[var(--ck-warn-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--ck-warn)]">
                         {s.stats.billable} · {formatPrice(s.stats.billableCents)}
                       </span>
                     ) : (
-                      <span className="text-slate-400">–</span>
+                      <span className="text-[var(--ck-faint)]">–</span>
                     )}
                   </td>
                   <td className="px-4 py-3">

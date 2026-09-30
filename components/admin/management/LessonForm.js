@@ -202,7 +202,7 @@ export default function LessonForm({ adminFetch, setNotice, students, fixedStude
       <Field label="Stundenprotokoll (Themen, Hausaufgaben, Beobachtungen)" className="sm:col-span-2">
         <textarea className={`${input} min-h-24`} value={form.lessonNotes} onChange={(e) => set("lessonNotes", e.target.value)} maxLength={5000} />
       </Field>
-      <p className="text-xs text-slate-500 sm:col-span-2">
+      <p className="text-xs text-[var(--ck-muted)] sm:col-span-2">
         Keine Gesundheitsdaten (z. B. Diagnosen) ohne ausdrückliche schriftliche Einwilligung notieren.
       </p>
       <div className="flex flex-wrap gap-2 sm:col-span-2">

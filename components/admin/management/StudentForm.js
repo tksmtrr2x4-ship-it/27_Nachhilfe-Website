@@ -136,13 +136,13 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
             const allowed = !form.studentClass || available.includes(subject);
             const levels = allowedLevels(subject, form.studentClass);
             return (
-              <div key={subject} className={`rounded-xl border px-3 py-2 ${selected ? "border-indigo-300 bg-indigo-50/60" : "border-slate-200"} ${allowed ? "" : "opacity-50"}`}>
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <div key={subject} className={`rounded-xl border px-3 py-2 ${selected ? "border-[var(--ck-accent)]/40 bg-[var(--ck-accent-soft)]" : "border-[var(--ck-line)]"} ${allowed ? "" : "opacity-50"}`}>
+                <label className="flex items-center gap-2 text-sm font-semibold text-[var(--ck-text)]">
                   <input type="checkbox" checked={Boolean(selected)} disabled={!allowed} onChange={() => toggleSubject(subject)} />
                   {subject}
                 </label>
                 {selected && levels.length > 0 && (
-                  <select className="mt-1 rounded border border-slate-300 px-2 py-1 text-xs" value={selected.courseLevel} onChange={(e) => setLevel(subject, e.target.value)}>
+                  <select className="mt-1 rounded border border-[var(--ck-line)] px-2 py-1 text-xs" value={selected.courseLevel} onChange={(e) => setLevel(subject, e.target.value)}>
                     {levels.map((l) => (
                       <option key={l} value={l}>
                         {COURSE_LEVELS[l]}
@@ -150,7 +150,7 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
                     ))}
                   </select>
                 )}
-                {!allowed && <p className="mt-1 text-xs text-slate-500">in Klasse {form.studentClass} nicht angeboten</p>}
+                {!allowed && <p className="mt-1 text-xs text-[var(--ck-muted)]">in Klasse {form.studentClass} nicht angeboten</p>}
               </div>
             );
           })}
@@ -192,7 +192,7 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
         </select>
       </Field>
       {form.customerId === "__new__" && newCustomer && (
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2 sm:grid-cols-2">
+        <div className="grid gap-3 rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface2)] p-4 sm:col-span-2 sm:grid-cols-2">
           {[
             ["name", "Name *"],
             ["email", "E-Mail *"],
@@ -217,7 +217,7 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
       <Field label="Allgemeine Notizen (Lernstand, Ziele, Absprachen)" className="sm:col-span-2">
         <textarea className={`${input} min-h-24`} value={form.notes} onChange={(e) => set("notes", e.target.value)} maxLength={5000} />
       </Field>
-      <p className="text-xs text-slate-500 sm:col-span-2">
+      <p className="text-xs text-[var(--ck-muted)] sm:col-span-2">
         Keine Gesundheitsdaten (z. B. Diagnosen wie LRS oder ADHS) ohne ausdrückliche schriftliche Einwilligung der Eltern speichern.
       </p>
 

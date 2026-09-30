@@ -47,7 +47,7 @@ export default function QuittungenView() {
         hint="Jede Quittung wird einmal erzeugt, unveränderbar gespeichert und ist hier jederzeit wieder abrufbar."
       />
 
-      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
         <SelectFilter
           label="Jahr"
           value={year}
@@ -70,7 +70,7 @@ export default function QuittungenView() {
             priority: "primary",
             cell: (r) => (
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-slate-900">{r.number}</span>
+                <span className="font-semibold text-[var(--ck-text)]">{r.number}</span>
                 {r.reversed ? <Badge tone="red">Buchung storniert</Badge> : null}
               </span>
             ),
@@ -85,7 +85,7 @@ export default function QuittungenView() {
             header: "Journal",
             width: "8rem",
             priority: "meta",
-            cell: (r) => <span className="text-slate-500">{r.entryNumber}</span>,
+            cell: (r) => <span className="text-[var(--ck-muted)]">{r.entryNumber}</span>,
           },
           {
             key: "copies",

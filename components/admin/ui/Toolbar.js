@@ -7,8 +7,8 @@ export function Toolbar({ title, hint, children }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        {hint ? <p className="mt-0.5 text-xs text-slate-500">{hint}</p> : null}
+        <h2 className="text-lg font-semibold tracking-[-0.3px]">{title}</h2>
+        {hint ? <p className="mt-0.5 text-xs text-[var(--ck-muted)]">{hint}</p> : null}
       </div>
       {children ? <div className="flex flex-wrap items-center gap-2">{children}</div> : null}
     </div>
@@ -56,7 +56,7 @@ export function FilterChips({ chips, onReset }) {
           key={chip.label}
           type="button"
           onClick={chip.onClear}
-          className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-200"
+          className="inline-flex items-center gap-1 rounded-full bg-[var(--ck-surface2)] px-2.5 py-1 font-semibold text-[var(--ck-text)] transition hover:bg-[var(--ck-surface3)]"
         >
           {chip.label}
           <span aria-hidden="true">×</span>
@@ -64,7 +64,7 @@ export function FilterChips({ chips, onReset }) {
         </button>
       ))}
       {onReset ? (
-        <button type="button" onClick={onReset} className="text-slate-500 underline underline-offset-2 hover:text-indigo-600">
+        <button type="button" onClick={onReset} className="text-[var(--ck-muted)] underline underline-offset-2 transition hover:text-[var(--ck-accent)]">
           Alle Filter zurücksetzen
         </button>
       ) : null}

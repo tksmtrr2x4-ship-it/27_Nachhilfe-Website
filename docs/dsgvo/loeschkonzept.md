@@ -20,6 +20,8 @@ Konzepts (siehe letzte Spalte).
 | Kundenkonto: Sitzungen | MongoDB, `kunden_sitzungen` | 30 Tage | **Automatisch** (TTL-Index); Abmelden löscht sofort | Kein manueller Schritt nötig |
 | Kundenkonto: Mengenbremse | MongoDB, `kunden_bremse` | 1 Stunde | **Automatisch** (TTL-Index) | Kein manueller Schritt nötig |
 | Nachrichten an Eltern | MongoDB, `kunden_nachrichten` | Mit der zugehörigen Schülerakte | Manuell zusammen mit der Akte | Betreiberin, bei Löschung der Akte |
+| Umsatzrechner (Name, Fach, Einheiten, Preis, Notiz) | MongoDB, `umsatz_eintraege` | Keine Aufbewahrungspflicht – **keine** Buchführungsunterlage, siehe [../cockpit.md](../cockpit.md). Spätestens mit der Schülerakte | Einzeln im Umsatzrechner löschen (mit Rückfrage) | Betreiberin, jährliche Durchsicht zusammen mit den Akten |
+| Eigene To-dos im Cockpit (freier Text) | MongoDB, `admin_todos` | Keine Frist; bei Bedarf löschen | Im Cockpit über das × an der Zeile | Betreiberin, laufend |
 
 ## Größte Lücke: automatisierte Löschung fehlt noch
 

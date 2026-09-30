@@ -53,8 +53,8 @@ export default function ElternNachricht({ customer, studentName, adminFetch, set
   if (!customerId) {
     return (
       <div className={`${card} min-w-0`}>
-        <h3 className="font-semibold text-slate-900">Nachricht an die Eltern</h3>
-        <p className="mt-2 text-sm text-slate-500">
+        <h3 className="font-semibold text-[var(--ck-text)]">Nachricht an die Eltern</h3>
+        <p className="mt-2 text-sm text-[var(--ck-muted)]">
           Dafür braucht die Akte erst eine:n Rechnungsempfänger:in – darüber läuft das Konto.
         </p>
       </div>
@@ -63,8 +63,8 @@ export default function ElternNachricht({ customer, studentName, adminFetch, set
 
   return (
     <div className={`${card} min-w-0`}>
-      <h3 className="font-semibold text-slate-900">Nachricht an die Eltern</h3>
-      <p className="mt-1 text-xs text-slate-500">
+      <h3 className="font-semibold text-[var(--ck-text)]">Nachricht an die Eltern</h3>
+      <p className="mt-1 text-xs text-[var(--ck-muted)]">
         Erscheint in der Schülerakte unter /konto. {customer.email || "Keine Adresse hinterlegt"}
       </p>
       <form onSubmit={senden} className="mt-3 space-y-2">
@@ -76,7 +76,7 @@ export default function ElternNachricht({ customer, studentName, adminFetch, set
           maxLength={MAX}
         />
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="flex items-center gap-2 text-xs text-slate-600">
+          <label className="flex items-center gap-2 text-xs text-[var(--ck-muted)]">
             <input
               type="checkbox"
               checked={auchPerMail}
@@ -93,12 +93,12 @@ export default function ElternNachricht({ customer, studentName, adminFetch, set
 
       <ul className="mt-4 max-h-56 space-y-2 overflow-y-auto">
         {nachrichten.length === 0 ? (
-          <li className="text-sm text-slate-500">Noch keine Nachricht verschickt.</li>
+          <li className="text-sm text-[var(--ck-muted)]">Noch keine Nachricht verschickt.</li>
         ) : (
           nachrichten.map((n) => (
-            <li key={n._id} className="rounded-xl bg-slate-50 p-3 text-sm">
-              <p className="text-slate-800">{n.text}</p>
-              <p className="mt-1 text-xs text-slate-500">
+            <li key={n._id} className="rounded-xl bg-[var(--ck-surface2)] p-3 text-sm">
+              <p className="text-[var(--ck-text)]">{n.text}</p>
+              <p className="mt-1 text-xs text-[var(--ck-muted)]">
                 {formatDateTime(n.erstelltAm)} · {n.gelesenAm ? `gelesen ${formatDateTime(n.gelesenAm)}` : "noch ungelesen"}
               </p>
             </li>

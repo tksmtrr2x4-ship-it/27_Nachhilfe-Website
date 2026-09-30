@@ -9,4 +9,5 @@ export * from "@/components/admin/ui/Modal";
 export * from "@/components/admin/ui/DataTable";
 export * from "@/components/admin/ui/Toolbar";
 export * from "@/components/admin/ui/ConfirmDialog";
+export * from "@/components/admin/ui/Cockpit";
 export * from "@/components/admin/ui/pinFetch";

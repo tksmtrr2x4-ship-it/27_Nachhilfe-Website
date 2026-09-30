@@ -2,6 +2,7 @@ import { getBookingByMeetingToken, updateBooking } from "@/lib/db";
 import { normalizeRecipient, validateRecipient } from "@/lib/invoicing/validation";
 import { findOrCreateCustomerFromBooking, updateCustomer } from "@/lib/invoicing/db";
 import { CONSENT_TEXT, INVOICE_COMMITMENT_TEXT } from "@/lib/legal/consents";
+import { bekannteRechnungsdaten } from "@/lib/invoicing/bekannteAdresse";
 
 // Zahlungs-Gate der Meeting-Seite: „Per Rechnung zahlen“.
 // Zugriffsmodell wie die Meeting-Seite selbst – der lange Zufallstoken in
@@ -44,7 +45,11 @@ export async function POST(request, { params }) {
     if (problems.length > 0) {
       return Response.json({ error: problems.join(" ") }, { status: 400 });
     }
-    if (body.eInvoiceConsent !== true) {
+    // Die Zustimmung zur elektronischen Rechnung (§ 14 Abs. 1 UStG) gilt
+    // dauerhaft: liegt sie aus der Buchung oder dem Kundendatensatz vor,
+    // zeigt das Formular die Checkbox gar nicht erst an.
+    const { einwilligungVorhanden } = await bekannteRechnungsdaten(booking);
+    if (body.eInvoiceConsent !== true && !einwilligungVorhanden) {
       return Response.json(
         { error: "Bitte bestätige, dass du die Rechnung elektronisch per E-Mail erhalten möchtest." },
         { status: 400 }
@@ -57,10 +62,14 @@ export async function POST(request, { params }) {
       city: address.city,
       country: address.country,
     };
-    const consents = {
-      ...(booking.consents || {}),
-      eInvoice: booking.consents?.eInvoice || { text: CONSENT_TEXT.eInvoice, checkedAt: now },
-    };
+    // Nur protokollieren, was hier tatsächlich angekreuzt wurde – eine
+    // Einwilligung, die bereits im Kundendatensatz steht, darf nicht als
+    // neues Häkchen dieser Buchung erscheinen.
+    const neueEinwilligung =
+      !booking.consents?.eInvoice && body.eInvoiceConsent === true
+        ? { eInvoice: { text: CONSENT_TEXT.eInvoice, checkedAt: now } }
+        : {};
+    const consents = { ...(booking.consents || {}), ...neueEinwilligung };
     const updated = await updateBooking(booking._id, {
       paymentMethod: "invoice",
       billingAddress,

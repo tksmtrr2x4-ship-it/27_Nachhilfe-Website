@@ -50,7 +50,11 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
   „Ausgefallen“ schließt aus.
 * **„Per Rechnung zahlen“ auf der Meeting-Seite:** Das Zahlungs-Gate vor dem
   Video (`components/MeetingPayGate.js`) verlangt Rechnungsadresse und
-  Zahlungsverpflichtung. Ablauf: Rechnungsadresse + E-Rechnungs-Einwilligung
+  Zahlungsverpflichtung – **beides nur, soweit es nicht schon vorliegt**
+  (`lib/invoicing/bekannteAdresse.js`: Buchung, sonst Kundendatensatz zur
+  Eltern-E-Mail, also auch die Anschrift aus der Schülerakte). Ist die
+  Anschrift bekannt, steht sie zum Prüfen da und ein Klick erledigt beide
+  Schritte. Ablauf: Rechnungsadresse + E-Rechnungs-Einwilligung
   (`POST /api/meeting/[token]/invoice`, step `address` → speichert
   `booking.billingAddress`, `paymentMethod: "invoice"`, legt/ergänzt den
   Kundendatensatz) → Bestätigungsdialog „Adresse angekommen“ mit der

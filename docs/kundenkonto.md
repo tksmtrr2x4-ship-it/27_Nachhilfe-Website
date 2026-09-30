@@ -84,6 +84,14 @@ erlaubter Unterrichtsort, ein Fach aus dem Angebot. Sonst bliebe ein Feld vorbel
 die Prüfung anschließend ablehnt. Ohne Anmeldung antwortet `/api/konto/vorbelegung` mit
 401 und die Strecke bleibt genau wie vorher.
 
+Dasselbe gilt vor dem Video-Unterricht: Das Zahlungs-Gate für kostenpflichtige
+Online-Stunden (`components/MeetingPayGate.js`) fragt die Rechnungsanschrift
+nicht mehr ab, wenn sie aus der Akte oder einer früheren Stunde bekannt ist –
+sie steht dann nur noch zum Prüfen da, ein Klick genügt. Gesucht wird über die
+E-Mail der erziehungsberechtigten Person (`lib/invoicing/bekannteAdresse.js`);
+wer in der Selbstauskunft keine Anschrift angegeben hat, wird dort einmal
+danach gefragt, weil ohne sie keine Rechnung möglich ist.
+
 ## Neuanmeldung: erst bestätigen, dann speichern
 
 Beim Absenden des Formulars entsteht **kein** Datensatz. Die Angaben liegen bis zur

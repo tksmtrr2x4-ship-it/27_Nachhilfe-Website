@@ -127,6 +127,17 @@ verschickt bei **jeder** neuen Anfrage (Einzelstunde oder Paket, Status
 wird das Video freigeschaltet (Stripe-Kartenzahlung seit 17.09.2026 entfernt). **0,00-€-Angebote sind ausgenommen** – dort erscheint das
 Video direkt nach der Terminbestätigung.
 
+Seit 30.09.2026 fragt das Gate **nichts ab, was schon bekannt ist**:
+`lib/invoicing/bekannteAdresse.js` sucht die Anschrift zuerst an der Buchung
+(`billingAddress`, von einer früheren Stunde) und dann im Kundendatensatz zur
+E-Mail der erziehungsberechtigten Person – dort steht sie, sobald die Familie
+eine Schülerakte angelegt hat. Ist sie vollständig, zeigt die Seite sie zum
+Prüfen an und ein einziger Klick quittiert die Zahlungspflicht und schaltet
+frei; „Andere Rechnungsadresse angeben“ öffnet das Formular vorausgefüllt.
+Dasselbe gilt für die Einwilligung in die elektronische Rechnung: Liegt sie
+vor, erscheint die Checkbox nicht noch einmal. Ohne hinterlegte Anschrift
+bleibt es beim bisherigen Formular.
+
 ## Offene Punkte / mögliche spätere Erweiterungen
 
 - Meeting-Links laufen aktuell nie ab (kein Zeitfenster). Falls gewünscht:

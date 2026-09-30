@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBookingByMeetingToken } from "@/lib/db";
+import { bekannteRechnungsdaten } from "@/lib/invoicing/bekannteAdresse";
 import { formatDate, formatPrice } from "@/lib/format";
 import MeetingEmbed from "@/components/MeetingEmbed";
 import MeetingPayGate from "@/components/MeetingPayGate";
@@ -56,6 +57,9 @@ export default async function MeetingPage({ params }) {
   }`;
 
   if (needsPayment) {
+    // Anschrift und Einwilligung nicht erneut abfragen, wenn beides aus der
+    // Schülerakte oder einer früheren Stunde schon vorliegt.
+    const bekannt = await bekannteRechnungsdaten(booking);
     return (
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{heading}</h1>
@@ -68,6 +72,9 @@ export default async function MeetingPage({ params }) {
             priceLabel={formatPrice(priceCents)}
             defaultName={booking.parentName}
             email={booking.parentEmail}
+            bekannteAdresse={bekannt.adresse}
+            adresseAus={bekannt.quelle}
+            einwilligungVorhanden={bekannt.einwilligungVorhanden}
           />
         </div>
       </div>

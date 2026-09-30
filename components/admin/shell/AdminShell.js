@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AREAS, areaForPath, legacyTabTarget } from "@/lib/admin/nav";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
+import Picture from "@/components/Picture";
 import InstallApp from "@/components/admin/InstallApp";
 import Suche from "@/components/admin/shell/Suche";
 
@@ -16,7 +17,7 @@ import Suche from "@/components/admin/shell/Suche";
 // lesbar noch treffsicher.
 const HANDY_LEISTE = ["uebersicht", "unterricht", "kalender", "finanzen"];
 
-export default function AdminShell({ children }) {
+export default function AdminShell({ children, logo = null }) {
   const pathname = usePathname();
   const router = useRouter();
   const params = useSearchParams();
@@ -53,9 +54,15 @@ export default function AdminShell({ children }) {
       <div className="mx-auto max-w-[1320px] px-4 pb-32 sm:px-7 md:pb-14">
         <header className="flex items-center gap-4 py-4 sm:pt-5.5">
           <Link href="/admin" className="flex shrink-0 items-center gap-2.5 font-bold tracking-[0.2px]">
-            <span aria-hidden="true" className="grid h-8.5 w-8.5 place-items-center rounded-full bg-[var(--ck-accent)]">
-              <span className="h-3 w-3 rounded-full bg-[var(--ck-surface)] shadow-[inset_0_0_0_4px_#111]" />
-            </span>
+            {logo ? (
+              // Dasselbe Logo wie im Kopf der Website. Dekorativ – der Name
+              // steht direkt daneben im selben Link.
+              <Picture image={logo} decorative loading="eager" className="h-9 w-auto" />
+            ) : (
+              <span aria-hidden="true" className="grid h-9 w-9 place-items-center rounded-full bg-[var(--ck-accent)] text-sm font-bold text-black">
+                L
+              </span>
+            )}
             <span className="hidden sm:inline">
               Lernsprung <span className="font-medium text-[var(--ck-faint)]">Cockpit</span>
             </span>

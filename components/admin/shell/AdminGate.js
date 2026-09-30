@@ -16,7 +16,7 @@ import AdminShell from "@/components/admin/shell/AdminShell";
 const STORAGE_KEY = "admin_session";
 const POLL_MS = 3000;
 
-export default function AdminGate({ children }) {
+export default function AdminGate({ children, logo = null }) {
   // Erst nach dem Mount lesen: Server und Browser rendern sonst
   // Unterschiedliches (Hydration-Fehler), weil der Server den sessionStorage
   // nicht kennt.
@@ -271,7 +271,7 @@ export default function AdminGate({ children }) {
       <DialogProvider>
         {/* useSearchParams in der Hülle braucht eine Suspense-Grenze. */}
         <Suspense fallback={null}>
-          <AdminShell>{children}</AdminShell>
+          <AdminShell logo={logo}>{children}</AdminShell>
         </Suspense>
       </DialogProvider>
     </AdminProvider>

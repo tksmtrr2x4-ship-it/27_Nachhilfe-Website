@@ -1,5 +1,5 @@
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
-import { getBooking } from "@/lib/db";
+import { getBooking, listBookings } from "@/lib/db";
 import {
   listInvoices,
   bereinigeEntwuerfe,
@@ -12,6 +12,8 @@ import {
 import { normalizeLine, normalizeRecipient } from "@/lib/invoicing/validation";
 import { invoiceErrorResponse, isOverdue } from "@/lib/invoicing/api";
 import { getStudent } from "@/lib/students/db";
+import { nochAbzurechnen } from "@/lib/invoicing/offene";
+import { todayIsoBerlin } from "@/lib/adminError";
 
 export async function GET(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
@@ -25,7 +27,9 @@ export async function GET(request) {
     ...inv,
     overdue: isOverdue(inv),
   }));
-  return Response.json({ invoices, bereinigt });
+  // Stunden, für die es (noch) weder Rechnung noch Zahlung gibt – auch ohne Entwurf.
+  const offen = nochAbzurechnen(await listBookings(), todayIsoBerlin());
+  return Response.json({ invoices, bereinigt, offen });
 }
 
 // Neuer Entwurf: entweder aus einer Buchung heraus (bookingId → Kund:in

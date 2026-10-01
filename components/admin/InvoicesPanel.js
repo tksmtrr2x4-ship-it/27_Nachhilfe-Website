@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatDate, formatPrice } from "@/lib/format";
 
@@ -63,6 +64,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
   // Rechnungsempfänger), startet er direkt dort.
   const [view, setView] = useState(initialView || "list");
   const [invoices, setInvoices] = useState([]);
+  const [offen, setOffen] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [config, setConfig] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -78,6 +80,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
         adminFetch("/api/admin/invoices/config"),
       ]);
       setInvoices(i.invoices);
+      setOffen(i.offen || []);
       const b = i.bereinigt;
       if (b && (b.geloescht || b.angepasst)) {
         setNotice(
@@ -276,6 +279,8 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
 
       {view === "list" && (
         <>
+          <NochAbzurechnen gruppen={offen} />
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               {FILTERS.map(([key, text]) => (
@@ -1236,5 +1241,66 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Stunden, die noch nicht abgerechnet sind – auch wenn es dafür noch keinen
+// Rechnungsentwurf gibt (lib/invoicing/offene.js). Ein Klick öffnet die Stunde
+// auf dem Reiter „Rechnung“: dort steht, ob per Rechnung oder bar abgerechnet
+// wird.
+const ZUERST_ZEIGEN = 5;
+
+function NochAbzurechnen({ gruppen }) {
+  const [alle, setAlle] = useState(false);
+  if (!gruppen?.length) return null;
+  const gesamt = gruppen.reduce((s, g) => s + g.summeCent, 0);
+  const anzahl = gruppen.reduce((s, g) => s + g.stunden.length, 0);
+  return (
+    <section className="rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4" aria-label="Noch nicht abgerechnet">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[15px] font-semibold">Noch nicht abgerechnet</h3>
+        <span className="text-[13px] text-[var(--ck-muted)]">
+          {anzahl === 1 ? "1 Stunde" : `${anzahl} Stunden`} · {formatPrice(gesamt)}
+        </span>
+      </div>
+      <ul className="mt-2">
+        {(alle ? gruppen : gruppen.slice(0, ZUERST_ZEIGEN)).map((g) => (
+          <li key={g.schluessel} className="border-t border-[var(--ck-line)] py-2.5 first:border-t-0">
+            <p className="text-sm font-semibold">{g.name}</p>
+            <ul className="mt-1 flex flex-wrap gap-1.5">
+              {g.stunden.map((st) => (
+                <li key={st._id}>
+                  <Link
+                    href={`/admin?stunde=${encodeURIComponent(st._id)}&reiter=rechnung`}
+                    title="Öffnen – dort Rechnung vorbereiten oder bar bezahlt verbuchen"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--ck-surface2)] px-3 py-1.5 text-[13px] transition hover:bg-[var(--ck-surface3)]"
+                  >
+                    {formatDate(st.datum)}
+                    {st.schueler ? ` · ${st.schueler}` : ""}
+                    {st.fach ? ` · ${st.fach}` : ""} · {formatPrice(st.preisCent)}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        st.gehalten ? "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]" : "bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]"
+                      }`}
+                    >
+                      {st.gehalten ? "offen" : "geplant"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      {gruppen.length > ZUERST_ZEIGEN ? (
+        <button
+          type="button"
+          onClick={() => setAlle((v) => !v)}
+          className="mt-2 text-[13px] font-semibold text-[var(--ck-muted)] underline underline-offset-2 transition hover:text-[var(--ck-accent)]"
+        >
+          {alle ? "Weniger zeigen" : `Alle ${gruppen.length} Familien zeigen`}
+        </button>
+      ) : null}
+    </section>
   );
 }

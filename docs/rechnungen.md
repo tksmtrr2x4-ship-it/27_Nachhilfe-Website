@@ -63,6 +63,13 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
   danach zeigt die Seite das Video. Die Stunde bleibt `confirmed` und erscheint nach dem
   Termin unter „abrechenbar“ – die Rechnung wird wie gewohnt manuell im
   Admin ausgestellt (Anschrift ist vorausgefüllt).
+* **„Noch nicht abgerechnet" steht oben in der Rechnungsliste.** Alle
+  bestätigten Einzelstunden ohne Rechnung, ohne Barzahlung und ohne
+  „anderweitig abgerechnet" – nach Rechnungsempfänger gruppiert, geplante
+  eingeschlossen (`lib/invoicing/offene.js`). Wer noch nicht weiß, ob eine
+  Familie per Rechnung oder bar zahlt, ist damit sichtbar, ohne dass schon ein
+  Entwurf angelegt sein muss. Ein Klick öffnet die Stunde auf dem Reiter
+  „Rechnung". Zuerst werden fünf Familien gezeigt, der Rest klappt auf.
 * **Entwürfe halten sich selbst aktuell.** Ein Entwurf darf nur Stunden
   enthalten, die noch abrechenbar sind. Wird eine Stunde danach bar bezahlt,
   als anderweitig abgerechnet oder ausgefallen markiert, abgesagt oder

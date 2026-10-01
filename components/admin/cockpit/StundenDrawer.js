@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { locationLabel } from "@/lib/format";
 import { lessonDateOf } from "@/lib/bookings/order";
-import { lessonState } from "@/lib/lessons/state";
+import { billingState, lessonState } from "@/lib/lessons/state";
+import { hasDiary } from "@/lib/lessons/diary";
 import { isLessonLocked } from "@/lib/lessons/rules";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
@@ -180,9 +181,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
               {l.offerSnapshot?.durationLabel ? <Badge>{l.offerSnapshot.durationLabel}</Badge> : null}
               <Badge>{formatPrice(l.offerSnapshot?.priceCents || 0)}</Badge>
               <Badge tone={lessonState(l, daten.heute).tone}>{lessonState(l, daten.heute).label}</Badge>
-              <Badge tone={l.lessonNotes || l.diary?.topic ? "emerald" : "amber"}>
-                {l.lessonNotes || l.diary?.topic ? "Tagebuch geführt" : "Tagebuch fehlt"}
-              </Badge>
+              <Badge tone={hasDiary(l) ? "emerald" : "amber"}>{hasDiary(l) ? "Tagebuch geführt" : "Tagebuch fehlt"}</Badge>
             </div>
           </div>
 
@@ -211,7 +210,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                       ["Thema", l.diary?.topic || l.notes || "—"],
                       ["Ort", locationLabel(l) || "—"],
                       ["Preis", `${formatPrice(l.offerSnapshot?.priceCents || 0)} · ${l.offerSnapshot?.durationLabel || ""}`],
-                      ["Abrechnung", l.invoiceId ? "auf einer Rechnung" : "noch offen"],
+                      ["Abrechnung", abrechnungsText(l, daten.heute)],
                       daten.customer ? ["Rechnung an", daten.customer.name] : null,
                     ]}
                   />
@@ -276,18 +275,21 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                       },
                       {
                         text: "Abgerechnet",
-                        hint: l.invoiceId ? "Rechnung liegt vor" : "noch offen",
-                        done: Boolean(l.invoiceId),
+                        hint: abrechnungsText(l, daten.heute),
+                        done: ABGERECHNET.includes(billingState(l, daten.heute).key),
                       },
                     ]}
                   />
                 </Section>
 
                 <Section title="Letzter Tagebucheintrag">
-                  {daten.verlauf?.[0] ? (
+                  {daten.letzter ? (
                     <p className="text-sm leading-relaxed">
-                      <span className="text-[var(--ck-muted)]">{formatDate(daten.verlauf[0].datum)}</span> —{" "}
-                      {daten.verlauf[0].text || daten.verlauf[0].thema}
+                      <span className="text-[var(--ck-muted)]">
+                        {formatDate(daten.letzter.datum)}
+                        {daten.letzter.dieseStunde ? " · diese Stunde" : ""}
+                      </span>{" "}
+                      — {daten.letzter.text || daten.letzter.thema}
                     </p>
                   ) : (
                     <p className="text-sm text-[var(--ck-muted)]">Für diese Schülerin / diesen Schüler gibt es noch keinen Eintrag.</p>
@@ -453,6 +455,20 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
   );
 }
 
+// Abgerechnet heißt: Rechnung, direkt bezahlt, vor Einführung abgerechnet oder
+// online bezahlt – dieselben Wege wie in lib/lessons/state.js (billingState),
+// nach dem sich auch die Stundenliste richtet.
+const ABGERECHNET = ["invoiced", "direct", "settled", "online"];
+
+function abrechnungsText(lesson, heute) {
+  const b = billingState(lesson, heute);
+  if (b.key === "invoiced") return "auf einer Rechnung";
+  if (b.key === "direct") return `${b.label.charAt(0).toLowerCase()}${b.label.slice(1)} (ohne Rechnung)`;
+  if (b.key === "open") return "noch offen";
+  if (b.key === "none") return "noch nicht fällig";
+  return b.label;
+}
+
 function Datei({ art, farbe, titel, hinweis, children }) {
   return (
     <div className="mt-2 flex items-center gap-3 rounded-[14px] bg-[var(--ck-surface2)] p-3 first:mt-0">
@@ -479,10 +495,17 @@ function Datei({ art, farbe, titel, hinweis, children }) {
 function RechnungsReiter({ daten, onRechnung, onZahlung, onGehalten, onQuittung }) {
   const summeCent = (daten.abrechenbar || []).reduce((s, z) => s + z.preisCent, 0);
   const vorhanden = daten.invoice;
+  // Ist diese Stunde schon auf anderem Weg abgerechnet, zeigt der Entwurf nur
+  // noch die übrigen offenen Stunden der Familie – das muss dastehen, sonst
+  // sucht man die eigene Stunde vergeblich darin.
+  const dieseImEntwurf = (daten.abrechenbar || []).some((z) => z._id === daten.lesson._id);
+  const zuerstZahlung = !vorhanden && Boolean(daten.zahlung);
 
   return (
     <>
-      <Section title={vorhanden ? "Rechnung" : "Rechnungsentwurf"}>
+      {zuerstZahlung ? <OhneRechnung daten={daten} onZahlung={onZahlung} onGehalten={onGehalten} onQuittung={onQuittung} /> : null}
+
+      <Section title={vorhanden ? "Rechnung" : dieseImEntwurf ? "Rechnungsentwurf" : "Rechnungsentwurf · weitere offene Stunden"}>
         <div className="paper rounded-[14px] p-5 text-[13px]">
           <div className="flex items-start justify-between">
             <div>
@@ -575,7 +598,7 @@ function RechnungsReiter({ daten, onRechnung, onZahlung, onGehalten, onQuittung 
         ) : null}
       </Section>
 
-      {!vorhanden ? <OhneRechnung daten={daten} onZahlung={onZahlung} onGehalten={onGehalten} onQuittung={onQuittung} /> : null}
+      {!vorhanden && !zuerstZahlung ? <OhneRechnung daten={daten} onZahlung={onZahlung} onGehalten={onGehalten} onQuittung={onQuittung} /> : null}
     </>
   );
 }

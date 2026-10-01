@@ -79,6 +79,22 @@ Vier Reiter, dahinter **keine neue Fachlogik**:
 | Rechnung | Entwurf im Layout des fertigen Dokuments, Quittung | `POST /api/admin/invoices`, Finanzen → Rechnungen |
 | Akte | Stammdaten, Tagebuchblatt und Aufnahmebogen als .docx | `lib/papierakte` |
 
+**Eine Regel je Frage.** Was „Tagebuch geführt" heißt, entscheidet allein
+`hasDiary()` ([../lib/lessons/diary.js](../lib/lessons/diary.js)); ob und wie eine
+Stunde abgerechnet ist, allein `billingState()`
+([../lib/lessons/state.js](../lib/lessons/state.js)) – dieselben Funktionen, nach
+denen sich die Stundenliste richtet. Drawer, Startseite und Übersicht hatten
+vorher jeweils eigene Prüfungen und zeigten bei derselben Stunde Gegensätzliches
+(„Tagebuch fehlt" neben „Tagebuch geführt", „Abrechnung offen" bei einer bar
+bezahlten Stunde). Neue Ansichten rufen diese Funktionen auf, statt selbst
+`invoiceId` oder `lessonNotes` zu prüfen. Abgesichert in
+`tests/stundeDetail.test.mjs`.
+
+Der „letzte Tagebucheintrag" im Reiter Übersicht schließt die geöffnete Stunde
+ein ([../lib/admin/stundeDetail.js](../lib/admin/stundeDetail.js)); der Verlauf im
+Reiter Tagebuch zeigt nur die früheren, weil die aktuelle im Formular darüber
+steht.
+
 „Verschieben" ist nur bei selbst eingetragenen Stunden möglich – online
 gebuchte Termine werden weiterhin unter Unterricht verwaltet
 (`lib/lessons/db.js`), der Knopf sagt das im Tooltip.

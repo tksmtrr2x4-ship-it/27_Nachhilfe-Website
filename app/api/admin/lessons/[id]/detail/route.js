@@ -7,6 +7,7 @@ import { getStudent } from "@/lib/students/db";
 import { findCustomerByEmail, getCustomer, getInvoice, listUnbilledSessions } from "@/lib/invoicing/db";
 import { lessonDateOf } from "@/lib/bookings/order";
 import { listLessons } from "@/lib/lessons/db";
+import { baueTagebuch } from "@/lib/admin/stundeDetail";
 
 // Alles, was die Detailansicht einer Stunde (Drawer im Cockpit) braucht –
 // in einer Anfrage: die Stunde selbst, die Akte dahinter, die
@@ -28,20 +29,10 @@ export async function GET(request, { params }) {
       ? await getCustomer(student.customerId)
       : await findCustomerByEmail(lesson.parentEmail);
 
-    // Frühere Tagebucheinträge derselben Schülerin / desselben Schülers –
-    // der Verlauf im Reiter „Tagebuch".
+    // Tagebuch: der jüngste Eintrag (auch der dieser Stunde) und der Verlauf
+    // davor – Regel in lib/admin/stundeDetail.js.
     const frueher = student ? await listLessons({ studentId: student._id }) : [];
-    const verlauf = frueher
-      .filter((b) => b._id !== lesson._id && (String(b.lessonNotes || "").trim() || b.diary?.topic))
-      .sort((a, b) => lessonDateOf(b).localeCompare(lessonDateOf(a)))
-      .slice(0, 8)
-      .map((b) => ({
-        _id: b._id,
-        datum: lessonDateOf(b),
-        fach: b.subject || "",
-        thema: b.diary?.topic || "",
-        text: b.lessonNotes || "",
-      }));
+    const { letzter, verlauf } = baueTagebuch(lesson, frueher);
 
     // Der Entwurf zeigt, was tatsächlich auf der nächsten Rechnung stünde:
     // alle abrechenbaren Stunden dieser Familie, nicht nur diese eine.
@@ -62,6 +53,7 @@ export async function GET(request, { params }) {
       student,
       customer: customer ? { ...customer, notes: undefined } : null,
       verlauf,
+      letzter,
       invoice: invoice ? { ...invoice, sendLog: undefined, lastEmail: undefined } : null,
       abrechenbar: offen.map((b) => ({
         _id: b._id,

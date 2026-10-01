@@ -48,6 +48,21 @@ formatiert.
 - **Was-wäre-wenn** rechnet mit 4,33 Wochen je Monat (365 / 7 / 12). Der
   Faktor steht sichtbar daneben und wird nirgends gespeichert.
 
+## Zahlungen und Umsatzrechner
+
+Eine Zahlung, die im Stunden-Drawer oder in der Schülerakte verbucht wird
+(„Als bezahlt verbuchen"), landet im **Journal**. Damit sie in den Einnahmen
+des Cockpits nicht fehlt, trägt der Zahlungsdialog sie auf Wunsch auch im
+Rechner ein: Das Häkchen „Auch im Umsatzrechner eintragen" ist vorausgewählt,
+je Stunde entsteht ein Eintrag (Datum = Zahlungsdatum, Status „bezahlt",
+Notiz = Journalnummer). Wer die Stunde lieber selbst einträgt, wählt es ab –
+sonst zählt sie doppelt. Ein Fehler beim Eintragen macht die bereits gebuchte
+Zahlung nicht rückgängig, der Dialog meldet ihn.
+
+Nicht berücksichtigt: Rechnungen, die als bezahlt markiert werden, und ältere
+Journaleinnahmen. Sie kommen nur in den Rechner, wenn sie dort eingetragen
+werden.
+
 ## Vorbelegung
 
 Beim Tippen eines Namens schlägt `PUT /api/admin/umsatz` den zuletzt

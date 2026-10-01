@@ -11,6 +11,7 @@ import SelbstauskunftKarte from "@/components/admin/management/SelbstauskunftKar
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog, { downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
+import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 import { Field, Modal, Stat, btnDanger, btnPrimary, btnSecondary, card, clockHours, errorText, input, link, plural, todayIso } from "@/components/admin/management/ui";
 import { useDialogs } from "@/components/admin/ui";
 import { CustomerForm } from "@/components/admin/InvoicesPanel";
@@ -40,6 +41,7 @@ export function billingState(lesson, today) {
 
 export default function StudentDetail({ id, adminFetch, pin, setNotice, customers, onCreateInvoice, onBack, onDeleted }) {
   const { confirm, ask } = useDialogs();
+  const loescheBuchung = useBuchungLoeschen();
   // Rechnungsempfänger:in direkt hier bearbeiten: Die fehlende Anschrift
   // fällt in dieser Akte auf, also gehört die Korrektur auch hierher.
   const [kundeBearbeiten, setKundeBearbeiten] = useState(null);
@@ -91,48 +93,10 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
     }
   }
 
-  // Wie im Bereich Unterricht: Löschen geht immer, braucht aber einen Grund
-  // fürs Löschprotokoll; Sperren werden gezeigt und lassen sich bestätigen.
+  // Wie im Bereich Unterricht und im Cockpit-Drawer: Löschen geht immer,
+  // braucht aber einen Grund fürs Löschprotokoll (useBuchungLoeschen).
   async function deleteLesson(lesson) {
-    const grund = await ask({
-      title: `Stunde vom ${formatDate(lesson.requestedDate)} löschen`,
-      message: "Warum? Der Grund steht später im Löschprotokoll.",
-      required: true,
-      maxLength: 300,
-    });
-    if (!grund) return;
-
-    const senden = (trotzdem) =>
-      adminFetch(`/api/admin/lessons/${lesson._id}`, {
-        method: "DELETE",
-        body: JSON.stringify({ grund, trotzdem }),
-      });
-
-    try {
-      await senden(false);
-      setNotice("Stunde gelöscht.");
-      refresh();
-    } catch (err) {
-      const gruende = err.daten?.gruende;
-      if (!gruende?.length) {
-        setNotice(errorText(err));
-        return;
-      }
-      const ok = await confirm({
-        title: "Trotzdem löschen?",
-        message: `${gruende.map((g) => `• ${g.text}`).join("\n")}\n\nDie Stunde verschwindet, die genannten Dokumente bleiben. Der Vorgang steht mit deinem Grund im Löschprotokoll.`,
-        confirmLabel: "Trotzdem löschen",
-        danger: true,
-      });
-      if (!ok) return;
-      try {
-        await senden(true);
-        setNotice("Stunde gelöscht und protokolliert.");
-        refresh();
-      } catch (zweiter) {
-        setNotice(errorText(zweiter));
-      }
-    }
+    if (await loescheBuchung(lesson)) refresh();
   }
 
   async function addNote(e) {

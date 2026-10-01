@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { locationLabel } from "@/lib/format";
 import { lessonDateOf } from "@/lib/bookings/order";
@@ -9,6 +9,7 @@ import { isLessonLocked } from "@/lib/lessons/rules";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
 import LessonForm from "@/components/admin/management/LessonForm";
+import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 import PapierakteButton from "@/components/admin/PapierakteButton";
 import {
   Badge,
@@ -44,7 +45,8 @@ const JITSI = "https://meet.lernsprung-vs.de";
 
 export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose, onChanged }) {
   const { adminFetch, pin, notify } = useAdmin();
-  const { confirm, ask } = useDialogs();
+  const { confirm } = useDialogs();
+  const loescheBuchung = useBuchungLoeschen();
   const router = useRouter();
   const [daten, setDaten] = useState(null);
   const [verschieben, setVerschieben] = useState(false);
@@ -60,15 +62,24 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
   const aktiv = reiterState.aktiv;
   const setAktiv = (key) => setReiterState({ adresse, aktiv: key });
 
+  // Die Seite gibt bei jedem Neuzeichnen eine neue onClose-Funktion herein.
+  // Hinge `laden` direkt daran, lüde der Drawer seine Daten bei jedem
+  // Neuzeichnen der Seite neu – und nach dem Löschen noch einmal die eben
+  // gelöschte Stunde ("Stunde nicht gefunden"). Deshalb über eine Referenz.
+  const schliessen = useRef(onClose);
+  useEffect(() => {
+    schliessen.current = onClose;
+  });
+
   const laden = useCallback(async () => {
     if (!stundeId) return;
     try {
       setDaten(await adminFetch(`/api/admin/lessons/${stundeId}/detail`));
     } catch (err) {
       notify(errorText(err));
-      onClose();
+      schliessen.current();
     }
-  }, [adminFetch, notify, onClose, stundeId]);
+  }, [adminFetch, notify, stundeId]);
 
   useEffect(() => {
     if (!stundeId) return;
@@ -99,6 +110,15 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     } catch (err) {
       notify(errorText(err));
     }
+  }
+
+  // Löschen mit Grund und Protokoll, auch wenn es „gegen die Logik" geht –
+  // Fehler werden nicht per Storno gelöst (siehe useBuchungLoeschen). Danach
+  // gibt es die Stunde nicht mehr, also schließt der Drawer.
+  async function loeschen() {
+    if (!(await loescheBuchung(l))) return;
+    onClose();
+    await onChanged?.();
   }
 
   async function rechnungAnlegen() {
@@ -215,6 +235,13 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     </Button>
                     <Button variant="danger" onClick={absagen} disabled={l.status === "cancelled"}>
                       Absagen
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={loeschen}
+                      title="Entfernt den Eintrag ganz – mit Grund im Löschprotokoll. Zum Absagen oben „Absagen“ nehmen."
+                    >
+                      Löschen
                     </Button>
                     {l.parentEmail ? (
                       <a

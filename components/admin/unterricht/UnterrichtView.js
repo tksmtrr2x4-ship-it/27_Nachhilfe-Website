@@ -31,13 +31,15 @@ import {
 } from "@/components/admin/ui";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog from "@/components/admin/management/TagebuchDialog";
+import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 
 // Eine Liste für alles, was Unterricht ist: Online-Anfragen, bestätigte
 // Termine, selbst eingetragene Stunden und Pakete. Sortiert nach dem Tag des
 // Unterrichts (lib/bookings/order.js), gruppiert nach Monat.
 export default function UnterrichtView({ filters, onFilters }) {
   const { adminFetch, notify } = useAdmin();
-  const { confirm, ask } = useDialogs();
+  const { confirm } = useDialogs();
+  const loescheBuchung = useBuchungLoeschen();
   const router = useRouter();
   const today = todayIso();
 
@@ -136,52 +138,10 @@ export default function UnterrichtView({ filters, onFilters }) {
     }
   }
 
-  // Löschen ist immer möglich – ein Tippfehler ist kein Geschäftsvorfall und
-  // gehört nicht per Gegenbuchung „gelöst". Was dagegen spricht, wird aber
-  // gezeigt und muss ausdrücklich bestätigt werden, und der Grund landet im
-  // Löschprotokoll (Finanzen → Gelöschtes).
+  // Löschen mit Grund und Protokoll – derselbe Ablauf wie im Cockpit-Drawer
+  // und in der Schülerakte (useBuchungLoeschen).
   async function deleteBooking(booking) {
-    const grund = await ask({
-      title: "Eintrag löschen",
-      message: "Warum? Der Grund steht später im Löschprotokoll – z. B. „doppelt eingetragen“ oder „Termin gab es nie“.",
-      required: true,
-      maxLength: 300,
-    });
-    if (!grund) return;
-
-    async function senden(trotzdem) {
-      return adminFetch(`/api/admin/bookings/${booking._id}`, {
-        method: "DELETE",
-        body: JSON.stringify({ grund, trotzdem }),
-      });
-    }
-
-    try {
-      await senden(false);
-      notify("Eintrag gelöscht.");
-      load();
-      return;
-    } catch (err) {
-      const gruende = err.daten?.gruende;
-      if (!gruende?.length) {
-        notify(errorText(err));
-        return;
-      }
-      const ok = await confirm({
-        title: "Trotzdem löschen?",
-        message: `${gruende.map((g) => `• ${g.text}`).join("\n")}\n\nDie Zeile hier verschwindet, die genannten Dokumente bleiben. Der Vorgang steht mit deinem Grund im Löschprotokoll.`,
-        confirmLabel: "Trotzdem löschen",
-        danger: true,
-      });
-      if (!ok) return;
-      try {
-        await senden(true);
-        notify("Eintrag gelöscht und protokolliert.");
-        load();
-      } catch (zweiter) {
-        notify(errorText(zweiter));
-      }
-    }
+    if (await loescheBuchung(booking)) load();
   }
 
   async function createInvoice(booking) {

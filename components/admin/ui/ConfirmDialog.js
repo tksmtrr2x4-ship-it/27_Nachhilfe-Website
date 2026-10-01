@@ -51,6 +51,10 @@ export function DialogProvider({ children }) {
     <DialogContext.Provider value={api}>
       {children}
       {request ? (
+        // Der Provider sitzt über dem Cockpit-Rahmen; ohne die Klasse hier
+        // wären die Farbvariablen (--ck-*) im Dialog nicht definiert. `contents`
+        // lässt den Wrapper selbst nichts zeichnen.
+        <div className="cockpit contents">
         <Modal title={request.title || "Bitte bestätigen"} onClose={() => finish(request.kind === "ask" ? null : false)}>
           <form
             onSubmit={(e) => {
@@ -87,6 +91,7 @@ export function DialogProvider({ children }) {
             </div>
           </form>
         </Modal>
+        </div>
       ) : null}
     </DialogContext.Provider>
   );

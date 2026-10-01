@@ -208,6 +208,9 @@ export function Drawer({ open, onClose, labelledBy, children }) {
     zuvor.current = document.activeElement;
     const onKey = (e) => {
       if (e.key === "Escape") {
+        // Liegt eine Rückfrage (Löschen, Absagen) über dem Drawer, schließt
+        // Escape nur sie – der Drawer selbst ist das erste Dialog-Element.
+        if (document.querySelectorAll('[role="dialog"]').length > 1) return;
         onClose();
         return;
       }

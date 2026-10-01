@@ -17,7 +17,7 @@ export function Modal({ title, onClose, children, wide = false }) {
       aria-label={title}
     >
       <div
-        className={`w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[#0b0b0c] p-5 shadow-2xl sm:p-6`}
+        className={`w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-panel)] p-5 shadow-2xl sm:p-6`}
       >
         <div className="flex items-start justify-between gap-4">
           <h3 className="text-lg font-semibold tracking-[-0.3px]">{title}</h3>

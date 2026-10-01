@@ -188,7 +188,7 @@ export default function ZugangView() {
             priority: "primary",
             cell: (p) => (
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-[var(--ck-text)] dark:text-white">{p.label}</span>
+                <span className="font-semibold text-[var(--ck-text)]">{p.label}</span>
                 <Badge tone={p.kind === "geräteübergreifend" ? "sky" : "slate"}>{p.kind}</Badge>
               </span>
             ),

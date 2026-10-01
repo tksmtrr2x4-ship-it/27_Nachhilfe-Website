@@ -112,7 +112,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
                 onClick={() => setBereich(key)}
                 aria-pressed={bereich === key}
                 className={`rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${
-                  bereich === key ? "bg-[var(--ck-text)] text-black" : "text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
+                  bereich === key ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]" : "text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
                 }`}
               >
                 {text}

@@ -19,7 +19,11 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#000000",
+  // Adressleiste/Statusleiste folgen dem Farbschema des Geräts.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f2f2f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 // Die PIN-Abfrage und der Rahmen (Navigation, Meldungen) liegen im Layout,

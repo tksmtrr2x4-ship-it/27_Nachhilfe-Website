@@ -2,7 +2,8 @@
 // Panels importieren Tokens oder – besser – die fertigen Bausteine
 // (Button, Badge, DataTable …) aus @/components/admin/ui.
 //
-// Seit dem Cockpit-Umbau (30.09.2026) sind die Werte dunkel. Die konkreten
+// Seit dem Cockpit-Umbau (30.09.2026) gibt es ein dunkles und ein helles
+// Farbschema; es folgt der Geräteeinstellung. Die konkreten
 // Farben liegen als CSS-Variablen in app/admin/cockpit.css; hier stehen nur
 // die Klassenkombinationen, damit ein Farbwechsel eine Datei betrifft.
 
@@ -64,9 +65,9 @@ export const btnDanger =
   "whitespace-nowrap rounded-full bg-[var(--ck-neg-soft)] px-4.5 py-2.5 text-sm font-semibold text-[var(--ck-neg)] transition hover:brightness-125 disabled:opacity-50";
 export const btnGhost =
   "whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-[var(--ck-muted)] transition hover:bg-[var(--ck-surface2)] hover:text-[var(--ck-text)] disabled:opacity-50";
-// Heller Knopf auf dunklem Grund (Vorlage: „Erzeugen" in der Dokumentenliste).
+// Kontrastknopf in Textfarbe (hell auf dunklem, dunkel auf hellem Grund) (Vorlage: „Erzeugen" in der Dokumentenliste).
 export const btnBright =
-  "whitespace-nowrap rounded-full bg-[var(--ck-text)] px-4 py-2 text-sm font-semibold text-black transition hover:brightness-90 disabled:opacity-50";
+  "whitespace-nowrap rounded-full bg-[var(--ck-text)] px-4 py-2 text-sm font-semibold text-[var(--ck-on-text)] transition hover:brightness-90 disabled:opacity-50";
 export const link = "text-sm text-[var(--ck-muted)] transition hover:text-[var(--ck-accent)]";
 
 export const BUTTON_VARIANTS = {

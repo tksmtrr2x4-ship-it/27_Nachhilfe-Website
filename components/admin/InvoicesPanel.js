@@ -287,7 +287,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface2)] text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"}`}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-[var(--ck-accent)] text-black" : "bg-[var(--ck-surface2)] text-[var(--ck-text)] hover:bg-[var(--ck-surface3)]"}`}
                 >
                   {text}
                   {key === "overdue" && invoices.some((i) => i.overdue) ? ` (${invoices.filter((i) => i.overdue).length})` : ""}

@@ -4,6 +4,17 @@ Seit 30.09.2026 ist der Admin-Bereich ein dunkles Cockpit. Vorlage war die
 abgestimmte Datei `lernsprung-cockpit.html`; Aufbau, Farben, Abstände,
 Rundungen und das Verhalten der Detailansicht sind davon übernommen.
 
+## Hell und dunkel
+
+Das Cockpit folgt der Geräteeinstellung (`prefers-color-scheme`), es gibt keinen
+eigenen Schalter. Alle Farben stehen als `--ck-*`-Variablen in
+[../app/admin/cockpit.css](../app/admin/cockpit.css): der Grundblock ist dunkel,
+der Medienblock `(prefers-color-scheme: light)` überschreibt dieselben Namen.
+Neue Bausteine nutzen nur diese Variablen, nie feste Hex-Werte. Schrift auf
+Flächen in Textfarbe (aktiver Reiter, heller Knopf) heißt `--ck-on-text`, nicht
+`text-black`. Der Rechnungsentwurf im Drawer (`.paper`) bleibt in beiden Modi
+hell, weil er das Dokument beim Empfänger zeigt.
+
 ## Farben und Bausteine
 
 | Was | Wo |

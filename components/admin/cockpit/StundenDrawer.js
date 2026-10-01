@@ -312,7 +312,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                           <span>{e.fach}</span>
                         </div>
                         {e.thema ? <p className="mt-1 text-sm font-semibold">{e.thema}</p> : null}
-                        {e.text ? <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-[#d8d8dc]">{e.text}</p> : null}
+                        {e.text ? <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-[var(--ck-text-soft)]">{e.text}</p> : null}
                       </div>
                     ))
                   ) : (

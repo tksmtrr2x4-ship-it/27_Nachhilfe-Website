@@ -174,7 +174,7 @@ export default function WebsiteView({ view: viewParam, onView }) {
             onClick={() => onView(key)}
             aria-current={view === key ? "page" : undefined}
             className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              view === key ? "bg-[var(--ck-text)] text-black" : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
+              view === key ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]" : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
             }`}
           >
             {label}

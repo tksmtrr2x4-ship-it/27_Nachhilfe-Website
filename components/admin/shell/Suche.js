@@ -79,7 +79,7 @@ export default function Suche({ onClose }) {
         aria-modal="true"
         aria-label="Suche"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-xl overflow-hidden rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[#0b0b0c] shadow-2xl"
+        className="w-full max-w-xl overflow-hidden rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-panel)] shadow-2xl"
       >
         <div className="p-3">
           <input

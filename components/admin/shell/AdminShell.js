@@ -148,7 +148,7 @@ export default function AdminShell({ children, logo = null }) {
       {/* Leiste unten auf dem Handy und Tablet */}
       <nav
         aria-label="Bereiche"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--ck-line)] bg-black/95 backdrop-blur xl:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--ck-line)] bg-[var(--ck-bar)] backdrop-blur xl:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <ul className="flex">
@@ -187,7 +187,7 @@ export default function AdminShell({ children, logo = null }) {
         <>
           <div className="fixed inset-0 z-30 bg-black/55 xl:hidden" onClick={() => setMehr(false)} aria-hidden="true" />
           <div
-            className="fixed inset-x-0 bottom-0 z-40 rounded-t-[var(--ck-r)] border-t border-[var(--ck-line)] bg-[#0b0b0c] p-3 pb-8 xl:hidden"
+            className="fixed inset-x-0 bottom-0 z-40 rounded-t-[var(--ck-r)] border-t border-[var(--ck-line)] bg-[var(--ck-panel)] p-3 pb-8 xl:hidden"
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <ul className="space-y-1">

@@ -75,7 +75,7 @@ export function DayTile({ day, month, today = false }) {
   return (
     <span
       className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[14px] ${
-        today ? "bg-[var(--ck-accent)] text-black" : "bg-[var(--ck-surface2)] group-hover:bg-[#26262b]"
+        today ? "bg-[var(--ck-accent)] text-black" : "bg-[var(--ck-surface2)] group-hover:bg-[var(--ck-surface3)]"
       }`}
     >
       <b className="text-[17px] leading-none">{day}</b>
@@ -88,7 +88,7 @@ export function DayTile({ day, month, today = false }) {
 
 // Initialen als farbiger Kreis. Die Farbe leitet sich aus dem Namen ab,
 // damit dieselbe Person immer gleich aussieht.
-const INITIAL_COLORS = ["#27324a", "#3a2a44", "#233b33", "#44322a", "#2a3a44", "#3f2f2f"];
+const INITIAL_COLORS = ["var(--ck-av1)", "var(--ck-av2)", "var(--ck-av3)", "var(--ck-av4)", "var(--ck-av5)", "var(--ck-av6)"];
 
 export function initialsOf(name) {
   const parts = String(name || "")
@@ -175,14 +175,14 @@ export function AreaChart({ points, labels = [], height = 170 }) {
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="block h-full w-full" role="img" aria-label={chartLabel(values, labels)}>
         <defs>
           <linearGradient id={`grad${id}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#ff7a1a" stopOpacity=".28" />
-            <stop offset="1" stopColor="#ff7a1a" stopOpacity="0" />
+            <stop offset="0" style={{ stopColor: "var(--ck-accent)" }} stopOpacity=".28" />
+            <stop offset="1" style={{ stopColor: "var(--ck-accent)" }} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <line x1="0" y1={H - 52} x2={W} y2={H - 52} stroke="#2a2a2f" strokeDasharray="3 5" />
+        <line x1="0" y1={H - 52} x2={W} y2={H - 52} style={{ stroke: "var(--ck-chart-line)" }} strokeDasharray="3 5" />
         <path d={area} fill={`url(#grad${id})`} />
-        <path d={line} fill="none" stroke="#ff7a1a" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <circle cx={last[0]} cy={last[1]} r="5" fill="#ff7a1a" />
+        <path d={line} fill="none" style={{ stroke: "var(--ck-accent)" }} strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={last[0]} cy={last[1]} r="5" style={{ fill: "var(--ck-accent)" }} />
       </svg>
     </div>
   );
@@ -256,7 +256,7 @@ export function Drawer({ open, onClose, labelledBy, children }) {
         aria-labelledby={labelledBy}
         aria-hidden={open ? undefined : "true"}
         inert={!open}
-        className={`fixed inset-y-0 right-0 z-50 flex w-[min(620px,100vw)] flex-col border-l border-[var(--ck-line)] bg-[#0b0b0c] transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[min(620px,100vw)] flex-col border-l border-[var(--ck-line)] bg-[var(--ck-panel)] transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -341,7 +341,7 @@ export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
           aria-current={aktiv === key ? "page" : undefined}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
             aktiv === key
-              ? "bg-[var(--ck-text)] text-black"
+              ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]"
               : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
           }`}
         >

@@ -98,14 +98,24 @@ Optional: `INVOICE_TAX_NUMBER`, `INVOICE_VAT_ID`, `INVOICE_BIC`,
 `INVOICE_NUMBER_FORMAT` (Standard `LS-{YYYY}-{NNNN}`),
 `INVOICE_PAYMENT_TERM_DAYS` (14), `INVOICE_STORAGE_PATH` (`data/invoices`).
 
-> **Steuerangaben:** `INVOICE_TAX_NUMBER` und `INVOICE_VAT_ID` sind bewusst
-> optional und im Betrieb leer. Die persönliche **Steuer-Identifikationsnummer
+> **Steuerangaben:** `INVOICE_TAX_NUMBER` und `INVOICE_VAT_ID` sind optional.
+> Seit 01.10.2026 ist im Betrieb die vom Finanzamt vergebene **Steuernummer**
+> hinterlegt (`INVOICE_TAX_NUMBER` in `/etc/lernsprung/.env.production`, nicht
+> im Repo); die USt-IdNr bleibt leer (Kleinunternehmer, § 19 UStG). Die
+> Steuernummer steht auf jeder **neu** ausgestellten Rechnung und Stornorechnung
+> (PDF-Fußzeile, E-Rechnungs-XML als BT-32 und BT-29) sowie auf der Quittung.
+> Bereits ausgestellte Rechnungen bleiben unverändert (GoBD) und tragen sie
+> nicht. Die persönliche **Steuer-Identifikationsnummer
 > nach § 139b AO (11 Ziffern)** darf in keiner dieser Variablen stehen – sie
 > ist ein lebenslanges Personenkennzeichen ausschließlich für den Verkehr mit
 > Finanzbehörden, ist nach § 14 Abs. 4 UStG kein zulässiger Rechnungsbestand-
-> teil und gehört nach § 5 Abs. 1 Nr. 6 DDG auch nicht ins Impressum. Sind
-> beide Variablen leer, entfällt die Steuerzeile in der PDF-Fußzeile und die
-> Gruppe `cac:PartyTaxScheme` im XML vollständig.
+> teil und gehört nach § 5 Abs. 1 Nr. 6 DDG auch nicht ins Impressum. Eine
+> elfstellige Zahl in `INVOICE_TAX_NUMBER` wird deshalb **erkannt und
+> ignoriert** (`isSteuerId` in `lib/invoicing/config.js`); der Admin-Bereich
+> meldet das im Banner. Sind beide Variablen leer, entfällt die Steuerzeile in
+> der PDF-Fußzeile und die Gruppe `cac:PartyTaxScheme` im XML vollständig.
+> Die Steuernummer gehört nicht ins Impressum – dort verlangt § 5 DDG nur eine
+> USt-IdNr, soweit eine vergeben ist.
 
 Fehlt etwas, zeigt der Tab „Rechnungen“ einen Banner mit genau den fehlenden
 Namen; Ausstellen ist dann serverseitig blockiert.

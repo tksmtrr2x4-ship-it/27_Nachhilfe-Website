@@ -437,6 +437,11 @@ function ConfigBanner({ config }) {
     // und versenden. Das eingebettete ZUGFeRD-XML erfüllt aber BR-E-02
     // (Steuerkategorie „Exempt" verlangt BT-31 oder BT-32) erst, sobald eine
     // echte Steuernummer hinterlegt ist.
+    ...(config.taxNumberRejected
+      ? [
+          "In INVOICE_TAX_NUMBER steht eine elfstellige Zahl – das ist die persönliche Steuer-Identifikationsnummer und kommt nicht auf Rechnungen. Sie wird ignoriert. Bitte die Steuernummer vom Finanzamt eintragen (Form 12345/67890).",
+        ]
+      : []),
     ...(config.hasTaxRegistration
       ? []
       : [

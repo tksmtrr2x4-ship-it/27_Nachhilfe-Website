@@ -119,7 +119,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
               </button>
             ))}
             <span className="ml-auto self-center text-xs text-[var(--ck-muted)]">
-              aus dem Umsatzrechner ·{" "}
+              aus Journal und Umsatzrechner ·{" "}
               <Link href="/admin/finanzen?ansicht=umsatz" className="underline underline-offset-2 hover:text-[var(--ck-accent)]">
                 öffnen
               </Link>

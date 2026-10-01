@@ -116,7 +116,7 @@ Seit 30.09.2026. Technische Beschreibung: [../cockpit.md](../cockpit.md).
 
 | Feld | Inhalt |
 |---|---|
-| Zweck | Eigene Übersicht über Einnahmen und Auslastung; Notizzettel für die tägliche Arbeit. **Keine steuerliche Aufzeichnung** – die bleibt das Journal (Nr. 7) |
+| Zweck | Eigene Übersicht über Einnahmen und Auslastung (speist sich aus den Einnahmen des Journals, Nr. 7, und eigenen Einträgen); Notizzettel für die tägliche Arbeit. **Keine steuerliche Aufzeichnung** – die bleibt das Journal |
 | Kategorien betroffener Personen | Schüler:innen (als Bezugspunkt der Einheiten), keine Angaben zu Erziehungsberechtigten |
 | Datenkategorien | Datum, Name der Schülerin / des Schülers (Auswahl aus der Akte oder frei eingetippt), Fach, Anzahl und Dauer der Einheiten, Preis, Status (bezahlt/offen/geplant), Zahlungsart, freie Notiz. Eigene To-dos: freier Text |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer eigenen Planungsübersicht); die Angaben stammen aus dem ohnehin bestehenden Vertragsverhältnis |

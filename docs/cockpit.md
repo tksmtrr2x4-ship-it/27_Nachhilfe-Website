@@ -105,5 +105,7 @@ statt einen Code zu zeigen, der nicht scannbar wäre.
 
 ## Was die große Zahl bedeutet
 
-Die Einnahmen im Hero kommen **ausschließlich** aus dem Umsatzrechner, nie
-aus Stunden oder Rechnungen. Siehe [umsatzrechner.md](umsatzrechner.md).
+Die Einnahmen im Hero setzen sich aus den **Einnahmen im Journal** und den
+**eigenen Einträgen im Umsatzrechner** zusammen. Eine bezahlte Rechnung, eine
+Barzahlung oder ein Storno bewegt sie also von selbst; Stunden und Rechnungen
+allein nicht. Siehe [umsatzrechner.md](umsatzrechner.md).

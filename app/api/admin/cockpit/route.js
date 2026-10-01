@@ -5,7 +5,7 @@ import { listStudentsWithStats } from "@/lib/students/db";
 import { listInvoices } from "@/lib/invoicing/db";
 import { listEntries } from "@/lib/bookkeeping/db";
 import { buildYearReport, entriesOfYear, kleinunternehmerCheck } from "@/lib/bookkeeping/report";
-import { listeEintraege } from "@/lib/umsatz/db";
+import { alleEintraege } from "@/lib/umsatz/alle";
 import { listeTodos } from "@/lib/admin/todos";
 import { buildCockpit } from "@/lib/admin/cockpit";
 import { monatVon } from "@/lib/umsatz/berechnung";
@@ -27,7 +27,7 @@ export async function GET(request) {
       listStudentsWithStats(),
       listInvoices(),
       listEntries({ years: [jahr - 1, jahr] }),
-      listeEintraege(),
+      alleEintraege(),
       listeTodos(),
     ]);
 

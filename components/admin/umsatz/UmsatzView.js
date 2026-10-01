@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import {
@@ -32,10 +33,11 @@ import {
   useDialogs,
 } from "@/components/admin/ui";
 
-// Der Umsatzrechner. Alles, was hier steht, habe ich selbst eingetragen –
-// es gibt bewusst keine Übernahme aus Buchungen oder Rechnungen. Die
-// Einordnung dazu steht in lib/umsatz/berechnung.js und als Hinweis unten
-// in der Ansicht.
+// Der Umsatzrechner. Zwei Arten von Zeilen: eigene Einträge, die ich hier
+// anlege (Offenes, Geplantes, was sonst nirgends steht), und die Einnahmen
+// aus dem Journal, die von selbst dazukommen – Rechnung bezahlt, Barzahlung,
+// Storno. Journalzeilen sind hier gesperrt: Das Journal ist unveränderlich,
+// Korrekturen laufen dort per Gegenbuchung. Siehe lib/umsatz/berechnung.js.
 
 const STATUS_TON = { bezahlt: "emerald", offen: "amber", geplant: "slate" };
 const ZAHLUNGSART_TEXT = Object.fromEntries(ZAHLUNGSARTEN);
@@ -219,6 +221,10 @@ export default function UmsatzView() {
       {/* Schnellerfassung */}
       <Card span={12}>
         <CardHead title="Schnellerfassung" />
+        <p className="-mt-1 mb-3 text-[13px] text-[var(--ck-muted)]">
+          Zahlungen aus dem Journal stehen unten von selbst – hier trägst du ein, was dort nicht steht: Offenes, Geplantes,
+          Einnahmen ohne Buchung. Dieselbe Zahlung nicht zusätzlich eintragen, sie zählte sonst doppelt.
+        </p>
         <form onSubmit={hinzufuegen}>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[9.5rem_1fr_9rem_5rem_6rem_7rem_8rem_9rem]">
             <Feld text="Datum">
@@ -337,20 +343,36 @@ export default function UmsatzView() {
                     {e.schuelerName} <span className="font-normal text-[var(--ck-muted)]">· {e.fach}</span>
                   </span>
                   <span className="block truncate text-[13px] text-[var(--ck-muted)]">
-                    {formatDate(e.datum)} · {e.anzahl} × {e.dauerMin} Min zu {formatPrice(e.preisCent)} ·{" "}
+                    {formatDate(e.datum)} ·{" "}
+                    {e.anzahl !== 0 ? `${e.anzahl} × ${e.dauerMin} Min zu ${formatPrice(e.preisCent)}` : e.beschreibung || "Einnahme"} ·{" "}
                     {ZAHLUNGSART_TEXT[e.zahlungsart] || e.zahlungsart}
                     {e.notiz ? ` · ${e.notiz}` : ""}
                   </span>
                 </span>
+                {e.quelle === "journal" ? <Badge tone="indigo">Journal</Badge> : null}
                 <Badge tone={STATUS_TON[e.status]}>{e.status}</Badge>
-                <span className="w-24 shrink-0 text-right text-[15px] font-semibold tabular-nums">{formatPrice(betragCent(e))}</span>
+                <span className={`w-24 shrink-0 text-right text-[15px] font-semibold tabular-nums ${betragCent(e) < 0 ? "text-[var(--ck-neg)]" : ""}`}>
+                  {formatPrice(betragCent(e))}
+                </span>
                 <span className="ml-auto flex shrink-0 gap-1">
-                  <Button variant="ghost" onClick={() => setBearbeiten(e)}>
-                    Bearbeiten
-                  </Button>
-                  <Button variant="ghost" onClick={() => loeschen(e)} className="text-[var(--ck-neg)]">
-                    Löschen
-                  </Button>
+                  {e.quelle === "journal" ? (
+                    <Link
+                      href="/admin/finanzen?ansicht=journal"
+                      title="Journaleinträge sind unveränderlich – Korrekturen dort per Gegenbuchung"
+                      className="rounded-full px-3 py-1.5 text-sm font-semibold text-[var(--ck-muted)] transition hover:bg-[var(--ck-surface2)] hover:text-[var(--ck-text)]"
+                    >
+                      Im Journal
+                    </Link>
+                  ) : (
+                    <>
+                      <Button variant="ghost" onClick={() => setBearbeiten(e)}>
+                        Bearbeiten
+                      </Button>
+                      <Button variant="ghost" onClick={() => loeschen(e)} className="text-[var(--ck-neg)]">
+                        Löschen
+                      </Button>
+                    </>
+                  )}
                 </span>
               </li>
             ))}
@@ -388,10 +410,11 @@ export default function UmsatzView() {
       </div>
 
       <p className="rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4 text-[13px] leading-relaxed text-[var(--ck-muted)]">
-        <b className="text-[var(--ck-text)]">Das hier ist keine Buchhaltung.</b> Die Zahlen entstehen nur aus deinen
-        Eingaben in diesem Rechner – sie ändern sich nicht, wenn du Stunden oder Rechnungen anlegst, und umgekehrt
-        landet hier nichts im Journal. Steuerlich maßgeblich bleibt das Journal unter Finanzen, das nach dem
-        Zuflussprinzip aus Rechnungen und Zahlungen entsteht. Beide Zahlen dürfen auseinanderlaufen.
+        <b className="text-[var(--ck-text)]">So hängen Journal und Rechner zusammen.</b> Jede Einnahme im Journal erscheint hier
+        von selbst, mit dem Datum der Zahlung – eine bezahlte Rechnung, eine Barzahlung, ein Storno (negativ). Stunden und
+        Rechnungen allein ändern nichts, erst das Geld. Eigene Einträge ergänzen das um Offenes und Geplantes. Das Journal
+        bleibt die steuerlich maßgebliche Aufzeichnung; die Summe hier kann davon abweichen, sobald du selbst etwas
+        einträgst.
       </p>
 
       {bearbeiten ? (

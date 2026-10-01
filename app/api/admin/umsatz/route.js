@@ -1,12 +1,14 @@
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { adminErrorResponse, assertValid, todayIsoBerlin } from "@/lib/adminError";
-import { legeEintragAn, letzterPreis, listeEintraege } from "@/lib/umsatz/db";
+import { legeEintragAn, letzterPreis } from "@/lib/umsatz/db";
+import { alleEintraege } from "@/lib/umsatz/alle";
 import { pruefeEintrag } from "@/lib/umsatz/validierung";
 import { monatVon, monatsZahlen, nachFach, nachSchueler, verlauf } from "@/lib/umsatz/berechnung";
 
-// Der Umsatzrechner. Liefert die Einträge und gleich die fertig gerechneten
-// Kennzahlen mit, damit Cockpit und Rechner dieselben Zahlen zeigen –
-// gerechnet wird ausschließlich in lib/umsatz/berechnung.js.
+// Der Umsatzrechner. Liefert die Zeilen (eigene und aus dem Journal) und
+// gleich die fertig gerechneten Kennzahlen mit, damit Cockpit und Rechner
+// dieselben Zahlen zeigen – gerechnet wird ausschließlich in
+// lib/umsatz/berechnung.js.
 
 export async function GET(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
@@ -16,7 +18,8 @@ export async function GET(request) {
     const monat = /^\d{4}-\d{2}$/.test(searchParams.get("monat") || "") ? searchParams.get("monat") : monatVon(heute);
     const bereich = searchParams.get("bereich") || "1M";
 
-    const alle = await listeEintraege();
+    // Eigene Einträge und Einnahmen aus dem Journal in einer Liste.
+    const alle = await alleEintraege();
     return Response.json({
       heute,
       monat,

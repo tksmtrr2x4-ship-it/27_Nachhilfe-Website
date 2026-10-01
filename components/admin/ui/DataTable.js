@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 // Eine Tabelle für alle Admin-Listen.
 //
@@ -214,56 +215,99 @@ function ActionLink({ action }) {
   );
 }
 
+// Das Menü hinter „…". Es wird nicht in der Tabelle gezeichnet, sondern am
+// Seitenrand (Portal): Die Tabelle schneidet mit overflow-hidden alles ab, was
+// über ihren Rand ragt – bei der letzten Zeile sah man vom Menü nur einen
+// Streifen. Position und Platz (nach unten oder nach oben aufklappen) werden
+// beim Öffnen aus der Lage des Knopfes bestimmt.
+const MENU_BREITE = 224; // w-56
+const ZEILE_HOEHE = 38;
+
 function ActionMenu({ actions }) {
-  const [open, setOpen] = useState(false);
-  const boxRef = useRef(null);
+  const [lage, setLage] = useState(null); // { rechts, oben } | { rechts, unten }
+  const knopf = useRef(null);
+  const menue = useRef(null);
+  const open = Boolean(lage);
+
+  function umschalten() {
+    if (open) {
+      setLage(null);
+      return;
+    }
+    const r = knopf.current.getBoundingClientRect();
+    const platzUnten = window.innerHeight - r.bottom;
+    const gebraucht = actions.length * ZEILE_HOEHE + 16;
+    const rechts = Math.max(8, window.innerWidth - r.right);
+    setLage(platzUnten >= gebraucht || platzUnten >= r.top ? { rechts, oben: r.bottom + 4 } : { rechts, unten: window.innerHeight - r.top + 4 });
+  }
 
   useEffect(() => {
     if (!open) return undefined;
+    const schliessen = () => setLage(null);
     const onOutside = (e) => {
-      if (!boxRef.current?.contains(e.target)) setOpen(false);
+      if (!menue.current?.contains(e.target) && !knopf.current?.contains(e.target)) setLage(null);
     };
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setLage(null);
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onKey);
+    // Beim Scrollen oder Verändern des Fensters wäre die Lage veraltet.
+    window.addEventListener("resize", schliessen);
+    window.addEventListener("scroll", schliessen, true);
     return () => {
       document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", schliessen);
+      window.removeEventListener("scroll", schliessen, true);
     };
   }, [open]);
 
   return (
-    <div ref={boxRef} className="relative">
+    <div className="relative">
       <button
+        ref={knopf}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={umschalten}
         aria-expanded={open}
+        aria-haspopup="menu"
         aria-label="Weitere Aktionen"
         className="rounded-full px-2 py-1 text-sm font-semibold text-[var(--ck-muted)] hover:bg-[var(--ck-surface2)]"
       >
         …
       </button>
-      {open ? (
-        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-1 shadow-lg">
-          {actions.map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                action.onClick?.();
-              }}
-              disabled={action.disabled}
-              title={action.title}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-sm disabled:opacity-40 ${
-                action.tone === "red" ? "text-[var(--ck-neg)] hover:bg-[var(--ck-neg-soft)]" : "text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
-              }`}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {open
+        ? createPortal(
+            // Außerhalb des Cockpit-Rahmens fehlen die Farbvariablen – die
+            // Klasse holt sie, `contents` lässt den Wrapper selbst nichts zeichnen.
+            <div className="cockpit contents">
+              <div
+                ref={menue}
+                role="menu"
+                style={{ position: "fixed", right: lage.rechts, top: lage.oben, bottom: lage.unten, width: MENU_BREITE, zIndex: 70 }}
+                className="rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-1 shadow-2xl"
+              >
+                {actions.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setLage(null);
+                      action.onClick?.();
+                    }}
+                    disabled={action.disabled}
+                    title={action.title}
+                    className={`block w-full rounded-lg px-3 py-2 text-left text-sm disabled:opacity-40 ${
+                      action.tone === "red" ? "text-[var(--ck-neg)] hover:bg-[var(--ck-neg-soft)]" : "text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
+                    }`}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

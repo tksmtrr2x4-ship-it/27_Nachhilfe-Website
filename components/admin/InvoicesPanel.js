@@ -78,6 +78,17 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
         adminFetch("/api/admin/invoices/config"),
       ]);
       setInvoices(i.invoices);
+      const b = i.bereinigt;
+      if (b && (b.geloescht || b.angepasst)) {
+        setNotice(
+          [
+            b.geloescht ? `${b.geloescht === 1 ? "1 Rechnungsentwurf" : `${b.geloescht} Rechnungsentwürfe`} entfernt` : "",
+            b.angepasst ? `${b.angepasst === 1 ? "1 Entwurf" : `${b.angepasst} Entwürfe`} angepasst` : "",
+          ]
+            .filter(Boolean)
+            .join(", ") + " – die Stunden darin sind inzwischen bezahlt, abgesagt oder gelöscht.",
+        );
+      }
       setCustomers(c.customers);
       setConfig(cfg);
     } catch (err) {

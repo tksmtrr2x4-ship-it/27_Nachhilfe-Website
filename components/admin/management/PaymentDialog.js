@@ -24,6 +24,7 @@ export default function PaymentDialog({ student, customer, lessons, totalCents, 
   const [counterparty, setCounterparty] = useState(customer?.name || student.name);
   const [saving, setSaving] = useState(false);
   const [entry, setEntry] = useState(null);
+  const [entwuerfe, setEntwuerfe] = useState(null);
 
   async function save() {
     setSaving(true);
@@ -33,6 +34,7 @@ export default function PaymentDialog({ student, customer, lessons, totalCents, 
         body: JSON.stringify({ studentId: student._id, bookingIds: lessons.map((l) => l._id), date, method, counterparty }),
       });
       setEntry(res.entry);
+      setEntwuerfe(res.entwuerfe || null);
       setNotice(`Zahlung ${formatPrice(res.entry.amountCents)} als ${res.entry.entryNumber} verbucht.`);
     } catch (err) {
       setNotice(errorText(err));
@@ -50,6 +52,11 @@ export default function PaymentDialog({ student, customer, lessons, totalCents, 
           {formatPrice(entry.amountCents)} wurden als <strong>{entry.entryNumber}</strong> mit Zahlungsdatum {formatDate(entry.date)} im Journal
           verbucht. Die Stunden gelten als bezahlt und erscheinen nicht mehr bei den offenen Rechnungsposten. Die Einnahme zählt im Umsatzrechner und im Cockpit von selbst mit.
         </p>
+        {entwuerfe && (entwuerfe.geloescht || entwuerfe.angepasst) ? (
+          <p className="mt-2 text-sm text-[var(--ck-muted)]">
+            {entwuerfe.geloescht ? "Ein Rechnungsentwurf mit dieser Stunde wurde entfernt." : "Die Stunde wurde aus einem Rechnungsentwurf genommen."}
+          </p>
+        ) : null}
         {entry.method === "cash" && !canQuittung && action.reason ? (
           <p className="mt-2 text-sm text-[var(--ck-warn)]">{action.reason}</p>
         ) : null}

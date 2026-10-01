@@ -63,6 +63,16 @@ Entwurf ──„Ausstellen“──▶ issued ──„Versenden“──▶ se
   danach zeigt die Seite das Video. Die Stunde bleibt `confirmed` und erscheint nach dem
   Termin unter „abrechenbar“ – die Rechnung wird wie gewohnt manuell im
   Admin ausgestellt (Anschrift ist vorausgefüllt).
+* **Entwürfe halten sich selbst aktuell.** Ein Entwurf darf nur Stunden
+  enthalten, die noch abrechenbar sind. Wird eine Stunde danach bar bezahlt,
+  als anderweitig abgerechnet oder ausgefallen markiert, abgesagt oder
+  gelöscht, entfällt ihre Zeile; ein Entwurf ohne Zeilen verschwindet
+  (`bereinigeEntwuerfe` in `lib/invoicing/db.js`, Regeln in
+  `lib/invoicing/entwuerfe.js`). Das passiert beim Verbuchen einer Zahlung, beim
+  Löschen einer Stunde und beim Öffnen der Rechnungsliste; die Liste meldet es.
+  Freie Positionen ohne Stunde, ausgestellte Rechnungen und Storno-Entwürfe
+  bleiben unberührt. Das Ausstellen prüft dieselbe Regel und verweigert einen
+  veralteten Entwurf, falls er doch noch dasteht.
 * **Pakete:** Nach „Bestätigen“ im Tab „Buchungen“ erscheint dort „Rechnung“.
   Die Position übernimmt Paketname, Fach und Preis; Leistungsdatum ist der Tag
   der Bestätigung (im Entwurf änderbar).

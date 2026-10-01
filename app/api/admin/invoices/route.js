@@ -2,6 +2,7 @@ import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { getBooking } from "@/lib/db";
 import {
   listInvoices,
+  bereinigeEntwuerfe,
   createDraftInvoice,
   getCustomer,
   findOrCreateCustomerFromBooking,
@@ -17,11 +18,14 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || undefined;
   const customerId = searchParams.get("customerId") || undefined;
+  // Entwürfe, deren Stunden inzwischen bar bezahlt, abgesagt oder gelöscht
+  // sind, stehen nicht mehr in der Liste (lib/invoicing/entwuerfe.js).
+  const bereinigt = await bereinigeEntwuerfe();
   const invoices = (await listInvoices({ status, customerId })).map((inv) => ({
     ...inv,
     overdue: isOverdue(inv),
   }));
-  return Response.json({ invoices });
+  return Response.json({ invoices, bereinigt });
 }
 
 // Neuer Entwurf: entweder aus einer Buchung heraus (bookingId → Kund:in

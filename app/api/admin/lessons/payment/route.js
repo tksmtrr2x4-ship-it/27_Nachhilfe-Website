@@ -2,7 +2,7 @@ import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { adminErrorResponse, AdminError, todayIsoBerlin } from "@/lib/adminError";
 import { recordLessonPayment } from "@/lib/bookkeeping/db";
 import { getStudent } from "@/lib/students/db";
-import { getCustomer } from "@/lib/invoicing/db";
+import { bereinigeEntwuerfe, getCustomer } from "@/lib/invoicing/db";
 
 // Zahlung ohne Rechnung (bar, Überweisung, Karte) für abgehaltene, noch
 // nicht abgerechnete Stunden verbuchen – mit dem tatsächlichen Zahlungsdatum.
@@ -21,7 +21,13 @@ export async function POST(request) {
       student,
       counterparty: String(body.counterparty || "").trim().slice(0, 200) || customer?.name || student.name,
     });
-    return Response.json({ entry });
+    // Stand die Stunde in einem Rechnungsentwurf, ist sie dort jetzt überholt.
+    // Best-Effort: Die gebuchte Zahlung bleibt in jedem Fall bestehen.
+    const entwuerfe = await bereinigeEntwuerfe().catch((err) => {
+      console.error("Entwürfe konnten nicht bereinigt werden:", err?.name || "Error");
+      return null;
+    });
+    return Response.json({ entry, entwuerfe });
   } catch (err) {
     return adminErrorResponse(err, "Zahlung");
   }

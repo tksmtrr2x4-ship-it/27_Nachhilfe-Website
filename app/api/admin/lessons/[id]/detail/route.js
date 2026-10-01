@@ -1,6 +1,8 @@
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { AdminError, adminErrorResponse, todayIsoBerlin } from "@/lib/adminError";
 import { getBooking } from "@/lib/db";
+import { getEntry } from "@/lib/bookkeeping/db";
+import { isBillableSession } from "@/lib/lessons/rules";
 import { getStudent } from "@/lib/students/db";
 import { findCustomerByEmail, getCustomer, getInvoice, listUnbilledSessions } from "@/lib/invoicing/db";
 import { lessonDateOf } from "@/lib/bookings/order";
@@ -45,8 +47,17 @@ export async function GET(request, { params }) {
     // alle abrechenbaren Stunden dieser Familie, nicht nur diese eine.
     const offen = lesson.invoiceId ? [] : await listUnbilledSessions(lesson.parentEmail);
 
+    // Ohne Rechnung bezahlt (bar, Überweisung, Karte)? Dann gehört ein
+    // Journaleintrag dazu – der Drawer zeigt ihn und bietet bei Barzahlung
+    // die Quittung an.
+    const zahlung = lesson.paymentLedgerEntryId ? await getEntry(lesson.paymentLedgerEntryId) : null;
+
     return Response.json({
       heute,
+      // Darf diese Stunde jetzt abgerechnet werden? Gehalten oder in der
+      // Vergangenheit, bestätigt, nicht ausgefallen, noch nicht abgerechnet.
+      abrechenbarJetzt: isBillableSession(lesson, heute),
+      zahlung,
       lesson,
       student,
       customer: customer ? { ...customer, notes: undefined } : null,
@@ -54,6 +65,7 @@ export async function GET(request, { params }) {
       invoice: invoice ? { ...invoice, sendLog: undefined, lastEmail: undefined } : null,
       abrechenbar: offen.map((b) => ({
         _id: b._id,
+        studentId: b.studentId || null,
         datum: lessonDateOf(b),
         beschreibung: `Nachhilfe ${b.subject || b.offerSnapshot?.subject || ""}, ${b.offerSnapshot?.durationLabel || ""}`.trim(),
         preisCent: b.offerSnapshot?.priceCents || 0,

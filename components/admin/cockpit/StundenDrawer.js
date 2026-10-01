@@ -11,6 +11,8 @@ import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/mana
 import LessonForm from "@/components/admin/management/LessonForm";
 import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 import PapierakteButton from "@/components/admin/PapierakteButton";
+import PaymentDialog from "@/components/admin/management/PaymentDialog";
+import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 import {
   Badge,
   Button,
@@ -50,6 +52,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
   const router = useRouter();
   const [daten, setDaten] = useState(null);
   const [verschieben, setVerschieben] = useState(false);
+  const [zahlungOffen, setZahlungOffen] = useState(false);
   // Der Reiter kommt aus der Adresse und lässt sich im Drawer umschalten.
   // Beim Wechsel der Stunde (oder wenn die Adresse einen anderen Reiter
   // nennt) gilt wieder die Adresse – deshalb der Vergleich beim Rendern
@@ -134,18 +137,21 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     }
   }
 
-  async function quittungAnlegen() {
-    const ok = await confirm({
-      title: "Quittung statt Rechnung?",
-      message: "Für Barzahlung: Die Quittung wird im Bereich Finanzen erstellt und dort als Einnahme gebucht.",
-      confirmLabel: "Zu den Quittungen",
-    });
-    if (!ok) return;
-    onClose();
-    router.push("/admin/finanzen?ansicht=quittungen");
+  // Eine Stunde, die erst morgen stattfindet, lässt sich nicht abrechnen –
+  // bar bezahlt wird meist danach. Wer im Voraus kassiert hat, markiert sie
+  // hier als gehalten und bucht die Zahlung gleich im Anschluss.
+  async function alsGehaltenMarkieren() {
+    try {
+      await adminFetch(`/api/admin/bookings/${l._id}`, { method: "PATCH", body: JSON.stringify({ heldStatus: "held" }) });
+      await aktualisieren();
+      setZahlungOffen(true);
+    } catch (err) {
+      notify(errorText(err));
+    }
   }
 
   return (
+    <>
     <Drawer open={offen} onClose={onClose} labelledBy="drawer-titel">
       <DrawerClose onClose={onClose} />
 
@@ -314,7 +320,19 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
               </>
             ) : null}
 
-            {aktiv === "rechnung" ? <RechnungsReiter daten={daten} onRechnung={rechnungAnlegen} onQuittung={quittungAnlegen} /> : null}
+            {aktiv === "rechnung" ? (
+              <RechnungsReiter
+                daten={daten}
+                onRechnung={rechnungAnlegen}
+                onZahlung={() => setZahlungOffen(true)}
+                onGehalten={alsGehaltenMarkieren}
+                onQuittung={async (entry) => {
+                  if (quittungAction(entry).kind === "open") await openQuittung({ pin, entry, notify });
+                  else await issueQuittung({ adminFetch, pin, entry, notify });
+                  await aktualisieren();
+                }}
+              />
+            ) : null}
 
             {aktiv === "akte" ? (
               <>
@@ -392,6 +410,12 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
         </>
       )}
 
+    </Drawer>
+
+    {/* Die Dialoge stehen neben dem Drawer, nicht darin: Ein verschobenes
+        Element (translate) wird zum Bezugsrahmen für alles, was darin
+        „fixed" positioniert ist – der Dialog säße dann im Drawer statt
+        mittig im Fenster. */}
       {verschieben && l ? (
         <Modal title="Stunde verschieben" onClose={() => setVerschieben(false)} wide>
           <LessonForm
@@ -408,7 +432,24 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
           />
         </Modal>
       ) : null}
-    </Drawer>
+
+    {zahlungOffen && l && daten.student ? (
+      <PaymentDialog
+        student={daten.student}
+        customer={daten.customer}
+        lessons={[l]}
+        totalCents={l.offerSnapshot?.priceCents || 0}
+        adminFetch={adminFetch}
+        pin={pin}
+        setNotice={notify}
+        onClose={() => setZahlungOffen(false)}
+        onSaved={async () => {
+          setZahlungOffen(false);
+          await aktualisieren();
+        }}
+      />
+    ) : null}
+    </>
   );
 }
 
@@ -435,7 +476,7 @@ function Datei({ art, farbe, titel, hinweis, children }) {
 // fertigen Dokuments, damit man vor dem Ausstellen sieht, was ankommt.
 // Ausgestellt und versendet wird danach im Bereich Finanzen mit der
 // vorhandenen Logik (Nummernkreis, PDF, XML, GiroCode, Mail).
-function RechnungsReiter({ daten, onRechnung, onQuittung }) {
+function RechnungsReiter({ daten, onRechnung, onZahlung, onGehalten, onQuittung }) {
   const summeCent = (daten.abrechenbar || []).reduce((s, z) => s + z.preisCent, 0);
   const vorhanden = daten.invoice;
 
@@ -524,7 +565,6 @@ function RechnungsReiter({ daten, onRechnung, onQuittung }) {
               <Button variant="primary" onClick={onRechnung} disabled={(daten.abrechenbar || []).length === 0}>
                 Entwurf anlegen und öffnen
               </Button>
-              <Button onClick={onQuittung}>Quittung (Barzahlung)</Button>
             </>
           )}
         </div>
@@ -534,6 +574,99 @@ function RechnungsReiter({ daten, onRechnung, onQuittung }) {
           </p>
         ) : null}
       </Section>
+
+      {!vorhanden ? <OhneRechnung daten={daten} onZahlung={onZahlung} onGehalten={onGehalten} onQuittung={onQuittung} /> : null}
     </>
   );
+}
+
+// Bar (oder per Überweisung/Karte) bezahlt, ganz ohne Rechnung: Die Zahlung
+// wird mit dem tatsächlichen Datum im Journal verbucht, bei Barzahlung folgt
+// die Quittung. Dieselbe Buchungslogik wie in der Schülerakte
+// (lib/bookkeeping/db.js recordLessonPayment) – hier nur für eine Stunde.
+function OhneRechnung({ daten, onZahlung, onGehalten, onQuittung }) {
+  const l = daten.lesson;
+  const zahlung = daten.zahlung;
+  const wegen = grundGegenAbrechnung(daten);
+
+  // 1) Schon bezahlt: den Journaleintrag zeigen und die Quittung anbieten.
+  if (zahlung) {
+    const aktion = quittungAction(zahlung);
+    const wie = { cash: "bar", bank: "per Überweisung", card: "per Karte" }[zahlung.method] || "";
+    return (
+      <Section title="Bezahlt ohne Rechnung">
+        <p className="text-sm">
+          {formatPrice(zahlung.amountCents)} {wie} am {formatDate(zahlung.date)} · Journal {zahlung.entryNumber}
+        </p>
+        {zahlung.reversedBy ? <p className="mt-2 text-sm text-[var(--ck-warn)]">Diese Buchung wurde storniert.</p> : null}
+        {aktion.kind === "none" && zahlung.method === "cash" && aktion.reason ? (
+          <p className="mt-2 text-[13px] text-[var(--ck-warn)]">{aktion.reason}</p>
+        ) : null}
+        {aktion.kind !== "none" ? (
+          <div className="mt-3">
+            <Button variant="primary" onClick={() => onQuittung(zahlung)}>
+              {aktion.kind === "open" ? `Quittung ${aktion.number} öffnen` : "Quittung ausstellen (PDF)"}
+            </Button>
+          </div>
+        ) : null}
+      </Section>
+    );
+  }
+
+  // 2) Ohne Schülerakte lässt sich nichts zuordnen.
+  if (!daten.student) {
+    return (
+      <Section title="Ohne Rechnung bezahlt?">
+        <p className="text-sm text-[var(--ck-muted)]">
+          Dafür braucht die Stunde eine Schülerakte – die Zahlung wird ihr zugeordnet. Bitte erst unter „Akte“ prüfen, ob sie
+          angelegt ist.
+        </p>
+      </Section>
+    );
+  }
+
+  // 3) Abrechenbar: verbuchen.
+  if (daten.abrechenbarJetzt) {
+    return (
+      <Section title="Ohne Rechnung bezahlt?">
+        <p className="text-sm text-[var(--ck-muted)]">
+          Bar, per Überweisung oder Karte – die Zahlung kommt mit dem tatsächlichen Datum ins Journal, bei Barzahlung
+          kannst du danach gleich die Quittung ausstellen.
+        </p>
+        <div className="mt-3">
+          <Button variant="primary" onClick={onZahlung}>
+            Bezahlt verbuchen · {formatPrice(l.offerSnapshot?.priceCents || 0)}
+          </Button>
+        </div>
+      </Section>
+    );
+  }
+
+  // 4) Noch nicht abrechenbar: sagen, warum – und wenn es nur am Termin liegt,
+  //    den kurzen Weg anbieten.
+  return (
+    <Section title="Ohne Rechnung bezahlt?">
+      <p className="text-sm text-[var(--ck-muted)]">{wegen.text}</p>
+      {wegen.holbar ? (
+        <div className="mt-3">
+          <Button onClick={onGehalten}>Als gehalten markieren und bezahlt verbuchen</Button>
+        </div>
+      ) : null}
+    </Section>
+  );
+}
+
+// Warum lässt sich diese Stunde (noch) nicht abrechnen? `holbar`: Es liegt nur
+// daran, dass sie noch nicht als gehalten gilt.
+function grundGegenAbrechnung(daten) {
+  const l = daten.lesson;
+  if (l.status === "pending") return { text: "Die Anfrage ist noch nicht bestätigt. Erst bestätigen, dann lässt sich die Stunde abrechnen." };
+  if (l.status === "cancelled") return { text: "Der Termin ist abgesagt und wird nicht abgerechnet." };
+  if (l.heldStatus === "missed") return { text: "Die Stunde ist als ausgefallen markiert und wird nicht abgerechnet." };
+  if (l.settledExternally) return { text: "Die Stunde ist bereits anderweitig abgerechnet." };
+  if (l.invoiceId) return { text: "Die Stunde steht schon auf einer Rechnung." };
+  return {
+    text: "Die Stunde hat noch nicht stattgefunden und ist nicht als gehalten markiert – deshalb lässt sie sich noch nicht abrechnen. Wurde schon im Voraus bezahlt, kannst du sie hier als gehalten markieren.",
+    holbar: l.status === "confirmed",
+  };
 }

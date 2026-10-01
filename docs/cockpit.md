@@ -52,6 +52,9 @@ Website und Jitsi werden per HEAD mit 4 Sekunden Zeitlimit abgerufen, das
 Backup über das Änderungsdatum der jüngsten `.tar.enc` in `BACKUP_DIR`
 (Standard `/var/backups/lernsprung/daily`, frisch = höchstens 36 Stunden alt).
 Fehlt das Leserecht, sagt die Karte genau das – statt „alles in Ordnung".
+Der Speicherplatz kommt per `statfs` von der Platte, auf der die Website läuft
+(Standard `/`, überschreibbar mit `DISK_PATH`); Datenbank und Backups liegen auf
+demselben Laufwerk. Gelb unter 20 % frei, rot unter 10 % frei.
 
 ### To-dos
 

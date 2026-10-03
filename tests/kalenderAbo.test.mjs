@@ -21,6 +21,12 @@ test("Dauer aus dem Angebotstext", () => {
   assert.equal(dauerMinuten("90 Minuten"), 90);
   assert.equal(dauerMinuten("1,5 Std"), 90);
   assert.equal(dauerMinuten(""), 60);
+  // Regression: „Doppelstunde“ hinter der Zahl darf nicht als Stunden zählen.
+  assert.equal(dauerMinuten("90 Minuten (Doppelstunde)"), 90);
+  assert.equal(dauerMinuten("60 Minuten"), 60);
+  assert.equal(dauerMinuten("2 Stunden"), 120);
+  assert.equal(dauerMinuten("Doppelstunde"), 60);
+  assert.equal(dauerMinuten("9000"), 60);
 });
 
 test("Feed: Termin mit Start und Ende in Ortszeit, CRLF, Abo-Hinweise", () => {
@@ -32,6 +38,12 @@ test("Feed: Termin mit Start und Ende in Ortszeit, CRLF, Abo-Hinweise", () => {
   assert.match(ics, /SUMMARY:Jonas Winter · Mathematik\r\n/);
   assert.match(ics, /UID:abc-1@lernsprung-vs\.de/);
   assert.match(ics, /REFRESH-INTERVAL;VALUE=DURATION:PT1H/);
+});
+
+test("Feed: Doppelstunde endet 90 Minuten nach dem Beginn, am selben Tag", () => {
+  const ics = baueFeed([b({ offerSnapshot: { type: "session", durationLabel: "90 Minuten (Doppelstunde)" } })], opt);
+  assert.match(ics, /DTSTART:20261005T170000/);
+  assert.match(ics, /DTEND:20261005T183000/);
 });
 
 test("Feed: Ende über Mitternacht rollt auf den Folgetag", () => {

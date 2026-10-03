@@ -161,8 +161,61 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
         )}
       </Card>
 
+      <AboKarte />
+
       <StundenDrawer stundeId={stundeId} reiter={reiter} onClose={() => onStunde(null)} onChanged={laden} />
     </div>
+  );
+}
+
+// Abo-Link für Apple Kalender, Google Kalender & Co.: Der Feed liegt unter
+// einem langen geheimen Link (lib/kalender/abo.js), das Handy holt ihn stündlich.
+function AboKarte() {
+  const { adminFetch, notify } = useAdmin();
+  const [abo, setAbo] = useState(null);
+
+  useEffect(() => {
+    let abgebrochen = false;
+    adminFetch("/api/admin/kalender/abo")
+      .then((a) => !abgebrochen && setAbo(a))
+      .catch(() => {});
+    return () => {
+      abgebrochen = true;
+    };
+  }, [adminFetch]);
+
+  if (!abo?.url) return null;
+
+  async function kopieren() {
+    try {
+      await navigator.clipboard.writeText(abo.url);
+      notify("Abo-Link kopiert.");
+    } catch {
+      notify("Kopieren nicht möglich – Link bitte von Hand markieren.");
+    }
+  }
+
+  return (
+    <Card span={12}>
+      <CardHead title="Kalender abonnieren" />
+      <p className="max-w-2xl text-sm text-[var(--ck-muted)]">
+        Alle bestätigten Stunden und Anfragen erscheinen automatisch im Kalender deines iPhones und halten sich
+        stündlich aktuell. Neue Stunden kommen dazu, abgesagte verschwinden wieder. Der Link ist geheim – nicht weitergeben.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a
+          href={abo.webcal}
+          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+        >
+          Auf diesem Gerät abonnieren
+        </a>
+        <Button onClick={kopieren}>Link kopieren</Button>
+      </div>
+      <p className="mt-3 text-xs text-[var(--ck-faint)]">
+        Am iPhone: Link öffnen und „Abonnieren“ tippen – oder Einstellungen → Kalender → Accounts → Account hinzufügen →
+        Andere → Kalenderabo hinzufügen und den kopierten Link einfügen.
+      </p>
+    </Card>
   );
 }
 

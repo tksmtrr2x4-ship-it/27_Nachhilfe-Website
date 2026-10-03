@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cancelRuleShort } from "@/lib/legal/terms";
 import Link from "next/link";
 import { buildDurationSummary, MODE_LABEL, formatClassRange, offerMatchesClass } from "@/lib/pricing";
 import OfferPriceBlock, { DiscountBadge } from "@/components/OfferPriceBlock";
@@ -53,11 +54,11 @@ function OfferCard({ offer, settings, shopClosed }) {
       ) : null}
 
       <div className="mt-6 flex flex-1 flex-col justify-end gap-4 pt-4">
-        {(offer.cancellationText || offer.validityText) && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {[offer.cancellationText, offer.validityText].filter(Boolean).join(" · ")}
-          </p>
-        )}
+        {/* Absageregel aus der AGB-Konfiguration (lib/legal/terms.js), nicht aus
+            dem frei editierbaren Angebotstext – sonst können beide abweichen. */}
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {[cancelRuleShort(), offer.validityText].filter(Boolean).join(" · ")}
+        </p>
         <div className="flex items-end justify-between gap-4">
           <OfferPriceBlock offer={offer} settings={settings} />
           {shopClosed ? (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
+import { LATE_CANCEL_PERCENT, MEETING_HOST, PAYMENT_TERM_DAYS, PREP_PERCENT, WAIT_MINUTES, cancelRuleShort } from "@/lib/legal/terms";
 import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -21,15 +22,15 @@ const FAQS = [
   },
   {
     q: "Wie funktioniert der Online-Unterricht?",
-    a: "Ich unterrichte per Video-Call mit digitalem Whiteboard, auf dem ich mit dir gemeinsam rechne und skizziere. Du brauchst nur einen Laptop oder ein Tablet mit Internetverbindung, den Link bekommst du vorab per E-Mail.",
+    a: `Ich unterrichte per Video-Call mit digitalem Whiteboard auf meiner eigenen Plattform (${MEETING_HOST}), auf dem ich mit dir gemeinsam rechne und skizziere. Du brauchst nur einen Laptop oder ein Tablet mit Kamera, Mikrofon und stabiler Internetverbindung, den Link bekommst du vorab per E-Mail. Fällt die Verbindung auf meiner Seite aus, hole ich die Zeit nach oder berechne sie nicht. Aufnahmen sind ohne Zustimmung aller Beteiligten nicht erlaubt.`,
   },
   {
     q: "Was passiert, wenn ich einen Termin absagen muss?",
-    a: "Bei Einzelstunden und Paketen gilt die Stornofrist, die auf der jeweiligen Angebotsseite steht (in der Regel 24 Stunden vorher kostenfrei). Kurzfristigere Absagen kläre ich individuell – melde dich einfach so früh wie möglich.",
+    a: `${cancelRuleShort()} – per E-Mail oder Messenger genügt. Bei späterer Absage oder wenn der Termin nicht wahrgenommen wird, berechne ich ${LATE_CANCEL_PERCENT} % des Stundenpreises, dazu ${PREP_PERCENT} % der Vorbereitungszeit für die Stunde (§ 6 der AGB). Ich warte ${WAIT_MINUTES} Minuten; verspätet ihr euch, endet die Stunde zur vereinbarten Zeit. Sage ich selbst ab, kostet das nichts und wir finden einen Ersatztermin.`,
   },
   {
     q: "Wie bezahle ich?",
-    a: "Online bezahlst du nichts. Pakete und Einzelstunden sind zunächst eine unverbindliche Anfrage. Sobald ich bestätigt habe, bekommst du bei Paketen eine Rechnung zur Überweisung; bei Einzelstunden kläre ich die Bezahlung mit dir persönlich, Online-Stunden laufen per Rechnung.",
+    a: `Online bezahlst du nichts. Die Buchung ist zunächst eine unverbindliche Anfrage; der Vertrag kommt mit meiner Bestätigung per E-Mail zustande. Abgerechnet wird per Rechnung (PDF per E-Mail, mit GiroCode für die Überweisung), zahlbar innerhalb von ${PAYMENT_TERM_DAYS} Tagen.`,
   },
   {
     q: "In welchem Gebiet bietet Lernsprung Präsenzunterricht an?",

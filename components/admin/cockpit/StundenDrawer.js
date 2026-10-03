@@ -6,7 +6,9 @@ import { locationLabel } from "@/lib/format";
 import { lessonDateOf } from "@/lib/bookings/order";
 import { billingState, lessonState } from "@/lib/lessons/state";
 import { hasDiary } from "@/lib/lessons/diary";
-import { isLessonLocked } from "@/lib/lessons/rules";
+import { AUSFALL_ARTEN } from "@/lib/ausfall/berechnung";
+import { hatAusfallVerguetung, isLessonLocked } from "@/lib/lessons/rules";
+import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
 import LessonForm from "@/components/admin/management/LessonForm";
@@ -53,6 +55,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
   const router = useRouter();
   const [daten, setDaten] = useState(null);
   const [verschieben, setVerschieben] = useState(false);
+  const [ausfallOffen, setAusfallOffen] = useState(false);
   const [zahlungOffen, setZahlungOffen] = useState(false);
   // Der Reiter kommt aus der Adresse und lässt sich im Drawer umschalten.
   // Beim Wechsel der Stunde (oder wenn die Adresse einen anderen Reiter
@@ -99,6 +102,22 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     await onChanged?.();
   }
 
+  async function ausfallZurueck() {
+    const ok = await confirm({
+      title: "Ausfallvergütung zurücknehmen?",
+      message: "Der Stundenpreis gilt wieder, die Stunde bleibt als ausgefallen markiert und wird nicht abgerechnet. Das Protokoll behält den Eintrag.",
+      confirmLabel: "Zurücknehmen",
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/lessons/${l._id}/ausfall`, { method: "DELETE", body: JSON.stringify({}) });
+      notify("Ausfallvergütung zurückgenommen.");
+      await aktualisieren();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
   async function absagen() {
     const ok = await confirm({
       title: "Termin absagen?",
@@ -129,7 +148,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     try {
       const data = await adminFetch("/api/admin/invoices", {
         method: "POST",
-        body: JSON.stringify({ bookingId: l._id, bookingIds: daten.abrechenbar.map((z) => z._id) }),
+        body: JSON.stringify({ bookingId: l._id, bookingIds: [...new Set(daten.abrechenbar.map((z) => z._id))] }),
       });
       onClose();
       router.push(`/admin/finanzen?ansicht=rechnungen&rechnung=${data.invoice._id}`);
@@ -209,7 +228,9 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     items={[
                       ["Thema", l.diary?.topic || l.notes || "—"],
                       ["Ort", locationLabel(l) || "—"],
-                      ["Preis", `${formatPrice(l.offerSnapshot?.priceCents || 0)} · ${l.offerSnapshot?.durationLabel || ""}`],
+                      hatAusfallVerguetung(l)
+                        ? ["Ausfallvergütung", `${formatPrice(l.offerSnapshot?.priceCents || 0)} (Stundenpreis ${formatPrice(l.ausfall.stundenpreisCent)})`]
+                        : ["Preis", `${formatPrice(l.offerSnapshot?.priceCents || 0)} · ${l.offerSnapshot?.durationLabel || ""}`],
                       ["Abrechnung", abrechnungsText(l, daten.heute)],
                       daten.customer ? ["Rechnung an", daten.customer.name] : null,
                     ]}
@@ -241,6 +262,12 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     <Button variant="danger" onClick={absagen} disabled={l.status === "cancelled"}>
                       Absagen
                     </Button>
+                    {l.status === "confirmed" && l.offerSnapshot?.type === "session" && !hatAusfallVerguetung(l) && !isLessonLocked(l) ? (
+                      <Button onClick={() => setAusfallOffen(true)} title="Termin versäumt: halber Stundenpreis plus Vorbereitung (§ 6 AGB)">
+                        Versäumt · Ausfallvergütung
+                      </Button>
+                    ) : null}
+                    {hatAusfallVerguetung(l) && !isLessonLocked(l) ? <Button onClick={ausfallZurueck}>Ausfallvergütung zurücknehmen</Button> : null}
                     <Button
                       variant="danger"
                       onClick={loeschen}
@@ -258,6 +285,31 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     ) : null}
                   </div>
                 </Section>
+
+                {l.ausfall ? (
+                  <Section title="Ausfallprotokoll">
+                    <KeyValues
+                      items={[
+                        ["Art", AUSFALL_ARTEN[l.ausfall.art] || "—"],
+                        l.ausfall.absageAm ? ["Absage", `${l.ausfall.absageAm}${l.ausfall.kanal ? ` · ${l.ausfall.kanal}` : ""}`] : null,
+                        l.ausfall.wartezeitEingehalten != null ? ["Wartezeit eingehalten", l.ausfall.wartezeitEingehalten ? "ja" : "nein"] : null,
+                        ["Stundenanteil", `${l.ausfall.prozent} % von ${formatPrice(l.ausfall.stundenpreisCent)} = ${formatPrice(l.ausfall.stundenCent)}`],
+                        ["Vorbereitung", `${l.ausfall.prepProzent} % von ${l.ausfall.vorbereitungMin} Min. à ${formatPrice(l.ausfall.satzCent)}/h = ${formatPrice(l.ausfall.vorbereitungCent)}`],
+                        ["Gesamt", formatPrice(l.ausfall.totalCent)],
+                        ["AGB-Version", l.ausfall.termsVersion],
+                        l.ausfall.notiz ? ["Notiz", l.ausfall.notiz] : null,
+                        l.ausfall.aufgehoben ? ["Status", "zurückgenommen"] : null,
+                      ]}
+                    />
+                    <ul className="mt-3 space-y-1.5 text-[13px] text-[var(--ck-muted)]">
+                      {(l.ausfall.protokoll || []).map((p, i) => (
+                        <li key={i}>
+                          <span className="tabular-nums text-[var(--ck-faint)]">{formatDate(String(p.am).slice(0, 10))}</span> · {p.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                ) : null}
 
                 <Section title="Ablauf">
                   <Timeline
@@ -435,6 +487,19 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
         </Modal>
       ) : null}
 
+    {ausfallOffen && l ? (
+      <AusfallDialog
+        lesson={l}
+        adminFetch={adminFetch}
+        notify={notify}
+        onClose={() => setAusfallOffen(false)}
+        onSaved={async () => {
+          setAusfallOffen(false);
+          await aktualisieren();
+        }}
+      />
+    ) : null}
+
     {zahlungOffen && l && daten.student ? (
       <PaymentDialog
         student={daten.student}
@@ -553,8 +618,8 @@ function RechnungsReiter({ daten, onRechnung, onZahlung, onGehalten, onQuittung 
                   </tr>
                 ))
               ) : (
-                daten.abrechenbar.map((z) => (
-                  <tr key={z._id}>
+                daten.abrechenbar.map((z, i) => (
+                  <tr key={`${z._id}-${i}`}>
                     <td className="border-b border-[#eee] py-2">{z.beschreibung}</td>
                     <td className="border-b border-[#eee] py-2">{formatDate(z.datum)}</td>
                     <td className="border-b border-[#eee] py-2 text-right">{formatPrice(z.preisCent)}</td>
@@ -685,7 +750,7 @@ function grundGegenAbrechnung(daten) {
   const l = daten.lesson;
   if (l.status === "pending") return { text: "Die Anfrage ist noch nicht bestätigt. Erst bestätigen, dann lässt sich die Stunde abrechnen." };
   if (l.status === "cancelled") return { text: "Der Termin ist abgesagt und wird nicht abgerechnet." };
-  if (l.heldStatus === "missed") return { text: "Die Stunde ist als ausgefallen markiert und wird nicht abgerechnet." };
+  if (l.heldStatus === "missed" && !hatAusfallVerguetung(l)) return { text: "Die Stunde ist als ausgefallen markiert und wird nicht abgerechnet." };
   if (l.settledExternally) return { text: "Die Stunde ist bereits anderweitig abgerechnet." };
   if (l.invoiceId) return { text: "Die Stunde steht schon auf einer Rechnung." };
   return {

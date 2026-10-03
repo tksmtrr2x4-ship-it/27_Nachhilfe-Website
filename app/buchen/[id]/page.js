@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cancelRuleLong } from "@/lib/legal/terms";
 import { notFound } from "next/navigation";
 import { getOffer, getSettings } from "@/lib/db";
 import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricing";
@@ -69,12 +70,10 @@ export default async function BuchenPage({ params }) {
             <dd className="inline">{offer.catchmentAreaText}</dd>
           </div>
         ) : null}
-        {offer.cancellationText ? (
-          <div>
-            <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Stornierung: </dt>
-            <dd className="inline">{offer.cancellationText}</dd>
-          </div>
-        ) : null}
+        <div>
+          <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Absage: </dt>
+          <dd className="inline">{cancelRuleLong()}</dd>
+        </div>
         {offer.validityText ? (
           <div>
             <dt className="inline font-semibold text-slate-600 dark:text-slate-300">Gültigkeit: </dt>

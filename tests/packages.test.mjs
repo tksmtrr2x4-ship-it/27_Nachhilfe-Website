@@ -31,7 +31,7 @@ test("Einzelstunden-Position bleibt unverändert", () => {
 test("Stripe ist aus AGB und Buchhaltungs-Auswahl verschwunden", () => {
   const agb = JSON.stringify(AGB_SECTIONS);
   assert.doesNotMatch(agb, /Stripe|Online-Zahlung/);
-  assert.match(agb, /Pakete werden nach Vertragsschluss per Rechnung abgerechnet/);
+  assert.match(agb, /Abgerechnet wird per Rechnung/);
   assert.doesNotMatch(JSON.stringify(PAYMENT_METHODS), /Stripe/);
   assert.equal(INCOME_CATEGORIES.tutoring_online, undefined);
 });

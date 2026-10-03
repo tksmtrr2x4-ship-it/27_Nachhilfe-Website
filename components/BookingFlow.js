@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { TERMS_VERSION } from "@/lib/legal/terms";
 import { useRouter } from "next/navigation";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import OrderSummary from "@/components/OrderSummary";
@@ -526,7 +527,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           Ich bin erziehungsberechtigt für die angemeldete Schülerin / den angemeldeten Schüler,
           schließe diesen Vertrag im eigenen Namen ab und habe die{" "}
           <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
-            AGB
+            AGB (Version {TERMS_VERSION})
           </a>{" "}
           sowie die{" "}
           <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">

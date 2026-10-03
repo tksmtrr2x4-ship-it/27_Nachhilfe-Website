@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TERMS_VERSION } from "@/lib/legal/terms";
 import { COURSE_LEVELS, DEFAULT_SUBJECTS, allowedLevels, allowedSubjects } from "@/lib/subjectRules";
 import { LOCATION_TYPES, SCHOOL_TYPES, STUDENT_STATUS } from "@/lib/students/validation";
 import { Field, btnPrimary, btnSecondary, errorText, input, label, todayIso } from "@/components/admin/management/ui";
@@ -28,6 +29,9 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
   });
   const [newCustomer, setNewCustomer] = useState(null);
   const [saving, setSaving] = useState(false);
+  // Telefonbuchung: Pflichtfeld, ob die AGB mit der Bestätigung versendet
+  // wurden (AGB § 2). Nur beim Anlegen, nicht beim Bearbeiten.
+  const [agbVersendet, setAgbVersendet] = useState(false);
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -76,8 +80,13 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
       const data = editing
         ? await adminFetch(`/api/admin/students/${student._id}`, { method: "PATCH", body: JSON.stringify(body) })
         : await adminFetch("/api/admin/students", { method: "POST", body: JSON.stringify(body) });
+      let angelegt = data.student;
+      if (!editing && agbVersendet) {
+        const agb = await adminFetch(`/api/admin/students/${angelegt._id}/agb`, { method: "POST", body: JSON.stringify({ senden: false }) });
+        angelegt = agb.student || angelegt;
+      }
       setNotice(editing ? "Profil gespeichert." : `Profil für ${data.student.name} angelegt.`);
-      onSaved?.(data.student);
+      onSaved?.(angelegt);
     } catch (err) {
       setNotice(errorText(err));
     } finally {
@@ -220,6 +229,16 @@ export default function StudentForm({ adminFetch, setNotice, customers, student,
       <p className="text-xs text-[var(--ck-muted)] sm:col-span-2">
         Keine Gesundheitsdaten (z. B. Diagnosen wie LRS oder ADHS) ohne ausdrückliche schriftliche Einwilligung der Eltern speichern.
       </p>
+
+      {!editing ? (
+        <label className="flex items-start gap-2.5 rounded-xl border border-[var(--ck-line)] bg-[var(--ck-surface2)] p-3 text-sm sm:col-span-2">
+          <input type="checkbox" required checked={agbVersendet} onChange={(e) => setAgbVersendet(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Die AGB (Version {TERMS_VERSION}) sind mit der Vertragsbestätigung versendet bzw. liegen ihr bei. *
+            <span className="block text-xs text-[var(--ck-muted)]">Bei Telefonbuchungen kommt der Vertrag erst mit dieser E-Mail zustande. In der Schülerakte kannst du die Unterlagen auch direkt versenden.</span>
+          </span>
+        </label>
+      ) : null}
 
       <div className="flex flex-wrap gap-2 sm:col-span-2">
         <button className={btnPrimary} disabled={saving}>

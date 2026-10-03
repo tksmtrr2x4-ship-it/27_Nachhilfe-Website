@@ -69,6 +69,22 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
     refresh();
   }, [refresh]);
 
+  async function agbSenden() {
+    const ok = await confirm({
+      title: "AGB jetzt per E-Mail senden?",
+      message: "Die Familie erhält die AGB (aktuelle Version) und die Widerrufsbelehrung als PDF per E-Mail. Der Versand wird in der Akte vermerkt.",
+      confirmLabel: "Senden",
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/students/${id}/agb`, { method: "POST", body: JSON.stringify({ senden: true }) });
+      setNotice("AGB per E-Mail versendet.");
+      await refresh();
+    } catch (err) {
+      setNotice(errorText(err));
+    }
+  }
+
   if (!data) return <p className="text-sm text-[var(--ck-muted)]">Lädt …</p>;
   const { student, customer, lessons, invoices, entries, stats } = data;
   const billable = lessons.filter((l) => isBillableSession(l, today));
@@ -233,6 +249,17 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
               <dd className="text-[var(--ck-text)]">
                 {LOCATION_TYPES[student.defaultLocationType] || "–"}
                 {student.locationAddress ? ` – ${student.locationAddress}` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold text-[var(--ck-muted)]">AGB</dt>
+              <dd className="text-[var(--ck-text)]">
+                {student.agb?.version
+                  ? `Version ${student.agb.version}, übermittelt am ${formatDate(String(student.agb.uebermitteltAm).slice(0, 10))}${student.agb.mailGesendetAm ? " (per E-Mail)" : " (vermerkt)"}`
+                  : "Nicht vermerkt – für bestehende Familien gilt Version 1.0."}
+                <button type="button" className={`${link} ml-2`} onClick={agbSenden}>
+                  AGB per E-Mail senden
+                </button>
               </dd>
             </div>
             <div>

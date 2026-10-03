@@ -1,6 +1,7 @@
 import { createBooking, getOffer, getSettings } from "@/lib/db";
 import { getShopStatus } from "@/lib/shopStatus";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
+import { TERMS_VERSION } from "@/lib/legal/terms";
 import { notifyAdminOfBooking } from "@/lib/adminNotify";
 import { autoLinkBooking } from "@/lib/students/db";
 import { classOptionsForOffer, offerSubjects, subjectLabel, validateSelection } from "@/lib/subjectRules";
@@ -174,6 +175,11 @@ export async function POST(request) {
     notes: notes?.trim() || "",
     guardianConsent: true,
     consents,
+    // AGB-Version, der zugestimmt wurde, samt Zeitpunkt und Kanal (Website).
+    termsVersion: TERMS_VERSION,
+    termsAcceptedAt: consentTimestamp,
+    bookingChannel: "online",
+    ...(earlyStartRequired ? { earlyStartConsent: { given: true, at: consentTimestamp } } : {}),
     ...(isSession
       ? {
           requestedDate,

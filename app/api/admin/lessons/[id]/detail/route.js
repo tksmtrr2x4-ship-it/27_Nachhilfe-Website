@@ -4,7 +4,7 @@ import { getBooking } from "@/lib/db";
 import { getEntry } from "@/lib/bookkeeping/db";
 import { isBillableSession } from "@/lib/lessons/rules";
 import { getStudent } from "@/lib/students/db";
-import { findCustomerByEmail, getCustomer, getInvoice, listUnbilledSessions } from "@/lib/invoicing/db";
+import { findCustomerByEmail, getCustomer, getInvoice, linesFromBooking, listUnbilledSessions } from "@/lib/invoicing/db";
 import { lessonDateOf } from "@/lib/bookings/order";
 import { listLessons } from "@/lib/lessons/db";
 import { baueTagebuch } from "@/lib/admin/stundeDetail";
@@ -55,13 +55,27 @@ export async function GET(request, { params }) {
       verlauf,
       letzter,
       invoice: invoice ? { ...invoice, sendLog: undefined, lastEmail: undefined } : null,
-      abrechenbar: offen.map((b) => ({
-        _id: b._id,
-        studentId: b.studentId || null,
-        datum: lessonDateOf(b),
-        beschreibung: `Nachhilfe ${b.subject || b.offerSnapshot?.subject || ""}, ${b.offerSnapshot?.durationLabel || ""}`.trim(),
-        preisCent: b.offerSnapshot?.priceCents || 0,
-      })),
+      // Eine Stunde kann mehrere Positionen haben (Ausfallvergütung: Stundenanteil
+      // und Vorbereitung) – dieselben Zeilen wie im späteren Entwurf.
+      abrechenbar: offen.flatMap((b) =>
+        b.ausfall && b.heldStatus === "missed" && !b.ausfall.aufgehoben
+          ? linesFromBooking(b).map((z) => ({
+              _id: b._id,
+              studentId: b.studentId || null,
+              datum: z.date || lessonDateOf(b),
+              beschreibung: z.description,
+              preisCent: z.unitPriceCents * z.quantity,
+            }))
+          : [
+              {
+                _id: b._id,
+                studentId: b.studentId || null,
+                datum: lessonDateOf(b),
+                beschreibung: `Nachhilfe ${b.subject || b.offerSnapshot?.subject || ""}, ${b.offerSnapshot?.durationLabel || ""}`.trim(),
+                preisCent: b.offerSnapshot?.priceCents || 0,
+              },
+            ]
+      ),
     });
   } catch (err) {
     return adminErrorResponse(err, "Stunde");

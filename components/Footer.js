@@ -97,6 +97,13 @@ export default function Footer({ siteName, contactEmail, contactPhone, logo }) {
                 </Link>
               </li>
             </ul>
+            {/* Widerrufsfunktion (§ 356a BGB): auf jeder Seite erreichbar. */}
+            <Link
+              href="/vertrag-widerrufen"
+              className="mt-3 inline-block rounded-full border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-500 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-300 dark:hover:text-indigo-400"
+            >
+              Vertrag widerrufen
+            </Link>
           </div>
         </div>
         <p className="mt-8 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">

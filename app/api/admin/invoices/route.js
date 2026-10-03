@@ -7,7 +7,7 @@ import {
   getCustomer,
   findOrCreateCustomerFromBooking,
   getBookingsByIds,
-  lineFromBooking,
+  linesFromBooking,
 } from "@/lib/invoicing/db";
 import { normalizeLine, normalizeRecipient } from "@/lib/invoicing/validation";
 import { invoiceErrorResponse, isOverdue } from "@/lib/invoicing/api";
@@ -67,7 +67,7 @@ export async function POST(request) {
         (String(b.parentEmail || "").toLowerCase() === customer.emailLower || profileIds.has(b.studentId))
     );
     const lines = [
-      ...usable.map(lineFromBooking),
+      ...usable.flatMap(linesFromBooking),
       ...(Array.isArray(body.lines) ? body.lines.map(normalizeLine) : []),
     ];
     // Name aus den Stunden zuerst: Bei Geschwistern mit gemeinsamer

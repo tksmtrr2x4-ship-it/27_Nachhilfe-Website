@@ -6,8 +6,8 @@ import { hatAusfallVerguetung, isBillableSession } from "../lib/lessons/rules.js
 import { lessonState } from "../lib/lessons/state.js";
 import { istOffen } from "../lib/invoicing/offene.js";
 
-// Regeln aus § 6 AGB: halber Stundenpreis plus die Hälfte der individuell
-// angegebenen Vorbereitungszeit (15 €/h bis Klasse 9, 25 €/h ab Klasse 10).
+// Regeln aus § 6 AGB: späte Absage 50 %, Nichterscheinen 100 % des Stundenpreises,
+// plus die Hälfte der individuell angegebenen Vorbereitungszeit (15 €/h bis Klasse 9, 25 €/h ab Klasse 10).
 
 test("Satz nach Klassenstufe: Grenze zwischen 9 und 10", () => {
   assert.equal(vorbereitungsSatzCent("8"), 1500);
@@ -18,12 +18,21 @@ test("Satz nach Klassenstufe: Grenze zwischen 9 und 10", () => {
   assert.equal(vorbereitungsSatzCent("Oberstufe"), null);
 });
 
-test("Klasse 8, 25 € Stunde, 60 Min. Vorbereitung → 12,50 € + 7,50 €", () => {
-  const r = berechneAusfall({ art: "no_show", stundenpreisCent: 2500, vorbereitungMin: 60, satzCent: 1500 });
+test("Klasse 8, 25 € Stunde, 60 Min. Vorbereitung, späte Absage → 12,50 € + 7,50 €", () => {
+  const r = berechneAusfall({ art: "late_cancel", stundenpreisCent: 2500, vorbereitungMin: 60, satzCent: 1500 });
+  assert.equal(r.prozent, 50);
   assert.equal(r.stundenCent, 1250);
   assert.equal(r.vorbereitungCent, 750);
   assert.equal(r.totalCent, 2000);
   assert.equal(r.termsVersion, "2.0");
+});
+
+test("Nichterscheinen: 100 % des Stundenpreises, Vorbereitung weiter 50 % der Zeit", () => {
+  const r = berechneAusfall({ art: "no_show", stundenpreisCent: 2500, vorbereitungMin: 60, satzCent: 1500 });
+  assert.equal(r.prozent, 100);
+  assert.equal(r.stundenCent, 2500);
+  assert.equal(r.vorbereitungCent, 750);
+  assert.equal(r.totalCent, 3250);
 });
 
 test("Klasse 11, 90 Min. Vorbereitung zu 25 €/h → 45 Min. = 18,75 €", () => {
@@ -34,7 +43,7 @@ test("Klasse 11, 90 Min. Vorbereitung zu 25 €/h → 45 Min. = 18,75 €", () =
 });
 
 test("Rundung auf ganze Cent, Summe der Positionen = Betrag", () => {
-  const r = berechneAusfall({ art: "no_show", stundenpreisCent: 1999, vorbereitungMin: 35, satzCent: 1500 });
+  const r = berechneAusfall({ art: "late_cancel", stundenpreisCent: 1999, vorbereitungMin: 35, satzCent: 1500 });
   assert.equal(r.stundenCent, 1000); // 999,5 → 1000
   assert.equal(r.vorbereitungCent, 438); // 4,375 € → 4,38 €
   assert.equal(r.totalCent, r.stundenCent + r.vorbereitungCent);
@@ -47,7 +56,7 @@ test("Vorbereitungszeit ist Pflicht: fehlt sie, gibt es keine Berechnung", () =>
 });
 
 function versaeumt(over = {}) {
-  const a = berechneAusfall({ art: "no_show", stundenpreisCent: 2500, vorbereitungMin: 60, satzCent: 1500 });
+  const a = berechneAusfall({ art: "late_cancel", stundenpreisCent: 2500, vorbereitungMin: 60, satzCent: 1500 });
   return {
     _id: "b1",
     status: "confirmed",

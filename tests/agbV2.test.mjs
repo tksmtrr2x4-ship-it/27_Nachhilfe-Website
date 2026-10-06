@@ -20,6 +20,8 @@ test("AGB 2.0 nennt Frist, Prozentsatz, Vorbereitungssätze, Wartezeit und Zahlu
   const t = alsText(AGB_SECTIONS);
   assert.match(t, /bis 24 Stunden vor Beginn/);
   assert.match(t, /50 % des Stundenpreises/);
+  assert.match(t, /Nichterscheinen ohne Absage 100 % des Stundenpreises/);
+  assert.match(t, /gilt ab dem 06\.10\.2026/);
   assert.match(t, /50 % der für den Termin aufgewendeten Vorbereitungszeit/);
   assert.match(t, /bis Klasse 9 zu 15,00 € je Stunde, ab Klasse 10 zu 25,00 € je Stunde/);
   assert.match(t, /15 Minuten/);
@@ -55,8 +57,8 @@ test("Fassung einer Buchung: ältere Datensätze gelten als 1.0", () => {
 test("Absageregel und Rechnungssatz kommen aus der Konfiguration", () => {
   assert.equal(cancelRuleShort(), `Kostenfrei absagen bis ${CANCEL_FREE_HOURS} Std. vorher`);
   assert.match(cancelRuleLong(), /zuzüglich Vorbereitungskosten \(§ 6 AGB\)/);
-  assert.match(agbSatzFuerRechnung("2.0"), /Es gelten die AGB in der Fassung vom 03\.10\.2026 \(Version 2\.0\)/);
-  assert.match(agbSatzFuerRechnung("1.0"), /Version 1\.0 \(gültig für Verträge bis 02\.10\.2026\)/);
+  assert.match(agbSatzFuerRechnung("2.0"), /Es gelten die AGB in der Fassung vom 06\.10\.2026 \(Version 2\.0\)/);
+  assert.match(agbSatzFuerRechnung("1.0"), /Version 1\.0 \(gültig für Verträge bis 05\.10\.2026\)/);
 });
 
 test("Widerrufsbelehrung erwähnt die Online-Widerrufsfunktion und die Eingangsbestätigung", () => {

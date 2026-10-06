@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AUSFALL_ARTEN, berechneAusfall, vorbereitungsSatzCent } from "@/lib/ausfall/berechnung";
+import { prozentFuerArt } from "@/lib/ausfall/berechnung";
 import { PREP_PERCENT, WAIT_MINUTES, CANCEL_FREE_HOURS } from "@/lib/legal/terms";
 import { Button, Modal, errorText, formatPrice, input, label } from "@/components/admin/ui";
 
@@ -65,7 +66,7 @@ export default function AusfallDialog({ lesson, adminFetch, notify, onClose, onS
     <Modal title="Termin versäumt – Ausfallvergütung" onClose={onClose}>
       <form onSubmit={speichern} className="space-y-4 text-sm">
         <p className="text-[var(--ck-muted)]">
-          Nach § 6 AGB wird {art === "late_cancel" ? "bei später Absage (nach Ablauf der kostenfreien Frist von " + CANCEL_FREE_HOURS + " Std.)" : "bei Nichterscheinen"} die Hälfte des Stundenpreises berechnet, zusätzlich die Hälfte ({PREP_PERCENT} %) der
+          Nach § 6 AGB wird {art === "late_cancel" ? "bei später Absage (nach Ablauf der kostenfreien Frist von " + CANCEL_FREE_HOURS + " Std.)" : "bei Nichterscheinen"} {prozentFuerArt(art)} % des Stundenpreises berechnet, zusätzlich {PREP_PERCENT} % der
           Vorbereitungszeit. Die Vorbereitungskosten gehören immer dazu.
         </p>
 

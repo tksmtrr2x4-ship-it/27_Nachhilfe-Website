@@ -247,7 +247,7 @@ const chk = [
   "☐  Vertragsbestätigung per E-Mail geschickt am ______________ (Pflicht bei Vertragsschluss am Telefon)",
   "☐  Vorzeitiger Beginn vor Ablauf der 14-Tage-Widerrufsfrist:  ☐ ja   ☐ nein (per E-Mail bestätigt)",
   "☐  Einverstanden, Rechnungen per E-Mail zu erhalten",
-  "☐  Absageregelung nach AGB erklärt (24 Std. kostenfrei; danach 50 % plus Vorbereitung)",
+  "☐  Absageregelung nach AGB erklärt (24 Std. kostenfrei; danach 50 %, ohne Absage 100 %, plus Vorbereitung)",
 ];
 A.push(new Table({
   width: { size: CW, type: WidthType.DXA }, columnWidths: [CW], layout: TableLayoutType.FIXED,

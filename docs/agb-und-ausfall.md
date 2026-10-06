@@ -1,12 +1,12 @@
 # AGB 2.0 und Ausfallvergütung
 
-Stand: 03.10.2026. Alle Werte stehen in [../lib/legal/terms.js](../lib/legal/terms.js) – dort ändern, `TERMS_VERSION`
+Stand: 06.10.2026 (AGB 2.0 gilt für Verträge ab diesem Tag). Alle Werte stehen in [../lib/legal/terms.js](../lib/legal/terms.js) – dort ändern, `TERMS_VERSION`
 anheben, nirgends sonst.
 
 ## Was gilt
 
 - **Absage** in Textform bis 24 Std. vor Beginn: kostenfrei.
-- **Späte Absage / Nichterscheinen:** 50 % des Stundenpreises **plus** 50 % der Vorbereitungszeit
+- **Späte Absage:** 50 % des Stundenpreises, **Nichterscheinen ohne Absage:** 100 %, jeweils **plus** 50 % der Vorbereitungszeit
   (Minuten gibt Jill je Fall an; 15,00 €/h bis Klasse 9, 25,00 €/h ab Klasse 10). Die Vorbereitung fällt immer an,
   es gibt keinen Erlass durch spätere Stunden.
 - Wartezeit 15 Minuten, Zahlungsziel 14 Tage, Nachweis eines geringeren Schadens bleibt gestattet (§ 309 Nr. 5 BGB).

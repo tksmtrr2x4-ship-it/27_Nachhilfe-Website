@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
-import { LATE_CANCEL_PERCENT, MEETING_HOST, PAYMENT_TERM_DAYS, PREP_PERCENT, WAIT_MINUTES, cancelRuleShort } from "@/lib/legal/terms";
+import { LATE_CANCEL_PERCENT, MEETING_HOST, NO_SHOW_PERCENT, PAYMENT_TERM_DAYS, PREP_PERCENT, WAIT_MINUTES, cancelRuleShort } from "@/lib/legal/terms";
 import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Was passiert, wenn ich einen Termin absagen muss?",
-    a: `${cancelRuleShort()} – per E-Mail oder Messenger genügt. Bei späterer Absage oder wenn der Termin nicht wahrgenommen wird, berechne ich ${LATE_CANCEL_PERCENT} % des Stundenpreises, dazu ${PREP_PERCENT} % der Vorbereitungszeit für die Stunde (§ 6 der AGB). Ich warte ${WAIT_MINUTES} Minuten; verspätet ihr euch, endet die Stunde zur vereinbarten Zeit. Sage ich selbst ab, kostet das nichts und wir finden einen Ersatztermin.`,
+    a: `${cancelRuleShort()} – per E-Mail oder Messenger genügt. Bei späterer Absage berechne ich ${LATE_CANCEL_PERCENT} % des Stundenpreises, wenn der Termin ohne Absage nicht wahrgenommen wird ${NO_SHOW_PERCENT} %, jeweils dazu ${PREP_PERCENT} % der Vorbereitungszeit für die Stunde (§ 6 der AGB). Ich warte ${WAIT_MINUTES} Minuten; verspätet ihr euch, endet die Stunde zur vereinbarten Zeit. Sage ich selbst ab, kostet das nichts und wir finden einen Ersatztermin.`,
   },
   {
     q: "Wie bezahle ich?",

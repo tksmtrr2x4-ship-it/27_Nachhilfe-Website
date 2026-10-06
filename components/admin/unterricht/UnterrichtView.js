@@ -6,7 +6,7 @@ import { locationLabel } from "@/lib/format";
 import { lessonDateOf, lessonDateSource, monthKeyOf, monthLabel } from "@/lib/bookings/order";
 import { BILLING_STATES, KINDS, LESSON_STATES, PERIODS, activeFilterChips, filterBookings, periodRange } from "@/lib/bookings/filters";
 import { billingState, lessonState } from "@/lib/lessons/state";
-import { isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import { hatAusfallVerguetung, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import {
   Badge,
@@ -31,6 +31,7 @@ import {
 } from "@/components/admin/ui";
 import LessonForm from "@/components/admin/management/LessonForm";
 import TagebuchDialog from "@/components/admin/management/TagebuchDialog";
+import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
 import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 
 // Eine Liste für alles, was Unterricht ist: Online-Anfragen, bestätigte
@@ -48,6 +49,7 @@ export default function UnterrichtView({ filters, onFilters }) {
   const [loaded, setLoaded] = useState(false);
   const [lessonDialog, setLessonDialog] = useState(null); // "new" | Stunde
   const [notesDialog, setNotesDialog] = useState(null);
+  const [ausfallDialog, setAusfallDialog] = useState(null); // { lesson, art }
   const [custom, setCustom] = useState({ from: "", to: "" });
 
   const period = filters.period || "current";
@@ -258,7 +260,7 @@ export default function UnterrichtView({ filters, onFilters }) {
       },
       {
         label: "Rechnung",
-        hidden: b.status !== "confirmed" || Boolean(b.invoiceId) || b.heldStatus === "missed" || locked,
+        hidden: b.status !== "confirmed" || Boolean(b.invoiceId) || (b.heldStatus === "missed" && !hatAusfallVerguetung(b)) || locked,
         onClick: () => createInvoice(b),
       },
       {
@@ -271,10 +273,21 @@ export default function UnterrichtView({ filters, onFilters }) {
         hidden: b.source !== "admin" || locked,
         onClick: () => setLessonDialog(b),
       },
+      // Versäumt mit Ausfallvergütung (§ 6 AGB) – derselbe Dialog wie im Drawer.
       {
-        label: "Ausgefallen",
+        label: "Nicht erschienen",
+        hidden: !isSession || b.status !== "confirmed" || hatAusfallVerguetung(b) || locked,
+        onClick: () => setAusfallDialog({ lesson: b, art: "no_show" }),
+      },
+      {
+        label: "Zu spät abgesagt",
+        hidden: !isSession || b.status !== "confirmed" || hatAusfallVerguetung(b) || locked,
+        onClick: () => setAusfallDialog({ lesson: b, art: "late_cancel" }),
+      },
+      {
+        label: "Ausgefallen ohne Berechnung",
         hidden: !isSession || b.status !== "confirmed" || b.heldStatus === "missed" || locked,
-        onClick: () => patchBooking(b._id, { heldStatus: "missed" }, "Als ausgefallen markiert."),
+        onClick: () => patchBooking(b._id, { heldStatus: "missed" }, "Als ausgefallen markiert (ohne Berechnung)."),
       },
       {
         label: "Markierung zurücknehmen",
@@ -403,6 +416,21 @@ export default function UnterrichtView({ filters, onFilters }) {
             onCancel={() => setLessonDialog(null)}
           />
         </Modal>
+      ) : null}
+
+      {ausfallDialog ? (
+        <AusfallDialog
+          lesson={ausfallDialog.lesson}
+          vorgabeArt={ausfallDialog.art}
+          studentClass={students.find((s) => s._id === ausfallDialog.lesson.studentId)?.studentClass}
+          adminFetch={adminFetch}
+          notify={notify}
+          onClose={() => setAusfallDialog(null)}
+          onSaved={async () => {
+            setAusfallDialog(null);
+            await load();
+          }}
+        />
       ) : null}
 
       {notesDialog ? (

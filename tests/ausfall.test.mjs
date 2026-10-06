@@ -86,7 +86,7 @@ test("Versäumter Termin mit Ausfallvergütung ist abrechenbar, ohne sie nicht",
 });
 
 test("Anzeige und offene Posten kennen die Ausfallvergütung", () => {
-  assert.equal(lessonState(versaeumt(), "2026-10-06").label, "Versäumt · Ausfallvergütung");
+  assert.equal(lessonState(versaeumt(), "2026-10-06").label, "Zu spät abgesagt · Ausfallvergütung");
   assert.equal(lessonState(versaeumt({ ausfall: undefined }), "2026-10-06").label, "Ausgefallen");
   assert.equal(istOffen(versaeumt()), true);
   assert.equal(istOffen(versaeumt({ ausfall: undefined })), false);
@@ -101,4 +101,43 @@ test("Entwurf: Ausfall-Zeilen bleiben, Stundenpreis-Zeile einer versäumten Stun
   // Rücknahme: Ausfall-Zeilen sind dann überholt
   const zurueck = { ...b, ausfall: { ...b.ausfall, aufgehoben: true } };
   assert.match(grundGegenZeile(entwurf, zurueck, entwurf.lines[0]), /zurückgenommen/);
+});
+
+// ---- Rechnungsentwurf: Fehler vom 06.10.2026 ----
+
+test("Speichern eines Entwurfs behält das Kennzeichen der Ausfall-Positionen", async () => {
+  const { normalizeLine } = await import("../lib/invoicing/validation.js");
+  const [z1] = ausfallZeilen(versaeumt());
+  const gespeichert = normalizeLine({ ...z1, unitPrice: "12,50" });
+  assert.equal(gespeichert.ausfall, true);
+  assert.equal(gespeichert.unitPriceCents, z1.unitPriceCents);
+  // Freie Positionen bekommen kein Kennzeichen untergeschoben.
+  assert.equal("ausfall" in normalizeLine({ description: "Nachhilfe", quantity: 1, unitPrice: "20" }), false);
+  // Nach dem Speichern bleibt die Zeile im Entwurf (keine Bereinigung).
+  assert.equal(grundGegenZeile({ _id: "d1" }, versaeumt(), gespeichert), null);
+});
+
+test("Menge 0.5 wird wie auf dem Server als 0 gelesen – nicht als halber Betrag", async () => {
+  const { normalizeLine } = await import("../lib/invoicing/validation.js");
+  assert.equal(normalizeLine({ quantity: "0.5", unitPrice: "25" }).quantity, 0);
+});
+
+test("PDF-Vorschau eines Entwurfs mit 0 € bricht nicht ab (kein GiroCode)", async () => {
+  const { renderInvoicePdf } = await import("../lib/invoicing/pdf.js");
+  const pdf = await renderInvoicePdf({
+    invoice: {
+      type: "invoice",
+      status: "draft",
+      issueDate: "2026-10-06",
+      dueDate: "2026-10-20",
+      recipient: { name: "Test", street: "Teststraße 1", zip: "12345", city: "Teststadt" },
+      lines: [{ date: "", description: "Versäumt", minutes: 60, quantity: 0, unitPriceCents: 2500, totalCents: 0 }],
+      totalCents: 0,
+      agbVersion: "2.0",
+    },
+    seller: { name: "Lernsprung", street: "Str. 1", zip: "12345", city: "Ort", email: "a@b.de" },
+    bank: { accountHolder: "Test", iban: "DE89370400440532013000", bic: "" },
+    isDraft: true,
+  });
+  assert.ok(pdf.length > 1000);
 });

@@ -5,7 +5,9 @@ import { formatDate, formatPrice, locationLabel } from "@/lib/format";
 import { COURSE_LEVELS } from "@/lib/subjectRules";
 import { SCHOOL_TYPES, STUDENT_STATUS, LOCATION_TYPES } from "@/lib/students/validation";
 import { PAYMENT_METHODS } from "@/lib/bookkeeping/categories";
-import { JOURNAL_START_DATE, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import { JOURNAL_START_DATE, hatAusfallVerguetung, isBeforeJournalStart, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import { AUSFALL_KURZ } from "@/lib/ausfall/berechnung";
+import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
 import ElternNachricht from "@/components/admin/management/ElternNachricht";
 import SelbstauskunftKarte from "@/components/admin/management/SelbstauskunftKarte";
 import StudentForm from "@/components/admin/management/StudentForm";
@@ -23,6 +25,9 @@ const INVOICE_STATUS = { issued: "Ausgestellt", sent: "Versendet", paid: "Bezahl
 export function lessonState(lesson, today) {
   if (lesson.status === "cancelled") return { text: "Storniert", cls: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]" };
   if (lesson.status === "pending") return { text: "Anfrage offen", cls: "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]" };
+  if (lesson.heldStatus === "missed" && hatAusfallVerguetung(lesson)) {
+    return { text: AUSFALL_KURZ[lesson.ausfall.art] || "Versäumt", cls: "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]" };
+  }
   if (lesson.heldStatus === "missed") return { text: "Ausgefallen", cls: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]" };
   if (lesson.heldStatus === "held" || (lesson.requestedDate && lesson.requestedDate <= today)) return { text: "Abgehalten", cls: "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]" };
   return { text: "Geplant", cls: "bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" };
@@ -40,6 +45,16 @@ export function billingState(lesson, today) {
   return { text: "–", cls: "text-[var(--ck-faint)]" };
 }
 
+// „davon 1 nicht erschienen, 2 zu spät abgesagt“ – nur aktive Ausfallvergütungen.
+function ausfallHinweis(lessons) {
+  const zahl = (art) => lessons.filter((l) => hatAusfallVerguetung(l) && l.ausfall.art === art).length;
+  const teile = [
+    zahl("no_show") ? `${zahl("no_show")} nicht erschienen` : null,
+    zahl("late_cancel") ? `${zahl("late_cancel")} zu spät abgesagt` : null,
+  ].filter(Boolean);
+  return teile.length ? `davon ${teile.join(", ")}` : undefined;
+}
+
 export default function StudentDetail({ id, adminFetch, pin, setNotice, customers, onCreateInvoice, onBack, onDeleted }) {
   const { confirm, ask } = useDialogs();
   const loescheBuchung = useBuchungLoeschen();
@@ -50,6 +65,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
   const [editing, setEditing] = useState(false);
   const [lessonDialog, setLessonDialog] = useState(null); // "new" | lesson
   const [notesDialog, setNotesDialog] = useState(null); // lesson
+  const [ausfallDialog, setAusfallDialog] = useState(null); // { lesson, art }
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [settleDialog, setSettleDialog] = useState(false);
   const [selected, setSelected] = useState([]);
@@ -98,6 +114,22 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       refresh();
     } catch (err) {
       setNotice(err.message);
+    }
+  }
+
+  async function ausfallZuruecknehmen(lesson) {
+    const ok = await confirm({
+      title: "Ausfallvergütung zurücknehmen?",
+      message: "Die Stunde bleibt als ausgefallen markiert, wird aber nicht mehr berechnet. Der Vorgang bleibt im Ausfallprotokoll stehen.",
+      confirmLabel: "Zurücknehmen",
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/lessons/${lesson._id}/ausfall`, { method: "DELETE", body: JSON.stringify({}) });
+      setNotice("Ausfallvergütung zurückgenommen.");
+      await refresh();
+    } catch (err) {
+      setNotice(errorText(err));
     }
   }
 
@@ -213,7 +245,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Stat title="Abgehaltene Stunden" value={stats.held} hint={clockHours(stats.heldMinutes)} />
         <Stat title="Geplant" value={stats.upcoming} />
-        <Stat title="Ausgefallen" value={stats.missed} />
+        <Stat title="Ausgefallen" value={stats.missed} hint={ausfallHinweis(lessons)} />
         <Stat title="Offen abzurechnen" value={formatPrice(stats.billableCents)} hint={plural(stats.billable, "Stunde", "Stunden")} tone={stats.billable > 0 ? "amber" : "slate"} />
         <Stat title="Bezahlt (Journal)" value={formatPrice(stats.paidCents)} tone="green" />
       </div>
@@ -426,6 +458,12 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                     <td className="py-2 pr-3">{formatPrice(l.offerSnapshot?.priceCents || 0)}</td>
                     <td className="py-2 pr-3">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${state.cls}`}>{state.text}</span>
+                      {hatAusfallVerguetung(l) ? (
+                        <span className="mt-1 block max-w-[14rem] text-xs text-[var(--ck-muted)]">
+                          Ausfallvergütung {l.ausfall.prozent} % von {formatPrice(l.ausfall.stundenpreisCent)} + Vorbereitung {l.ausfall.vorbereitungMin} Min.
+                          {l.ausfall.absageAm ? ` · Absage ${l.ausfall.absageAm}` : ""}
+                        </span>
+                      ) : null}
                     </td>
                     <td className={`py-2 pr-3 ${bill.cls}`}>
                       {bill.text}
@@ -438,9 +476,24 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                             abgehalten
                           </button>
                         )}
+                        {!locked && l.status === "confirmed" && (l.offerSnapshot?.type || "session") === "session" && !hatAusfallVerguetung(l) && (
+                          <>
+                            <button className={link} onClick={() => setAusfallDialog({ lesson: l, art: "no_show" })}>
+                              nicht erschienen
+                            </button>
+                            <button className={link} onClick={() => setAusfallDialog({ lesson: l, art: "late_cancel" })}>
+                              zu spät abgesagt
+                            </button>
+                          </>
+                        )}
+                        {!locked && hatAusfallVerguetung(l) && (
+                          <button className={link} onClick={() => ausfallZuruecknehmen(l)}>
+                            Ausfall zurücknehmen
+                          </button>
+                        )}
                         {!locked && !cancelled && l.heldStatus !== "missed" && (
-                          <button className={link} onClick={() => setHeld(l._id, "missed")}>
-                            ausgefallen
+                          <button className={link} onClick={() => setHeld(l._id, "missed")} title="Ausgefallen, ohne etwas zu berechnen (z. B. von mir abgesagt)">
+                            ausgefallen ohne Berechnung
                           </button>
                         )}
                         {!cancelled && (
@@ -545,6 +598,21 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
             }}
           />
         </Modal>
+      )}
+
+      {ausfallDialog && (
+        <AusfallDialog
+          lesson={ausfallDialog.lesson}
+          vorgabeArt={ausfallDialog.art}
+          studentClass={student.studentClass}
+          adminFetch={adminFetch}
+          notify={setNotice}
+          onClose={() => setAusfallDialog(null)}
+          onSaved={async () => {
+            setAusfallDialog(null);
+            await refresh();
+          }}
+        />
       )}
 
       {notesDialog && (

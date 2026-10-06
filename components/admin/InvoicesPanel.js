@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatDate, formatPrice } from "@/lib/format";
+import { AUSFALL_KURZ } from "@/lib/ausfall/berechnung";
+import { hatAusfallVerguetung } from "@/lib/lessons/rules";
 
 // Rechnungsbereich im Admin. Alle Schritte sind manuell: Entwurf anlegen →
 // prüfen/bearbeiten → PDF-Vorschau → "Ausstellen" (Nummer, PDF/A-3) →
@@ -552,12 +554,23 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
 
   function updateLine(index, field, value) {
     setDirty(true);
-    setLines((ls) => ls.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
+    // Wer den Einzelpreis ändert, ändert ihn wirklich: der gespeicherte
+    // Cent-Wert ginge sonst beim Speichern vor (normalizeLine).
+    const patch = field === "unitPrice" ? { unitPrice: value, unitPriceCents: undefined } : { [field]: value };
+    setLines((ls) => ls.map((l, i) => (i === index ? { ...l, ...patch } : l)));
   }
 
   function addLine(fromSession) {
     setDirty(true);
-    if (fromSession) {
+    if (fromSession?.lines?.length) {
+      // Fertige Positionen vom Server (bei versäumten Terminen die zwei
+      // Ausfall-Positionen nach § 6 AGB).
+      setLines((ls) => [
+        ...ls,
+        ...fromSession.lines.map((l) => ({ ...l, minutes: l.minutes ?? "", unitPrice: centsToEuroInput(l.unitPriceCents) })),
+      ]);
+      setUnbilled((u) => u.filter((s) => s._id !== fromSession._id));
+    } else if (fromSession) {
       const snap = fromSession.offerSnapshot || {};
       setLines((ls) => [
         ...ls,
@@ -583,7 +596,8 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
 
   function lineTotalCents(l) {
     const cents = Math.round(parseFloat(String(l.unitPrice || "0").replace(/\./g, "").replace(",", ".")) * 100) || 0;
-    return (Number(l.quantity) || 0) * cents;
+    // Menge wie auf dem Server: ganze Zahl (lib/invoicing/validation.js).
+    return (Number.parseInt(l.quantity, 10) || 0) * cents;
   }
   const total = lines.reduce((sum, l) => sum + lineTotalCents(l), 0);
 
@@ -598,7 +612,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
         inputMode={field === "minutes" || field === "quantity" ? "numeric" : field === "unitPrice" ? "decimal" : undefined}
         value={value}
         disabled={!isDraft}
-        onChange={(e) => updateLine(i, field, e.target.value)}
+        onChange={(e) => updateLine(i, field, field === "quantity" || field === "minutes" ? e.target.value.replace(/\D/g, "") : e.target.value)}
         className={`${input} mt-0 ${widthClass}`}
       />
     );
@@ -790,13 +804,17 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
         <div className="min-w-0 space-y-4 lg:col-span-2">
           {isDraft && unbilled.length > 0 && (
             <div className="rounded-2xl border border-[var(--ck-pos)]/35 bg-[var(--ck-pos-soft)] p-4">
-              <p className="text-sm font-semibold text-[var(--ck-pos)]">Abgehaltene, noch nicht abgerechnete Stunden</p>
+              <p className="text-sm font-semibold text-[var(--ck-pos)]">Noch nicht abgerechnete Stunden</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {unbilled.map((s) => (
                   <li key={s._id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <span>
                       {formatDate(s.requestedDate)} {s.requestedTime} Uhr · {s.subject} · {s.offerSnapshot?.durationLabel} · {formatPrice(s.offerSnapshot?.priceCents || 0)}
-                      {s.heldStatus !== "held" && <span className="ml-1 text-xs text-[var(--ck-pos)]">(automatisch: Termin vergangen)</span>}
+                      {hatAusfallVerguetung(s) ? (
+                        <span className="ml-1 text-xs font-semibold text-[var(--ck-warn)]">({AUSFALL_KURZ[s.ausfall.art] || "Versäumt"} · Ausfallvergütung)</span>
+                      ) : s.heldStatus !== "held" ? (
+                        <span className="ml-1 text-xs text-[var(--ck-pos)]">(automatisch: Termin vergangen)</span>
+                      ) : null}
                     </span>
                     <button onClick={() => addLine(s)} className="text-sm font-semibold text-[var(--ck-pos)] hover:underline">
                       + Hinzufügen

@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AUSFALL_ARTEN, berechneAusfall, vorbereitungsSatzCent } from "@/lib/ausfall/berechnung";
-import { prozentFuerArt } from "@/lib/ausfall/berechnung";
+import { AUSFALL_ARTEN, AUSFALL_KURZ, berechneAusfall, prozentFuerArt, vorbereitungsSatzCent } from "@/lib/ausfall/berechnung";
 import { PREP_PERCENT, WAIT_MINUTES, CANCEL_FREE_HOURS } from "@/lib/legal/terms";
 import { Button, Modal, errorText, formatPrice, input, label } from "@/components/admin/ui";
 
@@ -10,11 +9,18 @@ import { Button, Modal, errorText, formatPrice, input, label } from "@/component
 // zeit gibt man je Fall selbst an (Pflicht, keine Vorgabe); der Satz folgt der
 // Klassenstufe und lässt sich überschreiben. Die Rechnung steht live darunter –
 // dieselbe Rechnung wie später im Entwurf (lib/ausfall/berechnung.js).
+//
+// Geöffnet wird er überall, wo man eine Stunde anklickt: Cockpit-/Kalender-
+// Drawer, Liste „Unterricht“ und Stundenliste der Schülerakte. `vorgabeArt`
+// ist die dort gewählte Art („Nicht erschienen“ / „Zu spät abgesagt“).
 
-export default function AusfallDialog({ lesson, adminFetch, notify, onClose, onSaved }) {
+export default function AusfallDialog({ lesson, vorgabeArt = "no_show", studentClass, adminFetch, notify, onClose, onSaved }) {
+  // Nach einer Rücknahme steht in offerSnapshot wieder der Stundenpreis; der
+  // ursprüngliche Preis bleibt in ausfall.stundenpreisCent.
   const stundenpreisCent = lesson.ausfall?.stundenpreisCent ?? lesson.offerSnapshot?.priceCents ?? 0;
-  const vorgabeSatz = vorbereitungsSatzCent(lesson.studentClass);
-  const [art, setArt] = useState("no_show");
+  const klasse = lesson.studentClass || studentClass;
+  const vorgabeSatz = vorbereitungsSatzCent(klasse);
+  const [art, setArt] = useState(AUSFALL_ARTEN[vorgabeArt] ? vorgabeArt : "no_show");
   const [minuten, setMinuten] = useState("");
   const [satz, setSatz] = useState(vorgabeSatz ? (vorgabeSatz / 100).toFixed(2).replace(".", ",") : "");
   const [absageAm, setAbsageAm] = useState("");
@@ -53,7 +59,7 @@ export default function AusfallDialog({ lesson, adminFetch, notify, onClose, onS
           wartezeitEingehalten: wartezeit,
         }),
       });
-      notify("Ausfallvergütung vermerkt – sie ist jetzt abrechenbar.");
+      notify(`${AUSFALL_KURZ[art]} – vermerkt. Die Ausfallvergütung ist jetzt abrechenbar.`);
       await onSaved();
     } catch (err) {
       notify(errorText(err));
@@ -63,23 +69,35 @@ export default function AusfallDialog({ lesson, adminFetch, notify, onClose, onS
   }
 
   return (
-    <Modal title="Termin versäumt – Ausfallvergütung" onClose={onClose}>
+    <Modal title="Termin versäumt oder zu spät abgesagt" onClose={onClose}>
       <form onSubmit={speichern} className="space-y-4 text-sm">
         <p className="text-[var(--ck-muted)]">
           Nach § 6 AGB wird {art === "late_cancel" ? "bei später Absage (nach Ablauf der kostenfreien Frist von " + CANCEL_FREE_HOURS + " Std.)" : "bei Nichterscheinen"} {prozentFuerArt(art)} % des Stundenpreises berechnet, zusätzlich {PREP_PERCENT} % der
           Vorbereitungszeit. Die Vorbereitungskosten gehören immer dazu.
         </p>
 
-        <label className="block">
-          <span className={label}>Was ist passiert?</span>
-          <select className={input} value={art} onChange={(e) => setArt(e.target.value)}>
-            {Object.entries(AUSFALL_ARTEN).map(([key, text]) => (
-              <option key={key} value={key}>
-                {text}
-              </option>
+        <fieldset>
+          <legend className={label}>Was ist passiert?</legend>
+          <div className="mt-1 grid gap-2 sm:grid-cols-2">
+            {Object.keys(AUSFALL_ARTEN).map((key) => (
+              <label
+                key={key}
+                className={`flex cursor-pointer items-start gap-2 rounded-[12px] border p-3 ${
+                  art === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)]" : "border-[var(--ck-line)]"
+                }`}
+              >
+                <input type="radio" name="ausfall-art" value={key} checked={art === key} onChange={() => setArt(key)} className="mt-1" />
+                <span>
+                  <span className="block font-semibold">{AUSFALL_KURZ[key]}</span>
+                  <span className="block text-xs text-[var(--ck-muted)]">
+                    {prozentFuerArt(key)} % des Stundenpreises
+                    {key === "late_cancel" ? ` (Absage weniger als ${CANCEL_FREE_HOURS} Std. vorher)` : " (ohne Absage)"}
+                  </span>
+                </span>
+              </label>
             ))}
-          </select>
-        </label>
+          </div>
+        </fieldset>
 
         {art === "late_cancel" ? (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -109,7 +127,7 @@ export default function AusfallDialog({ lesson, adminFetch, notify, onClose, onS
             <input className={input} inputMode="decimal" required value={satz} onChange={(e) => setSatz(e.target.value)} />
             <span className="mt-1 block text-xs text-[var(--ck-faint)]">
               {vorgabeSatz
-                ? `Klasse ${lesson.studentClass}: ${formatPrice(vorgabeSatz)} pro Stunde (bis Klasse 9: 15 €, ab Klasse 10: 25 €).`
+                ? `Klasse ${klasse}: ${formatPrice(vorgabeSatz)} pro Stunde (bis Klasse 9: 15 €, ab Klasse 10: 25 €).`
                 : "Die Klasse ist nicht lesbar – bitte den Satz selbst eintragen."}
             </span>
           </label>

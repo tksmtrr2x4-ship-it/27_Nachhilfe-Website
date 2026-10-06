@@ -263,9 +263,14 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                       Absagen
                     </Button>
                     {l.status === "confirmed" && l.offerSnapshot?.type === "session" && !hatAusfallVerguetung(l) && !isLessonLocked(l) ? (
-                      <Button onClick={() => setAusfallOffen(true)} title="Termin versäumt: halber Stundenpreis plus Vorbereitung (§ 6 AGB)">
-                        Versäumt · Ausfallvergütung
-                      </Button>
+                      <>
+                        <Button onClick={() => setAusfallOffen("no_show")} title="Ohne Absage nicht erschienen – Ausfallvergütung nach § 6 AGB">
+                          Nicht erschienen
+                        </Button>
+                        <Button onClick={() => setAusfallOffen("late_cancel")} title="Zu spät abgesagt – Ausfallvergütung nach § 6 AGB">
+                          Zu spät abgesagt
+                        </Button>
+                      </>
                     ) : null}
                     {hatAusfallVerguetung(l) && !isLessonLocked(l) ? <Button onClick={ausfallZurueck}>Ausfallvergütung zurücknehmen</Button> : null}
                     <Button
@@ -490,6 +495,8 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     {ausfallOffen && l ? (
       <AusfallDialog
         lesson={l}
+        vorgabeArt={ausfallOffen}
+        studentClass={daten.student?.studentClass}
         adminFetch={adminFetch}
         notify={notify}
         onClose={() => setAusfallOffen(false)}

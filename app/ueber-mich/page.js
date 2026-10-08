@@ -120,7 +120,7 @@ export default async function UeberMichPage() {
         <p className="mt-3">
           Ich unterrichte selbst seit mittlerweile zwei Jahren. Ich weiß noch aus erster Hand,
           wie die Prüfungen aufgebaut sind und biete deswegen Nachhilfe, die wirklich
-          Qualität trägt. In Villingen-Schwenningen biete ich Einzelunterricht bei mir, bei dir zuhause
+          Qualität trägt. In Villingen-Schwenningen biete ich Einzelunterricht bei mir, bei Ihnen zu Hause
           oder online an – in{" "}
           {SUBJECTS.map((subject, i) => (
             <span key={subject.key}>
@@ -133,7 +133,7 @@ export default async function UeberMichPage() {
               </Link>
             </span>
           ))}
-          , ab Klasse 8 bis zum Abitur. Preise und Termine findest du bei den{" "}
+          , ab Klasse 8 bis zum Abitur. Preise und Termine finden Sie bei den{" "}
           <Link
             href="/angebote"
             className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"

@@ -93,10 +93,10 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
     return (
       <div className="mt-12 rounded-3xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-8 text-center shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-          Für welche Klasse suchst du Nachhilfe?
+          Für welche Klasse suchen Sie Nachhilfe?
         </h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Dann zeige ich dir direkt die passenden Angebote.
+          Dann zeige ich Ihnen direkt die passenden Angebote.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {classOptions.map((c) => (
@@ -150,7 +150,7 @@ export default function OffersBrowser({ packageOffers, sessionOffers, settings, 
 
       {noMatches ? (
         <div className="mt-8 rounded-2xl border border-dashed border-slate-300 p-12 text-center text-slate-500 dark:border-slate-700 dark:text-slate-400">
-          Für Klasse {activeClass} habe ich aktuell kein passendes Angebot. Schreib mir gerne über
+          Für Klasse {activeClass} habe ich aktuell kein passendes Angebot. Schreiben Sie mir gern über
           die <Link href="/faq" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">Kontaktmöglichkeiten</Link>, dann
           finden wir eine Lösung.
         </div>

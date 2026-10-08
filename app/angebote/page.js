@@ -33,7 +33,7 @@ export default async function AngebotePage() {
           Nachhilfe-Angebote in Villingen-Schwenningen
         </h1>
         <p className="mt-4 text-slate-600 dark:text-slate-300">
-          Kursabo oder einzelne Stunde – such dir aus, was zu dir passt. Beides fragst du
+          Kursabo oder einzelne Stunde – suchen Sie aus, was passt. Beides fragen Sie
           unverbindlich an: Ich bestätige per E-Mail, bezahlt wird danach.
         </p>
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
@@ -54,7 +54,7 @@ export default async function AngebotePage() {
 
       {offers.length === 0 ? (
         <div className="mt-12 rounded-2xl border border-dashed border-slate-300 p-12 text-center text-slate-500 dark:border-slate-700 dark:text-slate-400">
-          Aktuell sind keine Angebote verfügbar. Schau bald wieder vorbei.
+          Aktuell sind keine Angebote verfügbar. Schauen Sie bald wieder vorbei.
         </div>
       ) : (
         <OffersBrowser

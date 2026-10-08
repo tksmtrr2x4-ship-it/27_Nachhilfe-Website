@@ -51,7 +51,7 @@ export async function POST(request, { params }) {
     const { einwilligungVorhanden } = await bekannteRechnungsdaten(booking);
     if (body.eInvoiceConsent !== true && !einwilligungVorhanden) {
       return Response.json(
-        { error: "Bitte bestätige, dass du die Rechnung elektronisch per E-Mail erhalten möchtest." },
+        { error: "Bitte bestätigen Sie, dass Sie die Rechnung elektronisch per E-Mail erhalten möchten." },
         { status: 400 }
       );
     }

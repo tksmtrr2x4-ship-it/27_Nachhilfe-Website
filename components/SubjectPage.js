@@ -70,8 +70,8 @@ export default function SubjectPage({ subject, business }) {
             Bildungsplan 2016 des Gymnasiums in Baden-Württemberg ({subject.planName})
           </a>
           . Der Plan legt Inhalte für Doppeljahrgänge fest – in welchem Halbjahr genau welches
-          Thema drankommt, entscheidet deine Schule, und an anderen Schularten liegen einzelne
-          Themen teils in anderen Klassenstufen. Wir richten uns nach deinem aktuellen Stoff.
+          Thema drankommt, entscheidet die Schule, und an anderen Schularten liegen einzelne
+          Themen teils in anderen Klassenstufen. Wir richten uns nach dem aktuellen Stoff.
         </p>
         {/* TODO Jill: Werden auch Realschule/Gemeinschaftsschule bzw. berufliche Gymnasien abgedeckt? Die Themenlisten folgen nur dem Plan des allgemeinbildenden Gymnasiums. */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -143,13 +143,13 @@ export default function SubjectPage({ subject, business }) {
           {/* TODO Jill: Umkreis (15 km laut Angeboten) prüfen und ggf. konkrete Orte in der Umgebung ergänzen. */}
           <p className="max-w-prose">
             Die {subject.label} gebe ich in Villingen und in Schwenningen sowie im Umkreis von
-            etwa 15 Kilometern – bei mir oder bei dir zuhause. Wer weiter weg wohnt oder sich die
-            Fahrt sparen möchte, kann den Unterricht auch online machen: Du brauchst nur einen
-            Laptop oder ein Tablet mit Internetverbindung, den Link bekommst du vorab per E-Mail.
+            etwa 15 Kilometern – bei mir oder bei Ihnen zu Hause. Wer weiter weg wohnt oder sich die
+            Fahrt sparen möchte, kann den Unterricht auch online machen: Nötig ist nur ein Laptop
+            oder Tablet mit Internetverbindung, den Link erhalten Sie vorab per E-Mail.
           </p>
           <p className="max-w-prose">
             Was eine Einzel- oder Doppelstunde kostet, hängt von der Klassenstufe ab. Alle
-            aktuellen Preise findest du auf der{" "}
+            aktuellen Preise finden Sie auf der{" "}
             <Link
               href="/angebote"
               className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -164,7 +164,7 @@ export default function SubjectPage({ subject, business }) {
             >
               häufigen Fragen
             </Link>
-            , und wer ich bin, erfährst du unter{" "}
+            , und wer ich bin, erfahren Sie unter{" "}
             <Link
               href="/ueber-mich"
               className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"

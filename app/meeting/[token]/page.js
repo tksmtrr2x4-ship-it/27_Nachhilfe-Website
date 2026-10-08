@@ -13,7 +13,7 @@ import MeetingPayGate from "@/components/MeetingPayGate";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Dein Online-Termin",
+  title: "Ihr Online-Termin",
   robots: { index: false, follow: false },
 };
 
@@ -30,7 +30,7 @@ export default async function MeetingPage({ params }) {
       <div className="mx-auto max-w-xl px-6 py-20 text-center">
         <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Termin storniert</h1>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-          Dieser Termin wurde storniert. Bei Fragen melde dich gerne per E-Mail oder Telefon.
+          Dieser Termin wurde storniert. Bei Fragen melden Sie sich gern per E-Mail oder Telefon.
         </p>
       </div>
     );
@@ -52,7 +52,7 @@ export default async function MeetingPage({ params }) {
     booking.status !== "paid" &&
     !invoiceUnlocked;
 
-  const heading = `Dein Online-Termin${
+  const heading = `Ihr Online-Termin${
     booking.requestedDate ? ` – ${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : ""
   }`;
 
@@ -101,13 +101,13 @@ export default async function MeetingPage({ params }) {
 
       {invoiceUnlocked ? (
         <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
-          Zahlung per Rechnung: Du erhältst nach der Stunde eine Rechnung über {formatPrice(priceCents)} als
+          Zahlung per Rechnung: Sie erhalten nach der Stunde eine Rechnung über {formatPrice(priceCents)} als
           PDF per E-Mail an {booking.parentEmail}, zahlbar innerhalb von 14 Tagen.
         </p>
       ) : null}
 
       <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-        Dieser Link ist persönlich für deinen Termin und sollte nicht weitergegeben werden.
+        Dieser Link ist persönlich für Ihren Termin und sollte nicht weitergegeben werden.
       </p>
     </div>
   );

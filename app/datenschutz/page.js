@@ -15,14 +15,14 @@ export default function DatenschutzPage() {
       <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Datenschutzerklärung</h1>
 
       <div className="mt-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50/60 p-6 text-sm text-slate-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-slate-300">
-        <h2 className="font-semibold text-slate-900 dark:text-white">Kurz erklärt, für dich</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-white">Kurz erklärt</h2>
         <p className="mt-2">
-          Wenn du oder deine Eltern eine Nachhilfestunde bei mir buchen, speichere ich Name,
-          Klasse, Fach und Kontaktdaten, damit ich die Buchung organisieren und dir Bescheid
-          geben kann. Nur wenige Firmen (z.B. mein E-Mail- und Server-Anbieter Strato) haben
+          Wenn Sie eine Schülerakte anlegen oder eine Nachhilfestunde bei mir buchen, speichere ich
+          Name, Klasse, Fach und Kontaktdaten, damit ich die Nachhilfe organisieren und Ihnen
+          Bescheid geben kann. Nur wenige Firmen (z.B. mein E-Mail- und Server-Anbieter Strato) haben
           technisch mit den Daten zu tun, niemand nutzt sie für Werbung. Ich hebe die Daten so lange auf, wie
           es gesetzlich vorgeschrieben oder für die Abwicklung nötig ist, danach lösche ich
-          sie. Fragen dazu beantworte ich dir jederzeit unter j.hils@lernsprung-vs.de. Die
+          sie. Fragen dazu beantworte ich Ihnen jederzeit unter j.hils@lernsprung-vs.de. Die
           ausführliche, rechtlich vollständige Fassung steht direkt darunter.
         </p>
       </div>

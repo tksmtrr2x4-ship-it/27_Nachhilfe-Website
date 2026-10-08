@@ -113,7 +113,7 @@ export async function POST(request) {
     }
     if (locationType === "student" && !locationAddress?.trim()) {
       return Response.json(
-        { error: "Bitte deine Adresse für den Unterrichtsort angeben." },
+        { error: "Bitte geben Sie Ihre Adresse für den Unterrichtsort an." },
         { status: 400 }
       );
     }

@@ -52,7 +52,7 @@ export default function MeetingPayGate({
   async function bestaetigeBekannteAdresse() {
     setError("");
     if (!einwilligungVorhanden && !eInvoiceConsent) {
-      setError("Bitte bestätige den Erhalt der Rechnung per E-Mail.");
+      setError("Bitte bestätigen Sie den Erhalt der Rechnung per E-Mail.");
       return;
     }
     setUnlocking(true);
@@ -85,7 +85,7 @@ export default function MeetingPayGate({
     e.preventDefault();
     setError("");
     if (!einwilligungVorhanden && !eInvoiceConsent) {
-      setError("Bitte bestätige den Erhalt der Rechnung per E-Mail.");
+      setError("Bitte bestätigen Sie den Erhalt der Rechnung per E-Mail.");
       return;
     }
     setLoading(true);
@@ -162,13 +162,13 @@ export default function MeetingPayGate({
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
         {zeigeFormular ? (
           <>
-            Der Termin ist bestätigt. Die Stunde ({priceLabel}) bezahlst du per Rechnung: Gib dafür kurz
+            Der Termin ist bestätigt. Die Stunde ({priceLabel}) bezahlen Sie per Rechnung: Geben Sie dafür kurz
             die Rechnungsadresse an – danach wird der Video-Unterricht auf dieser Seite freigeschaltet.
           </>
         ) : (
           <>
-            Der Termin ist bestätigt. Die Stunde ({priceLabel}) bezahlst du per Rechnung – deine
-            Anschrift liegt mir schon vor, du musst sie nicht noch einmal eintippen.
+            Der Termin ist bestätigt. Die Stunde ({priceLabel}) bezahlen Sie per Rechnung – Ihre
+            Anschrift liegt mir schon vor, Sie müssen sie nicht noch einmal eintippen.
           </>
         )}
       </p>
@@ -237,8 +237,8 @@ export default function MeetingPayGate({
           <h3 className="text-sm font-semibold">Rechnungsadresse</h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {adresseAus === "akte"
-              ? "Aus deiner Schülerakte übernommen – bitte kurz prüfen."
-              : "Aus deiner letzten Stunde übernommen – bitte kurz prüfen."}
+              ? "Aus Ihrer Schülerakte übernommen – bitte kurz prüfen."
+              : "Aus Ihrer letzten Stunde übernommen – bitte kurz prüfen."}
           </p>
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-100">
             <p className="font-medium">{bekannteAdresse.name}</p>
@@ -278,7 +278,7 @@ export default function MeetingPayGate({
       ) : null}
 
       <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-        Nach der Stunde erhältst du eine E-Rechnung (PDF) mit allen Angaben zur Überweisung.
+        Nach der Stunde erhalten Sie eine E-Rechnung (PDF) mit allen Angaben zur Überweisung.
       </p>
 
       {dialog ? (
@@ -293,7 +293,7 @@ export default function MeetingPayGate({
               Rechnungsadresse angekommen
             </h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Vielen Dank – deine Angaben sind gespeichert. Die Rechnung über {priceLabel} bekommst du
+              Vielen Dank – Ihre Angaben sind gespeichert. Die Rechnung über {priceLabel} erhalten Sie
               nach der Stunde als PDF per E-Mail.
             </p>
             <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">

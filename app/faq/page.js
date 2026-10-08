@@ -22,27 +22,27 @@ const FAQS = [
   },
   {
     q: "Wie läuft eine Nachhilfestunde ab?",
-    a: "Du sagst mir vorab kurz, wo es gerade klemmt (Thema, Klassenarbeit, Hausaufgaben). In der Stunde arbeite ich mit dir gezielt daran – mit Erklärung, Übungsaufgaben und direktem Feedback. Am Ende bekommst du oft kleine Übungen für zuhause mit.",
+    a: "Sie oder Ihr Kind sagen mir vorab kurz, wo es gerade klemmt (Thema, Klassenarbeit, Hausaufgaben). In der Stunde arbeite ich gezielt daran – mit Erklärung, Übungsaufgaben und direktem Feedback. Am Ende gibt es oft kleine Übungen für zuhause.",
   },
   {
     q: "Wie funktioniert der Online-Unterricht?",
-    a: `Ich unterrichte per Video-Call mit digitalem Whiteboard auf meiner eigenen Plattform (${MEETING_HOST}), auf dem ich mit dir gemeinsam rechne und skizziere. Du brauchst nur einen Laptop oder ein Tablet mit Kamera, Mikrofon und stabiler Internetverbindung, den Link bekommst du vorab per E-Mail. Fällt die Verbindung auf meiner Seite aus, hole ich die Zeit nach oder berechne sie nicht. Aufnahmen sind ohne Zustimmung aller Beteiligten nicht erlaubt.`,
+    a: `Ich unterrichte per Video-Call mit digitalem Whiteboard auf meiner eigenen Plattform (${MEETING_HOST}), auf dem wir gemeinsam rechnen und skizzieren. Nötig ist nur ein Laptop oder Tablet mit Kamera, Mikrofon und stabiler Internetverbindung; den Link erhalten Sie vorab per E-Mail. Fällt die Verbindung auf meiner Seite aus, hole ich die Zeit nach oder berechne sie nicht. Aufnahmen sind ohne Zustimmung aller Beteiligten nicht erlaubt.`,
   },
   {
     q: "Was passiert, wenn ich einen Termin absagen muss?",
-    a: `${cancelRuleShort()} – per E-Mail oder Messenger genügt. Bei späterer Absage berechne ich ${LATE_CANCEL_PERCENT} % des Stundenpreises, wenn der Termin ohne Absage nicht wahrgenommen wird ${NO_SHOW_PERCENT} %, jeweils dazu ${PREP_PERCENT} % der Vorbereitungszeit für die Stunde (§ 6 der AGB). Ich warte ${WAIT_MINUTES} Minuten; verspätet ihr euch, endet die Stunde zur vereinbarten Zeit. Sage ich selbst ab, kostet das nichts und wir finden einen Ersatztermin.`,
+    a: `${cancelRuleShort()} – per E-Mail oder Messenger genügt. Bei späterer Absage berechne ich ${LATE_CANCEL_PERCENT} % des Stundenpreises, wenn der Termin ohne Absage nicht wahrgenommen wird ${NO_SHOW_PERCENT} %, jeweils dazu ${PREP_PERCENT} % der Vorbereitungszeit für die Stunde (§ 6 der AGB). Ich warte ${WAIT_MINUTES} Minuten; bei Verspätung endet die Stunde trotzdem zur vereinbarten Zeit. Sage ich selbst ab, kostet das nichts und wir finden einen Ersatztermin.`,
   },
   {
     q: "Wie bezahle ich?",
-    a: `Online bezahlst du nichts. Die Buchung ist zunächst eine unverbindliche Anfrage; der Vertrag kommt mit meiner Bestätigung per E-Mail zustande. Abgerechnet wird per Rechnung (PDF per E-Mail, mit GiroCode für die Überweisung), zahlbar innerhalb von ${PAYMENT_TERM_DAYS} Tagen.`,
+    a: `Online bezahlen Sie nichts. Die Buchung ist zunächst eine unverbindliche Anfrage; der Vertrag kommt mit meiner Bestätigung per E-Mail zustande. Abgerechnet wird per Rechnung (PDF per E-Mail, mit GiroCode für die Überweisung), zahlbar innerhalb von ${PAYMENT_TERM_DAYS} Tagen.`,
   },
   {
     q: "In welchem Gebiet bietet Lernsprung Präsenzunterricht an?",
-    a: "Vor-Ort-Termine biete ich in Villingen-Schwenningen und der näheren Umgebung (ca. 15 km) an – entweder bei mir oder bei dir zuhause. Weiter entfernt oder deutschlandweit funktioniert der Unterricht online.",
+    a: "Vor-Ort-Termine biete ich in Villingen-Schwenningen und der näheren Umgebung (ca. 15 km) an – entweder bei mir oder bei Ihnen zu Hause. Weiter entfernt oder deutschlandweit funktioniert der Unterricht online.",
   },
   {
     q: "Was sollte ich zur ersten Stunde mitbringen?",
-    a: "Am besten dein aktuelles Schulbuch bzw. Heft zum Thema, deine letzte Klassenarbeit (falls vorhanden) und, falls schon bekannt, die Themen der nächsten Prüfung. Den Rest kläre ich mit dir in der ersten Stunde.",
+    a: "Am besten das aktuelle Schulbuch bzw. Heft zum Thema, die letzte Klassenarbeit (falls vorhanden) und, falls schon bekannt, die Themen der nächsten Prüfung. Den Rest klären wir in der ersten Stunde.",
   },
 ];
 
@@ -57,7 +57,7 @@ export default async function FaqPage() {
       </h1>
       <p className="mt-4 max-w-prose text-slate-600 dark:text-slate-300">
         Die wichtigsten Antworten rund um Ablauf, Online-Unterricht, Absagen und Bezahlung. Wenn
-        etwas fehlt, schreib mir einfach direkt.
+        etwas fehlt, schreiben Sie mir einfach direkt.
       </p>
 
       <div className="mt-10 divide-y divide-slate-200 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">

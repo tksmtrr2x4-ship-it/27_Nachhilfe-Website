@@ -162,21 +162,21 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       return;
     }
     if (!form.contractConsent) {
-      setError("Bitte bestätige die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung.");
+      setError("Bitte bestätigen Sie die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung.");
       return;
     }
     if (isSession) {
       if (!form.requestedDate || !form.requestedTime) {
-        setError("Bitte Datum und Uhrzeit für deinen Terminwunsch auswählen.");
+        setError("Bitte wählen Sie Datum und Uhrzeit für Ihren Terminwunsch.");
         return;
       }
       if (form.locationType === "student" && !form.locationAddress.trim()) {
-        setError("Bitte deine Adresse für den Unterrichtsort angeben.");
+        setError("Bitte geben Sie Ihre Adresse für den Unterrichtsort an.");
         return;
       }
     }
     if (showEarlyStartCheckbox && !form.earlyStartConsent) {
-      setError("Bitte bestätige den vorzeitigen Leistungsbeginn, um fortzufahren.");
+      setError("Bitte bestätigen Sie den vorzeitigen Leistungsbeginn, um fortzufahren.");
       return;
     }
 
@@ -215,7 +215,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             Angemeldet als {konto.kunde.name || konto.kunde.email}
           </p>
           <p className="mt-1 text-slate-600 dark:text-slate-300">
-            Deine Angaben sind schon eingetragen. Ändern kannst du sie hier oder dauerhaft in der{" "}
+            Ihre Angaben sind schon eingetragen. Ändern können Sie sie hier oder dauerhaft in der{" "}
             <a className="underline" href="/konto">
               Schülerakte
             </a>
@@ -249,7 +249,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="studentName" className={labelClass}>
-            Wie heißt du? *
+            Name der Schülerin / des Schülers *
           </label>
           <input
             id="studentName"
@@ -262,7 +262,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
         <div>
           <label htmlFor="studentClass" className={labelClass}>
-            In welche Klasse gehst du? *
+            Klasse *
           </label>
           <select
             id="studentClass"
@@ -281,7 +281,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
         <div>
           <label htmlFor="subject" className={labelClass}>
-            Welches Fach brauchst du? *
+            Fach *
           </label>
           <select
             id="subject"
@@ -477,7 +477,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
             {form.locationType === "student" ? (
               <>
                 <label htmlFor="locationAddress" className="sr-only">
-                  Deine Adresse
+                  Ihre Adresse
                 </label>
                 <input
                   id="locationAddress"

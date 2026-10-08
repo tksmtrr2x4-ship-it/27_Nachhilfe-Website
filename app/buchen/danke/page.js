@@ -4,7 +4,7 @@ import { formatPrice, formatDate, locationLabelForCustomer } from "@/lib/format"
 import { NOINDEX_FOLLOW } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Rückmeldung zu deiner Buchung", robots: NOINDEX_FOLLOW };
+export const metadata = { title: "Rückmeldung zu Ihrer Buchung", robots: NOINDEX_FOLLOW };
 
 export default async function DankePage({ searchParams }) {
   const { bookingId } = await searchParams;
@@ -34,7 +34,7 @@ export default async function DankePage({ searchParams }) {
             Vielen Dank, {booking.parentName}. Das Paket „{booking.offerSnapshot?.title}&quot; für{" "}
             {booking.studentName} ({booking.subject}) über{" "}
             {formatPrice(booking.offerSnapshot?.priceCents || 0)} ist bestätigt. Die Rechnung und die
-            Terminabstimmung bekommst du unter {booking.parentEmail}.
+            Terminabstimmung erhalten Sie unter {booking.parentEmail}.
           </p>
         </>
       )}

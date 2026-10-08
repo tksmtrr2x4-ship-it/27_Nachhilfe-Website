@@ -274,6 +274,44 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
       return (a.number || "") < (b.number || "") ? 1 : -1;
     });
 
+  // Aktionen einer Rechnung – als Spalte in der Tabelle (ab md) oder als Zeile
+  // unter der Karte (Handy).
+  const rechnungsAktionen = (inv, zeile = false) => (
+    <div className={zeile ? "flex flex-wrap items-center gap-x-4 gap-y-2" : "flex flex-col items-start gap-1"}>
+      <button onClick={() => openEditor(inv._id)} className={link}>
+        {inv.status === "draft" ? "Bearbeiten" : "Details"}
+      </button>
+      {inv.status === "draft" && (
+        <button onClick={() => issue(inv._id)} disabled={busy} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
+          Ausstellen
+        </button>
+      )}
+      {["issued", "sent", "paid", "cancelled"].includes(inv.status) && (
+        <button
+          onClick={() => openSend(inv._id)}
+          className={inv.sentCount > 0 ? link : "text-sm font-semibold text-[var(--ck-warn)] hover:text-[var(--ck-warn)]"}
+        >
+          {inv.sentCount > 0 ? "Erneut senden" : "Jetzt versenden"}
+        </button>
+      )}
+      {["issued", "sent"].includes(inv.status) && inv.type !== "storno" && (
+        <button onClick={() => markPaid(inv)} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
+          Bezahlt
+        </button>
+      )}
+      {["issued", "sent", "paid"].includes(inv.status) && inv.type !== "storno" && (
+        <button onClick={() => cancelInvoice(inv)} disabled={busy} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
+          Stornieren
+        </button>
+      )}
+      {inv.status === "draft" && (
+        <button onClick={() => deleteDraft(inv)} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
+          Löschen
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="mt-8 space-y-6">
       {paying && <PaymentDialog invoice={paying} onConfirm={confirmPaid} onClose={() => setPaying(null)} />}
@@ -307,7 +345,41 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <ul className="space-y-2 md:hidden">
+            {visible.length === 0 ? <li className="py-6 text-center text-sm text-[var(--ck-muted)]">Keine Rechnungen in dieser Ansicht.</li> : null}
+            {visible.map((inv) => (
+              <li
+                key={inv._id}
+                className={`rounded-[18px] p-4 ring-1 ring-[var(--ck-line)] ${inv.overdue ? "bg-[var(--ck-neg-soft)]" : "bg-[var(--ck-surface)]"}`}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold">
+                    {inv.number || <span className="font-normal text-[var(--ck-faint)]">Entwurf</span>}
+                    {inv.type === "storno" ? <span className="ml-1.5 text-xs font-normal text-[var(--ck-muted)]">Storno</span> : null}
+                  </span>
+                  <span className="shrink-0 font-semibold tabular-nums">{formatPrice(inv.totalCents || 0)}</span>
+                </div>
+                <p className="mt-0.5 truncate text-[14px]">{inv.recipient?.name}</p>
+                <p className="mt-0.5 text-[12.5px] text-[var(--ck-muted)]">
+                  {inv.issueDate ? formatDate(inv.issueDate) : "nicht ausgestellt"}
+                  {inv.dueDate && inv.type !== "storno" ? ` · fällig ${formatDate(inv.dueDate)}` : ""}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadge(inv)}`}>
+                    {inv.overdue ? "Überfällig" : STATUS_LABEL[inv.status] || inv.status}
+                  </span>
+                  {inv.sentCount > 0 ? (
+                    <span className="text-xs text-[var(--ck-muted)]">{inv.sentCount}× gesendet</span>
+                  ) : inv.status === "issued" ? (
+                    <span className="text-xs font-semibold text-[var(--ck-warn)]">noch nicht versendet</span>
+                  ) : null}
+                </div>
+                <div className="mt-3 border-t border-[var(--ck-line)] pt-3">{rechnungsAktionen(inv, true)}</div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="text-[var(--ck-muted)]">
                 <tr className="border-b border-[var(--ck-line)]">
@@ -346,39 +418,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                       ) : null}
                     </td>
                     <td className="py-2.5 pr-4">
-                      <div className="flex flex-col items-start gap-1">
-                        <button onClick={() => openEditor(inv._id)} className={link}>
-                          {inv.status === "draft" ? "Bearbeiten" : "Details"}
-                        </button>
-                        {inv.status === "draft" && (
-                          <button onClick={() => issue(inv._id)} disabled={busy} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
-                            Ausstellen
-                          </button>
-                        )}
-                        {["issued", "sent", "paid", "cancelled"].includes(inv.status) && (
-                          <button
-                            onClick={() => openSend(inv._id)}
-                            className={inv.sentCount > 0 ? link : "text-sm font-semibold text-[var(--ck-warn)] hover:text-[var(--ck-warn)]"}
-                          >
-                            {inv.sentCount > 0 ? "Erneut senden" : "Jetzt versenden"}
-                          </button>
-                        )}
-                        {["issued", "sent"].includes(inv.status) && inv.type !== "storno" && (
-                          <button onClick={() => markPaid(inv)} className="text-sm text-[var(--ck-pos)] hover:text-[var(--ck-pos)]">
-                            Bezahlt
-                          </button>
-                        )}
-                        {["issued", "sent", "paid"].includes(inv.status) && inv.type !== "storno" && (
-                          <button onClick={() => cancelInvoice(inv)} disabled={busy} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
-                            Stornieren
-                          </button>
-                        )}
-                        {inv.status === "draft" && (
-                          <button onClick={() => deleteDraft(inv)} className="text-sm text-[var(--ck-neg)] hover:text-[var(--ck-neg)]">
-                            Löschen
-                          </button>
-                        )}
-                      </div>
+                      {rechnungsAktionen(inv)}
                     </td>
                   </tr>
                 ))}
@@ -621,7 +661,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
     if (!isDraft) return null;
     return (
       <button onClick={() => removeLine(i)} className="text-xs text-[var(--ck-neg)]" title="Position entfernen">
-        ✕ entfernen
+        Entfernen
       </button>
     );
   }

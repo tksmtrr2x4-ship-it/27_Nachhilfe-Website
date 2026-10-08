@@ -92,6 +92,8 @@ const PFADE = {
   ),
   schliessen: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
   pfeil: <path d="M9.5 6l6 6-6 6" />,
+  zurueck: <path d="M14.5 6l-6 6 6 6" />,
+  haken: <path d="m5 12.5 4.5 4.5L19 7.5" />,
 
   // Schnellaktionen und Unterreiter
   telefon: (

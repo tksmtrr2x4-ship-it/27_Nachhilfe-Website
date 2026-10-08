@@ -6,6 +6,7 @@ import { SCHOOL_TYPES, STUDENT_STATUS } from "@/lib/students/validation";
 import StudentForm from "@/components/admin/management/StudentForm";
 import StudentDetail from "@/components/admin/management/StudentDetail";
 import { btnPrimary, btnSecondary, card, errorText, input } from "@/components/admin/management/ui";
+import { Chevron } from "@/components/admin/ui/Cockpit";
 
 const STATUS_BADGE = {
   active: "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]",
@@ -118,8 +119,8 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
   return (
     <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end gap-3">
-        <input className={`${input} mt-0 w-full sm:w-64`} placeholder="Suchen (Name, Schule)" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <select className={`${input} mt-0 w-auto`} value={status} onChange={(e) => setStatus(e.target.value)}>
+        <input className={`${input} mt-0 sm:!w-64`} placeholder="Suchen (Name, Schule)" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <select className={`${input} mt-0 sm:!w-auto`} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">Alle</option>
           {Object.entries(STUDENT_STATUS).map(([k, v]) => (
             <option key={k} value={k}>
@@ -170,7 +171,38 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
       {loaded && students.length === 0 ? (
         <p className="text-sm text-[var(--ck-muted)]">Keine Profile{status !== "all" ? " mit diesem Status" : ""}.</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--ck-line)]">
+        <>
+        <ul className="space-y-2 md:hidden">
+          {students.map((s) => (
+            <li key={s._id}>
+              <button
+                type="button"
+                onClick={() => setSelectedId(s._id)}
+                className="flex w-full items-center gap-3 rounded-[18px] bg-[var(--ck-surface)] p-3.5 text-left ring-1 ring-[var(--ck-line)] transition active:scale-[0.99]"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--ck-surface2)] text-sm font-bold">
+                  {initialen(s.name)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold">{s.name}</span>
+                  <span className="block truncate text-[13px] text-[var(--ck-muted)]">
+                    {[s.studentClass ? `Klasse ${s.studentClass}` : null, s.subjects?.map((x) => x.subject).join(", ") || null].filter(Boolean).join(" · ") || "–"}
+                  </span>
+                  <span className="mt-1.5 flex flex-wrap gap-1.5">
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[s.status] || STATUS_BADGE.active}`}>{STUDENT_STATUS[s.status]}</span>
+                    {s.stats.billable > 0 ? (
+                      <span className="rounded-full bg-[var(--ck-warn-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--ck-warn)]">
+                        {s.stats.billable} offen · {formatPrice(s.stats.billableCents)}
+                      </span>
+                    ) : null}
+                  </span>
+                </span>
+                <Chevron />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-2xl border border-[var(--ck-line)] md:block">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>
@@ -216,7 +248,17 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );
+}
+
+function initialen(name) {
+  return String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((t) => t[0].toUpperCase())
+    .join("");
 }

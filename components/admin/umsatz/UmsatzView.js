@@ -20,6 +20,7 @@ import {
   Card,
   CardHead,
   Modal,
+  MonatsWahl,
   Stat,
   centsToInput,
   errorText,
@@ -177,20 +178,12 @@ export default function UmsatzView() {
     <div className="space-y-5">
       {/* Monatswahl */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setMonat((m) => monatVerschieben(m, -1))} aria-label="Vorheriger Monat">
-            ◀
-          </Button>
-          <span className="min-w-44 text-center text-lg font-semibold tracking-[-0.3px]">{monatsName(monat)}</span>
-          <Button onClick={() => setMonat((m) => monatVerschieben(m, 1))} aria-label="Nächster Monat">
-            ▶
-          </Button>
-          {monat !== monatVon(heute) ? (
-            <Button variant="ghost" onClick={() => setMonat(monatVon(heute))}>
-              Heute
-            </Button>
-          ) : null}
-        </div>
+        <MonatsWahl
+          name={monatsName(monat)}
+          onZurueck={() => setMonat((m) => monatVerschieben(m, -1))}
+          onWeiter={() => setMonat((m) => monatVerschieben(m, 1))}
+          onHeute={monat !== monatVon(heute) ? () => setMonat(monatVon(heute)) : null}
+        />
         <a
           href={`/api/admin/umsatz/export?monat=${monat}`}
           className="rounded-full bg-[var(--ck-surface2)] px-4.5 py-2.5 text-sm font-semibold transition hover:bg-[var(--ck-surface3)]"

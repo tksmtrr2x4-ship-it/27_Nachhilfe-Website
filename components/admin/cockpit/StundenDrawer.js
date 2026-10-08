@@ -205,18 +205,18 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
             </div>
           </div>
 
-          <div className="mt-5 flex gap-1 overflow-x-auto border-b border-[var(--ck-line)] px-7">
+          <div className="mt-5 flex gap-1 border-b border-[var(--ck-line)] px-2 sm:overflow-x-auto sm:px-7">
             {REITER.map(([key, text]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setAktiv(key)}
                 aria-current={aktiv === key ? "page" : undefined}
-                className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-semibold transition ${
+                className={`-mb-px flex min-w-0 flex-1 flex-col items-center gap-1 border-b-2 px-1 py-2.5 text-[12px] font-semibold transition sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3 sm:py-3 sm:text-sm ${
                   aktiv === key ? "border-[var(--ck-accent)] text-[var(--ck-text)]" : "border-transparent text-[var(--ck-muted)]"
                 }`}
               >
-                <Ikone name={SYMBOL_FUER_ANSICHT[key]} className={`h-[17px] w-[17px] ${aktiv === key ? "text-[var(--ck-accent)]" : ""}`} />
+                <Ikone name={SYMBOL_FUER_ANSICHT[key]} className={`h-5 w-5 sm:h-[17px] sm:w-[17px] ${aktiv === key ? "text-[var(--ck-accent)]" : ""}`} />
                 {text}
               </button>
             ))}

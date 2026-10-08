@@ -17,16 +17,17 @@ export function Toolbar({ title, hint, children }) {
   );
 }
 
-// Filterzeile: umbricht auf dem Handy, statt seitlich zu scrollen.
+// Filterzeile: am Handy zwei Spalten (Suche über die volle Breite), ab sm
+// eine umbrechende Reihe – nie seitlich scrollen.
 export function FilterRow({ children }) {
-  return <div className="flex flex-wrap items-end gap-3">{children}</div>;
+  return <div className="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap">{children}</div>;
 }
 
 export function SelectFilter({ label: text, value, onChange, options, className = "" }) {
   return (
-    <label className={`block ${className}`}>
+    <label className={`block min-w-0 ${className}`}>
       <span className={label}>{text}</span>
-      <select className={`${input} min-w-40`} value={value} onChange={(e) => onChange(e.target.value)}>
+      <select className={`${input} w-full sm:w-auto sm:min-w-40`} value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map(([key, name]) => (
           <option key={key} value={key}>
             {name}
@@ -39,7 +40,7 @@ export function SelectFilter({ label: text, value, onChange, options, className 
 
 export function SearchInput({ value, onChange, placeholder = "Suchen …", label: text = "Suche" }) {
   return (
-    <label className="block min-w-0 flex-1">
+    <label className="col-span-2 block min-w-0 sm:min-w-[14rem] sm:flex-1">
       <span className={label}>{text}</span>
       <input type="search" className={input} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </label>

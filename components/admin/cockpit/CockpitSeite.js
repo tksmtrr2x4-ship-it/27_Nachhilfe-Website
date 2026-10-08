@@ -489,7 +489,7 @@ function Todos({ todos, onChanged }) {
               t.erledigt ? "border-[var(--ck-accent)] bg-[var(--ck-accent)]" : "border-[var(--ck-faint)]"
             }`}
           >
-            {t.erledigt ? "✓" : ""}
+            {t.erledigt ? <Ikone name="haken" className="h-3.5 w-3.5" strich={3} /> : null}
           </button>
           <span className="min-w-0 flex-1">
             <span className={`block text-sm font-semibold ${t.erledigt ? "text-[var(--ck-faint)] line-through" : ""}`}>{t.text}</span>

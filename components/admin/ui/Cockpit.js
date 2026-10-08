@@ -194,7 +194,7 @@ function chartLabel(values, labels) {
 
 // ---------- Drawer ----------
 
-// Schiebt von rechts herein, verdunkelt den Hintergrund. Schließt per ✕,
+// Schiebt von rechts herein, verdunkelt den Hintergrund. Schließt per Kreuz,
 // Klick daneben und Escape. Der Fokus bleibt drin, solange er offen ist.
 export function Drawer({ open, onClose, labelledBy, children }) {
   const panel = useRef(null);
@@ -242,7 +242,7 @@ export function Drawer({ open, onClose, labelledBy, children }) {
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`fixed inset-0 z-40 bg-black/55 backdrop-blur-[3px] transition-opacity duration-250 ${
+        className={`fixed inset-0 z-40 bg-black/55 transition-opacity duration-250 sm:backdrop-blur-[3px] ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -253,9 +253,10 @@ export function Drawer({ open, onClose, labelledBy, children }) {
         aria-labelledby={labelledBy}
         aria-hidden={open ? undefined : "true"}
         inert={!open}
-        className={`fixed inset-y-0 right-0 z-50 flex w-[min(620px,100vw)] flex-col border-l border-[var(--ck-line)] bg-[var(--ck-panel)] transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
-          open ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-50 flex w-[min(620px,100vw)] flex-col overscroll-contain border-l border-[var(--ck-line)] bg-[var(--ck-panel)] transition-[transform,visibility] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
+          open ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {children}
       </aside>
@@ -269,9 +270,10 @@ export function DrawerClose({ onClose }) {
       type="button"
       onClick={onClose}
       aria-label="Schließen"
-      className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full bg-[var(--ck-surface2)] text-lg text-[var(--ck-muted)] transition hover:text-[var(--ck-text)]"
+      className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-[var(--ck-surface2)] text-[var(--ck-muted)] transition hover:text-[var(--ck-text)] sm:right-5 sm:top-5"
+      style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
     >
-      ✕
+      <Ikone name="schliessen" className="h-[18px] w-[18px]" strich={2} />
     </button>
   );
 }
@@ -352,5 +354,33 @@ export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
         </button>
       ))}
     </nav>
+  );
+}
+
+// Monatswechsel für Kalender und Umsatzrechner: Pfeile als Symbole (die
+// Zeichen ◀ ▶ zeigt das iPhone als bunte Emoji). Am Handy über die volle
+// Breite, Monat mittig.
+export function MonatsWahl({ name, onZurueck, onWeiter, onHeute }) {
+  const pfeil =
+    "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--ck-surface2)] text-[var(--ck-text)] transition hover:bg-[var(--ck-surface3)] active:scale-95";
+  return (
+    <div className="flex w-full items-center gap-2 sm:w-auto">
+      <button type="button" onClick={onZurueck} aria-label="Vorheriger Monat" className={pfeil}>
+        <Ikone name="zurueck" className="h-5 w-5" strich={2} />
+      </button>
+      <span className="min-w-0 flex-1 text-center text-lg font-semibold tracking-[-0.3px] sm:min-w-44 sm:flex-none">{name}</span>
+      <button type="button" onClick={onWeiter} aria-label="Nächster Monat" className={pfeil}>
+        <Ikone name="pfeil" className="h-5 w-5" strich={2} />
+      </button>
+      {onHeute ? (
+        <button
+          type="button"
+          onClick={onHeute}
+          className="shrink-0 rounded-full px-3 py-2 text-sm font-semibold text-[var(--ck-accent)] transition hover:bg-[var(--ck-accent-soft)]"
+        >
+          Heute
+        </button>
+      ) : null}
+    </div>
   );
 }

@@ -105,6 +105,48 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
   const years = [];
   for (let y = currentYear; y >= 2024; y--) years.push(y);
 
+  // Beleg und Aktionen einer Journalzeile – gemeinsam für Tabelle (ab md)
+  // und Karten (Handy).
+  const belegZelle = (e) =>
+    e.receipt ? (
+      <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/receipt`).catch((err) => setNotice(err.message))}>
+        Beleg anzeigen
+      </button>
+    ) : e.source === "invoice" ? (
+      <span className="text-xs text-[var(--ck-muted)]">Rechnung {e.invoiceNumber}</span>
+    ) : !e.reverses ? (
+      <ReceiptUpload onFile={(file) => attach(e, file)} />
+    ) : null;
+
+  const aktionen = (e) => {
+    const inactive = e.reversedBy || e.reverses;
+    // Ausstellen oder die bereits ausgestellte öffnen – Regeln in
+    // lib/bookkeeping/quittungRules.js.
+    const action = quittungAction(e);
+    return (
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {!inactive && e.source !== "invoice" && (
+          <button className={link} onClick={() => reverse(e)}>
+            Storno
+          </button>
+        )}
+        {action.kind === "none" ? null : (
+          <button
+            className={link}
+            title={action.kind === "open" ? "Archivierte Quittung öffnen" : "Quittung mit eigener Nummer ausstellen"}
+            onClick={() =>
+              action.kind === "open"
+                ? openQuittung({ pin, entry: e, notify: setNotice })
+                : issueQuittung({ adminFetch, pin, entry: e, notify: setNotice }).then((q) => q && refresh())
+            }
+          >
+            {action.kind === "open" ? "Quittung öffnen" : "Quittung ausstellen"}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end gap-3">
@@ -235,14 +277,16 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
       </div>
 
       <div className="min-w-0 space-y-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <h3 className="mr-auto font-semibold text-[var(--ck-text)]">Journal {year}</h3>
-          <select className={`${input} mt-0 w-auto`} value={filter.type} onChange={(e) => setFilter((f) => ({ ...f, type: e.target.value }))}>
+        {/* Am Handy zwei Spalten, ab md eine Reihe. „w-full“ steckt in input,
+            daher die Breite ab md ausdrücklich überschreiben. */}
+        <div className="grid grid-cols-2 items-end gap-2 md:flex md:flex-wrap md:gap-3">
+          <h3 className="col-span-2 font-semibold text-[var(--ck-text)] md:mr-auto">Journal {year}</h3>
+          <select className={`${input} mt-0 md:!w-auto`} value={filter.type} onChange={(e) => setFilter((f) => ({ ...f, type: e.target.value }))}>
             <option value="all">Alle Arten</option>
             <option value="income">Einnahmen</option>
             <option value="expense">Ausgaben</option>
           </select>
-          <select className={`${input} mt-0 w-auto`} value={filter.month} onChange={(e) => setFilter((f) => ({ ...f, month: e.target.value }))}>
+          <select className={`${input} mt-0 md:!w-auto`} value={filter.month} onChange={(e) => setFilter((f) => ({ ...f, month: e.target.value }))}>
             <option value="all">Alle Monate</option>
             {MONTHS.map((m, i) => (
               <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -250,7 +294,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
               </option>
             ))}
           </select>
-          <select className={`${input} mt-0 w-auto`} value={filter.method} onChange={(e) => setFilter((f) => ({ ...f, method: e.target.value }))}>
+          <select className={`${input} col-span-2 mt-0 md:!w-auto`} value={filter.method} onChange={(e) => setFilter((f) => ({ ...f, method: e.target.value }))}>
             <option value="all">Alle Zahlungsarten</option>
             {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
               <option key={k} value={k}>
@@ -258,9 +302,45 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
               </option>
             ))}
           </select>
-          <input className={`${input} mt-0 w-full sm:w-56`} placeholder="Suchen" value={filter.q} onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))} />
+          <input className={`${input} col-span-2 mt-0 md:!w-56`} placeholder="Suchen" value={filter.q} onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))} />
         </div>
-        <div className="overflow-x-auto rounded-2xl border border-[var(--ck-line)]">
+        <ul className="space-y-2 md:hidden">
+          {shown.length === 0 ? <li className="py-4 text-sm text-[var(--ck-muted)]">Keine Einträge.</li> : null}
+          {shown.map((e) => {
+            const inactive = e.reversedBy || e.reverses;
+            return (
+              <li key={e._id} className={`rounded-[18px] bg-[var(--ck-surface)] p-4 ring-1 ring-[var(--ck-line)] ${inactive ? "text-[var(--ck-faint)]" : ""}`}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-xs text-[var(--ck-muted)]">
+                    {formatDate(e.date)}
+                    {e.entryNumber ? <span className="font-mono"> · {e.entryNumber}</span> : null}
+                  </span>
+                  <span className={`shrink-0 font-semibold tabular-nums ${e.amountCents < 0 ? "text-[var(--ck-neg)]" : ""}`}>{formatPrice(e.amountCents)}</span>
+                </div>
+                {e.description ? <p className="mt-1 text-[15px] font-semibold leading-snug">{e.description}</p> : null}
+                <p className="mt-0.5 text-[13px] text-[var(--ck-muted)]">
+                  <span className={e.type === "income" ? "text-[var(--ck-pos)]" : ""}>{ENTRY_TYPES[e.type]}</span>
+                  {[categoryLabel(e.type, e.category), PAYMENT_METHODS[e.method], e.counterparty]
+                    .filter(Boolean)
+                    .map((teil) => ` · ${teil}`)
+                    .join("")}
+                </p>
+                {e.reversedBy ? <p className="mt-0.5 text-xs">storniert</p> : null}
+                {e.reverses ? <p className="mt-0.5 text-xs">Grund: {e.reversalReason}</p> : null}
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--ck-line)] pt-3 text-sm">
+                  {belegZelle(e)}
+                  {e.studentId ? (
+                    <button className={link} onClick={() => onShowStudent(e.studentId)}>
+                      Schülerprofil
+                    </button>
+                  ) : null}
+                  {aktionen(e)}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-2xl border border-[var(--ck-line)] md:block">
           <table className="w-full min-w-[960px] text-left text-sm">
             <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>
@@ -306,45 +386,8 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
                     </td>
                     <td className="px-3 py-2">{PAYMENT_METHODS[e.method]}</td>
                     <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold ${e.amountCents < 0 ? "text-[var(--ck-neg)]" : ""}`}>{formatPrice(e.amountCents)}</td>
-                    <td className="px-3 py-2">
-                      {e.receipt ? (
-                        <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/receipt`).catch((err) => setNotice(err.message))}>
-                          anzeigen
-                        </button>
-                      ) : e.source === "invoice" ? (
-                        <span className="text-xs text-[var(--ck-muted)]">Rechnung {e.invoiceNumber}</span>
-                      ) : !e.reverses ? (
-                        <ReceiptUpload onFile={(file) => attach(e, file)} />
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-x-3 gap-y-1">
-                        {!inactive && e.source !== "invoice" && (
-                          <button className={link} onClick={() => reverse(e)}>
-                            Storno
-                          </button>
-                        )}
-                        {(() => {
-                          // Ausstellen oder die bereits ausgestellte öffnen –
-                          // Regeln in lib/bookkeeping/quittungRules.js.
-                          const action = quittungAction(e);
-                          if (action.kind === "none") return null;
-                          return (
-                            <button
-                              className={link}
-                              title={action.kind === "open" ? "Archivierte Quittung öffnen" : "Quittung mit eigener Nummer ausstellen"}
-                              onClick={() =>
-                                action.kind === "open"
-                                  ? openQuittung({ pin, entry: e, notify: setNotice })
-                                  : issueQuittung({ adminFetch, pin, entry: e, notify: setNotice }).then((q) => q && refresh())
-                              }
-                            >
-                              {action.kind === "open" ? "Quittung öffnen" : "Quittung ausstellen"}
-                            </button>
-                          );
-                        })()}
-                      </div>
-                    </td>
+                    <td className="px-3 py-2">{belegZelle(e)}</td>
+                    <td className="px-3 py-2">{aktionen(e)}</td>
                   </tr>
                 );
               })}

@@ -146,7 +146,7 @@ export default function AdminShell({ children, logo = null }) {
       {/* ── Inhalt ─────────────────────────────────────────────────── */}
       <div className="min-w-0 flex-1">
         <header
-          className="sticky top-0 z-20 border-b border-[var(--ck-line)] bg-[var(--ck-bar)] backdrop-blur-xl md:border-transparent md:bg-transparent md:backdrop-blur-none"
+          className="sticky top-0 z-20 border-b border-[var(--ck-line)] bg-[var(--ck-bar)] md:static md:border-transparent md:bg-transparent"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
           <div className="mx-auto flex max-w-[1320px] items-center gap-3 px-4 py-3 sm:px-7 md:pb-2 md:pt-6">
@@ -202,7 +202,7 @@ export default function AdminShell({ children, logo = null }) {
       {/* ── Tab-Leiste (Handy) ─────────────────────────────────────── */}
       <nav
         aria-label="Bereiche"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--ck-line)] bg-[var(--ck-bar)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--ck-line)] bg-[var(--ck-bar)] md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <ul className="mx-auto flex max-w-lg px-1">

@@ -49,9 +49,10 @@ export function Stat({ title, value, hint, tone = "slate" }) {
   const t = tones[tone] || tones.slate;
   const valueColor = tone === "slate" ? "" : t.text;
   return (
-    <div className="min-w-0 rounded-[16px] bg-[var(--ck-surface2)] px-4 py-3.5">
-      <p className="text-[13px] font-medium text-[var(--ck-muted)]">{title}</p>
-      <p className={`mt-1 text-[22px] font-semibold tracking-[-0.5px] tabular-nums ${valueColor}`}>{value}</p>
+    <div className="min-w-0 rounded-[16px] bg-[var(--ck-surface2)] px-3 py-3 sm:px-4 sm:py-3.5">
+      <p className="truncate text-[13px] font-medium text-[var(--ck-muted)]">{title}</p>
+      {/* Am Handy wächst die Zahl mit der Breite mit, damit auch „1.234,50 €“ in eine Drittel-Kachel passt. */}
+      <p className={`mt-1 whitespace-nowrap text-[clamp(15px,4.6vw,22px)] font-semibold tracking-[-0.5px] tabular-nums sm:text-[22px] ${valueColor}`}>{value}</p>
       {hint ? <p className="mt-1 text-xs text-[var(--ck-muted)]">{hint}</p> : null}
     </div>
   );

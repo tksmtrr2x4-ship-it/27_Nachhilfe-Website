@@ -7,7 +7,7 @@ import { monatVerschieben, monatVon, monatsName } from "@/lib/umsatz/berechnung"
 import { stundenNachTag, tageDesRasters } from "@/lib/admin/kalender";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import StundenDrawer from "@/components/admin/cockpit/StundenDrawer";
-import { Badge, Button, Card, CardHead, Stat, errorText, formatDate, formatPrice, todayIso } from "@/components/admin/ui";
+import { Badge, Button, Card, CardHead, MonatsWahl, Stat, errorText, formatPrice, todayIso } from "@/components/admin/ui";
 
 // Derselbe Bestand wie unter „Unterricht", nur als Monatsraster: Beim
 // Planen schaut man auf freie Tage, beim Abarbeiten auf eine Liste.
@@ -15,10 +15,20 @@ import { Badge, Button, Card, CardHead, Stat, errorText, formatDate, formatPrice
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
+function tagUeberschrift(iso) {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+}
+
 export default function KalenderView({ stundeId, reiter, onStunde }) {
   const { adminFetch, notify } = useAdmin();
   const heute = todayIso();
-  const [monat, setMonat] = useState(monatVon(heute));
+  const [monat, setMonatRoh] = useState(monatVon(heute));
+  // Am Handy: angetippter Tag im kleinen Monatsraster (null = ganzer Monat).
+  const [tag, setTag] = useState(null);
+  const setMonat = (wert) => {
+    setMonatRoh(wert);
+    setTag(null);
+  };
   const [bookings, setBookings] = useState([]);
   const [geladen, setGeladen] = useState(false);
 
@@ -45,32 +55,85 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
     () => bookings.filter((b) => (b.offerSnapshot?.type || "session") === "session" && monatVon(lessonDateOf(b)) === monat),
     [bookings, monat]
   );
+  const gezeigt = useMemo(
+    () =>
+      imMonat
+        .filter((b) => !tag || lessonDateOf(b) === tag)
+        .sort((a, b) => lessonDateOf(a).localeCompare(lessonDateOf(b)) || String(a.requestedTime || "").localeCompare(String(b.requestedTime || ""))),
+    [imMonat, tag]
+  );
+  const gruppen = useMemo(() => {
+    const m = new Map();
+    for (const b of gezeigt) {
+      const iso = lessonDateOf(b);
+      if (!m.has(iso)) m.set(iso, []);
+      m.get(iso).push(b);
+    }
+    return [...m];
+  }, [gezeigt]);
   const gezaehlt = imMonat.filter((b) => b.status === "confirmed" && b.heldStatus !== "missed");
   const summeCent = gezaehlt.reduce((s, b) => s + (b.offerSnapshot?.priceCents || 0), 0);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setMonat((m) => monatVerschieben(m, -1))} aria-label="Vorheriger Monat">
-            ◀
-          </Button>
-          <span className="min-w-44 text-center text-lg font-semibold tracking-[-0.3px]">{monatsName(monat)}</span>
-          <Button onClick={() => setMonat((m) => monatVerschieben(m, 1))} aria-label="Nächster Monat">
-            ▶
-          </Button>
-          {monat !== monatVon(heute) ? (
-            <Button variant="ghost" onClick={() => setMonat(monatVon(heute))}>
-              Heute
-            </Button>
-          ) : null}
-        </div>
-        <div className="grid flex-1 grid-cols-3 gap-3 sm:max-w-md">
+        <MonatsWahl
+          name={monatsName(monat)}
+          onZurueck={() => setMonat(monatVerschieben(monat, -1))}
+          onWeiter={() => setMonat(monatVerschieben(monat, 1))}
+          onHeute={monat !== monatVon(heute) ? () => setMonat(monatVon(heute)) : null}
+        />
+        <div className="grid w-full grid-cols-[1fr_1fr_1.35fr] gap-2 sm:w-auto sm:max-w-md sm:flex-1 sm:grid-cols-3 sm:gap-3">
           <Stat title="Stunden" value={gezaehlt.length} />
           <Stat title="Anfragen" value={imMonat.filter((b) => b.status === "pending").length} tone={imMonat.some((b) => b.status === "pending") ? "amber" : "slate"} />
           <Stat title="Wert" value={formatPrice(summeCent)} />
         </div>
       </div>
+
+      {/* Handy: kleines Raster wie im iPhone-Kalender – Ziffer und Punkte je
+          Stunde; Antippen zeigt nur diesen Tag. */}
+      <Card span={12} className="sm:hidden">
+        <div className="grid grid-cols-7 gap-y-1">
+          {WOCHENTAGE.map((t) => (
+            <div key={t} className="pb-1 text-center text-[11px] font-semibold uppercase text-[var(--ck-muted)]">
+              {t}
+            </div>
+          ))}
+          {raster.map((t) => {
+            const stunden = nachTag.get(t.iso) || [];
+            const gewaehlt = tag === t.iso;
+            const istHeute = t.iso === heute;
+            return (
+              <button
+                key={t.iso}
+                type="button"
+                disabled={!t.imMonat}
+                onClick={() => setTag(gewaehlt ? null : t.iso)}
+                aria-pressed={gewaehlt}
+                aria-label={`${tagUeberschrift(t.iso)}: ${stunden.length} ${stunden.length === 1 ? "Stunde" : "Stunden"}`}
+                className="flex h-12 flex-col items-center justify-start gap-1 rounded-xl pt-1 disabled:opacity-30"
+              >
+                <span
+                  className={`grid h-7 w-7 place-items-center rounded-full text-[14px] tabular-nums ${
+                    gewaehlt
+                      ? "bg-[var(--ck-text)] font-bold text-[var(--ck-on-text)]"
+                      : istHeute
+                        ? "bg-[var(--ck-accent)] font-bold text-black"
+                        : "font-medium"
+                  }`}
+                >
+                  {t.tag}
+                </span>
+                <span className="flex h-1.5 gap-[3px]">
+                  {stunden.slice(0, 3).map((b) => (
+                    <i key={b._id} className="h-1.5 w-1.5 rounded-full" style={{ background: farbeFuer(b, heute).color }} />
+                  ))}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Sieben Spalten brauchen Platz. Auf dem Handy wäre jede Zelle 45 px
           breit – dort führt die Liste darunter weiter, das Raster bleibt
@@ -127,37 +190,51 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
       </Card>
 
       <Card span={12}>
-        <CardHead title={`Alle Stunden · ${monatsName(monat)}`} />
+        <CardHead title={tag ? tagUeberschrift(tag) : `Alle Stunden · ${monatsName(monat)}`}>
+          {tag ? (
+            <button type="button" onClick={() => setTag(null)} className="text-sm font-semibold text-[var(--ck-accent)]">
+              Ganzer Monat
+            </button>
+          ) : null}
+        </CardHead>
         {!geladen ? (
           <p className="py-5 text-center text-sm text-[var(--ck-muted)]">Lädt …</p>
-        ) : imMonat.length === 0 ? (
-          <p className="py-5 text-center text-sm text-[var(--ck-muted)]">In diesem Monat steht nichts an.</p>
+        ) : gezeigt.length === 0 ? (
+          <p className="py-5 text-center text-sm text-[var(--ck-muted)]">{tag ? "An diesem Tag steht nichts an." : "In diesem Monat steht nichts an."}</p>
         ) : (
-          imMonat
-            .slice()
-            .sort((a, b) => lessonDateOf(a).localeCompare(lessonDateOf(b)) || String(a.requestedTime || "").localeCompare(String(b.requestedTime || "")))
-            .map((b) => (
-              <button
-                key={b._id}
-                type="button"
-                onClick={() => onStunde(b._id)}
-                className="flex w-full items-center gap-3 border-t border-[var(--ck-line)] py-2.5 text-left first:border-t-0 hover:bg-[var(--ck-surface2)]"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">
-                    {b.studentName} <span className="font-normal text-[var(--ck-muted)]">· {b.subject}</span>
+          gruppen.map(([iso, liste]) => (
+            <div key={iso}>
+              {tag ? null : (
+                <p className="mt-4 pb-1 text-[12px] font-semibold uppercase tracking-[0.5px] text-[var(--ck-muted)] first:mt-0">
+                  {tagUeberschrift(iso)}
+                </p>
+              )}
+              {liste.map((b) => (
+                <button
+                  key={b._id}
+                  type="button"
+                  onClick={() => onStunde(b._id)}
+                  className="flex w-full items-center gap-3 border-t border-[var(--ck-line)] py-3 text-left transition first:border-t-0 hover:bg-[var(--ck-surface2)] active:bg-[var(--ck-surface2)]"
+                >
+                  <span className="w-12 shrink-0 text-[13px] font-semibold tabular-nums">
+                    {b.requestedTime || "–"}
+                    {b.offerSnapshot?.durationMinutes ? (
+                      <span className="block text-[11px] font-normal text-[var(--ck-muted)]">{b.offerSnapshot.durationMinutes} Min</span>
+                    ) : null}
                   </span>
-                  <span className="block truncate text-[13px] tabular-nums text-[var(--ck-muted)]">
-                    {formatDate(lessonDateOf(b))}
-                    {b.requestedTime ? ` · ${b.requestedTime} Uhr` : ""}
+                  <i className="h-9 w-1 shrink-0 rounded-full" style={{ background: farbeFuer(b, heute).color }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-semibold">{b.studentName}</span>
+                    <span className="mt-0.5 flex min-w-0 items-center gap-2">
+                      <span className="truncate text-[13px] text-[var(--ck-muted)]">{b.subject}</span>
+                      <Badge tone={lessonState(b, heute).tone}>{lessonState(b, heute).label}</Badge>
+                    </span>
                   </span>
-                </span>
-                <Badge tone={lessonState(b, heute).tone}>{lessonState(b, heute).label}</Badge>
-                <span className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums">
-                  {formatPrice(b.offerSnapshot?.priceCents || 0)}
-                </span>
-              </button>
-            ))
+                  <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{formatPrice(b.offerSnapshot?.priceCents || 0)}</span>
+                </button>
+              ))}
+            </div>
+          ))
         )}
       </Card>
 

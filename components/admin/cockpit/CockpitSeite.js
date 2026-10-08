@@ -7,6 +7,7 @@ import { lessonDateOf } from "@/lib/bookings/order";
 import { BEREICHE, monatsName } from "@/lib/umsatz/berechnung";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import StundenDrawer from "@/components/admin/cockpit/StundenDrawer";
+import Ikone from "@/components/admin/ui/Symbole";
 import {
   AreaChart,
   Badge,
@@ -130,10 +131,10 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
         <section className="rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-[22px]">
           <CardHead title="Schnellaktionen" />
           <div className="grid grid-cols-2 gap-3">
-            <Schnellaktion zeichen="＋" titel="Telefonanfrage" hinweis="Aufnahmebogen + Papierakte" href="/admin/schueler?neu=1" />
-            <Schnellaktion zeichen="◷" titel="Stunde planen" hinweis="Termin + Jitsi-Raum" href="/admin/unterricht?neu=1" />
-            <Schnellaktion zeichen="€" titel="Rechnung" hinweis="E-Rechnung mit GiroCode" href="/admin/finanzen?ansicht=rechnungen" />
-            <Schnellaktion zeichen="≡" titel="Buchung" hinweis="Soll / Haben erfassen" href="/admin/finanzen?ansicht=journal" />
+            <Schnellaktion symbol="telefon" titel="Telefonanfrage" hinweis="Aufnahmebogen + Papierakte" href="/admin/schueler?neu=1" />
+            <Schnellaktion symbol="stundePlanen" titel="Stunde planen" hinweis="Termin + Jitsi-Raum" href="/admin/unterricht?neu=1" />
+            <Schnellaktion symbol="rechnung" titel="Rechnung" hinweis="E-Rechnung mit GiroCode" href="/admin/finanzen?ansicht=rechnungen" />
+            <Schnellaktion symbol="journal" titel="Buchung" hinweis="Soll / Haben erfassen" href="/admin/finanzen?ansicht=journal" />
           </div>
           <div className="mt-3 grid grid-cols-3 gap-3">
             <Stat title="Stunden im Monat" value={daten?.kennzahlen?.stundenImMonat ?? "–"} />
@@ -374,7 +375,7 @@ function kanalVon(b) {
   return "über die Website";
 }
 
-function Schnellaktion({ zeichen, titel, hinweis, href }) {
+function Schnellaktion({ symbol, titel, hinweis, href }) {
   return (
     <Link
       href={href}
@@ -382,9 +383,9 @@ function Schnellaktion({ zeichen, titel, hinweis, href }) {
     >
       <span
         aria-hidden="true"
-        className="grid h-9.5 w-9.5 place-items-center rounded-xl bg-[var(--ck-accent-soft)] text-lg font-bold text-[var(--ck-accent)]"
+        className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]"
       >
-        {zeichen}
+        <Ikone name={symbol} className="h-[22px] w-[22px]" />
       </span>
       <span>
         <b className="block text-[15px] font-semibold">{titel}</b>
@@ -514,9 +515,9 @@ function Todos({ todos, onChanged }) {
         >
           <span
             aria-hidden="true"
-            className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[7px] bg-[var(--ck-surface2)] text-[10px] text-[var(--ck-muted)]"
+            className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[7px] bg-[var(--ck-surface2)] text-[var(--ck-muted)]"
           >
-            ›
+            <Ikone name="pfeil" className="h-3 w-3" strich={2.4} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{t.text}</span>

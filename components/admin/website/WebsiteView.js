@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatClassRange } from "@/lib/pricing";
 import { SUB_VIEWS, subViewFrom } from "@/lib/admin/nav";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
-import { Badge, Button, DataTable, Toolbar, formatPrice, useDialogs } from "@/components/admin/ui";
+import { Badge, Button, DataTable, SubNav, Toolbar, formatPrice, useDialogs } from "@/components/admin/ui";
 import OfferForm, { EMPTY_OFFER } from "@/components/admin/website/OfferForm";
 import TestimonialForm, { EMPTY_TESTIMONIAL } from "@/components/admin/website/TestimonialForm";
 import SettingsForm from "@/components/admin/website/SettingsForm";
@@ -167,20 +167,7 @@ export default function WebsiteView({ view: viewParam, onView }) {
 
   return (
     <div className="space-y-6">
-      <nav className="flex flex-wrap gap-2" aria-label="Website-Ansichten">
-        {SUB_VIEWS.website.map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => onView(key)}
-            aria-current={view === key ? "page" : undefined}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              view === key ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]" : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <SubNav views={SUB_VIEWS.website} aktiv={view} onWaehlen={onView} label="Website-Ansichten" />
 
       {view === "angebote" &&
         (editingOffer ? (

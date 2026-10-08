@@ -10,6 +10,7 @@ import { AUSFALL_ARTEN } from "@/lib/ausfall/berechnung";
 import { hatAusfallVerguetung, isLessonLocked } from "@/lib/lessons/rules";
 import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
+import Ikone, { SYMBOL_FUER_ANSICHT } from "@/components/admin/ui/Symbole";
 import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/management/TagebuchDialog";
 import LessonForm from "@/components/admin/management/LessonForm";
 import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
@@ -211,10 +212,11 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                 type="button"
                 onClick={() => setAktiv(key)}
                 aria-current={aktiv === key ? "page" : undefined}
-                className={`-mb-px shrink-0 border-b-2 px-3 py-3 text-sm font-semibold transition ${
+                className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-semibold transition ${
                   aktiv === key ? "border-[var(--ck-accent)] text-[var(--ck-text)]" : "border-transparent text-[var(--ck-muted)]"
                 }`}
               >
+                <Ikone name={SYMBOL_FUER_ANSICHT[key]} className={`h-[17px] w-[17px] ${aktiv === key ? "text-[var(--ck-accent)]" : ""}`} />
                 {text}
               </button>
             ))}

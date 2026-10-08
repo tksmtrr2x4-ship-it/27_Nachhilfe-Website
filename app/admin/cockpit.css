@@ -134,3 +134,27 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* „Mehr"-Blatt am Handy: gleitet von unten herein wie ein App-Blatt. */
+@keyframes ck-blatt-rein {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes ck-blende-rein {
+  from {
+    opacity: 0;
+  }
+}
+.cockpit .ck-blatt {
+  animation: ck-blatt-rein 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cockpit .ck-blende {
+  animation: ck-blende-rein 0.2s ease-out;
+}
+
+/* Keine blaue Tipp-Fläche auf iOS – die Leisten zeigen den Druck selbst. */
+.cockpit a,
+.cockpit button {
+  -webkit-tap-highlight-color: transparent;
+}

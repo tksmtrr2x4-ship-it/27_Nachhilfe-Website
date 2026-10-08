@@ -3,12 +3,14 @@
 import { input, label } from "@/components/admin/ui/tokens";
 
 // Kopfzeile eines Bereichs: Titel links, Hauptaktionen rechts.
+// Ohne title (wenn er dem Seitentitel in der Kopfzeile entspräche) steht nur
+// der Hinweis da.
 export function Toolbar({ title, hint, children }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold tracking-[-0.3px]">{title}</h2>
-        {hint ? <p className="mt-0.5 text-xs text-[var(--ck-muted)]">{hint}</p> : null}
+        {title ? <h2 className="text-lg font-semibold tracking-[-0.3px]">{title}</h2> : null}
+        {hint ? <p className={`${title ? "mt-0.5 text-xs" : "text-sm"} text-[var(--ck-muted)]`}>{hint}</p> : null}
       </div>
       {children ? <div className="flex flex-wrap items-center gap-2">{children}</div> : null}
     </div>

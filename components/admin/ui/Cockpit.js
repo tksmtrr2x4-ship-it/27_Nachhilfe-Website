@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { card } from "@/components/admin/ui/tokens";
+import Ikone, { SYMBOL_FUER_ANSICHT } from "@/components/admin/ui/Symbole";
 
 // Die Bausteine des Cockpits – Karte, Listenzeile, Balken, Kurve, Drawer.
 // Sie halten das Aussehen der Vorlage (lernsprung-cockpit.html) an einer
@@ -63,11 +64,7 @@ export function RowMain({ title, subtitle }) {
 }
 
 export function Chevron() {
-  return (
-    <span aria-hidden="true" className="text-lg text-[var(--ck-faint)]">
-      ›
-    </span>
-  );
+  return <Ikone name="pfeil" className="h-[18px] w-[18px] shrink-0 text-[var(--ck-faint)]" />;
 }
 
 // Datumskachel links in der Zeile; „heute" ist orange.
@@ -330,21 +327,27 @@ export function Timeline({ steps }) {
 
 // views: [[key, label]] – die Auswahl steht in der Adresse (?ansicht=),
 // damit jede Unteransicht verlinkbar bleibt.
+// Unterreiter mit Symbol. Am Handy eine waagrecht wischbare Reihe (ohne
+// Umbruch, bis an den Rand), ab sm umbrechend.
 export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
   return (
-    <nav className="flex flex-wrap gap-1.5" aria-label={label}>
+    <nav
+      className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
+      aria-label={label}
+    >
       {views.map(([key, text]) => (
         <button
           key={key}
           type="button"
           onClick={() => onWaehlen(key)}
           aria-current={aktiv === key ? "page" : undefined}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+          className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full py-2 pl-3 pr-4 text-sm font-semibold transition active:scale-[0.97] ${
             aktiv === key
               ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]"
-              : "bg-[var(--ck-surface2)] text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
+              : "bg-[var(--ck-surface)] text-[var(--ck-muted)] ring-1 ring-[var(--ck-line)] hover:text-[var(--ck-text)]"
           }`}
         >
+          <Ikone name={SYMBOL_FUER_ANSICHT[key]} className="h-[18px] w-[18px]" />
           {text}
         </button>
       ))}

@@ -316,7 +316,7 @@ export default function UnterrichtView({ filters, onFilters }) {
 
   return (
     <div className="space-y-5">
-      <Toolbar title="Unterricht" hint="Anfragen, Termine und eingetragene Stunden – sortiert nach Unterrichtstermin.">
+      <Toolbar hint="Anfragen, Termine und eingetragene Stunden – sortiert nach Unterrichtstermin.">
         <Button
           variant="primary"
           onClick={() => setLessonDialog("new")}

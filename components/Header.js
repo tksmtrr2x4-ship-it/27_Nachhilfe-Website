@@ -14,6 +14,8 @@ const NAV_LINKS = [
 
 export default function Header({ siteName, logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Die volle Leiste erst ab lg: Zwischen 768 und 1024 px brachen „Über mich“,
+  // „Meine Akte“ und der Knopf sonst auf zwei Zeilen um.
   // Beim Scrollen bekommt die Leiste eine feine Kante, damit sie sich vom
   // Inhalt abhebt.
   const [scrolled, setScrolled] = useState(false);
@@ -42,7 +44,7 @@ export default function Header({ siteName, logo }) {
           <span className="serif text-[1.35rem] font-semibold leading-none">{siteName}</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 text-[15px] text-text md:flex">
+        <nav className="hidden items-center gap-1 whitespace-nowrap text-[15px] text-text lg:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="rounded-full px-3 py-2 transition hover:bg-mulde hover:text-tinte">
               {link.label}
@@ -58,7 +60,7 @@ export default function Header({ siteName, logo }) {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <Lichtschalter />
           <button
             type="button"
@@ -81,7 +83,7 @@ export default function Header({ siteName, logo }) {
 
       <div
         id="mobile-menu"
-        className={`overflow-hidden bg-papier transition-[max-height] duration-300 ease-in-out md:hidden ${
+        className={`overflow-hidden bg-papier transition-[max-height] duration-300 ease-in-out lg:hidden ${
           menuOpen ? "max-h-[28rem] border-t border-linie" : "max-h-0"
         }`}
       >

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Picture from "@/components/Picture";
 
 const NAV_LINKS = [
+  { href: "/angebote", label: "Angebote" },
   { href: "/ueber-mich", label: "Über mich" },
   { href: "/faq", label: "FAQ" },
   // Die Schülerakte für Eltern: nächste Stunde und Nachrichten.
@@ -13,8 +14,8 @@ const NAV_LINKS = [
 
 export default function Header({ siteName, logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // Beim Scrollen wird die Leiste kompakter und bekommt einen feinen Schatten,
-  // damit sie sich vom Inhalt abhebt, ohne ihn zu erschlagen.
+  // Schmale, halbdurchsichtige Leiste; beim Scrollen kommt eine feine Linie
+  // dazu, damit sie sich vom Inhalt abhebt.
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -26,53 +27,41 @@ export default function Header({ siteName, logo }) {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b transition-all duration-300 ${
-        scrolled
-          ? "border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/90"
-          : "border-transparent bg-white/70 backdrop-blur-md dark:bg-slate-950/60"
+      className={`sticky top-0 z-40 border-b bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 dark:bg-slate-950/80 ${
+        scrolled ? "border-slate-200/80 dark:border-slate-800/80" : "border-transparent"
       }`}
     >
       <div
-        className={`mx-auto flex max-w-6xl items-center justify-between px-6 transition-all duration-300 ${
-          scrolled ? "py-2.5" : "py-4"
-        }`}
+        className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5"
       >
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900 dark:text-white"
+          className="flex items-center gap-2 text-[17px] font-semibold tracking-tight text-slate-900 dark:text-white"
           onClick={() => setMenuOpen(false)}
         >
           {logo ? (
             // Dekorativ: Der Name steht direkt daneben im Link.
-            <Picture image={logo} decorative loading="eager" className="h-8 w-auto" />
+            <Picture image={logo} decorative loading="eager" className="h-7 w-auto" />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-semibold text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm font-semibold text-white">
               {siteName?.[0]?.toUpperCase() || "N"}
             </span>
           )}
           {siteName}
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300 sm:flex">
+        <nav className="hidden items-center gap-7 text-[13px] text-slate-700 dark:text-slate-300 sm:flex">
           {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="group relative py-1 transition hover:text-brand-600 dark:hover:text-brand-400"
-            >
+            <Link key={link.href} href={link.href} className="transition hover:text-slate-950 dark:hover:text-white">
               {link.label}
-              {/* Unterstrich wächst beim Überfahren aus der Mitte. */}
-              <span
-                className="absolute inset-x-0 -bottom-0.5 h-0.5 origin-center scale-x-0 rounded-full bg-gradient-to-r from-brand-500 to-accent-400 transition-transform duration-300 group-hover:scale-x-100"
-                aria-hidden="true"
-              />
             </Link>
           ))}
+          {/* Hauptziel für Erstbesucher: das kostenlose Gespräch (Startseite). */}
           <Link
-            href="/angebote"
-            className="rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-5 py-2.5 text-white shadow-md shadow-brand-500/25 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-500/35"
+            href="/#anfrage"
+            className="rounded-full bg-brand-700 px-4 py-1.5 font-medium text-white transition hover:bg-brand-600"
           >
-            Angebote
+            Kostenloses Gespräch
           </Link>
         </nav>
 
@@ -100,7 +89,7 @@ export default function Header({ siteName, logo }) {
       <div
         id="mobile-menu"
         className={`overflow-hidden border-t border-slate-200/80 bg-white transition-[max-height] duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-950 sm:hidden ${
-          menuOpen ? "max-h-60" : "max-h-0 border-t-0"
+          menuOpen ? "max-h-80" : "max-h-0 border-t-0"
         }`}
       >
         <nav className="flex flex-col gap-1 px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -115,11 +104,11 @@ export default function Header({ siteName, logo }) {
             </Link>
           ))}
           <Link
-            href="/angebote"
+            href="/#anfrage"
             onClick={() => setMenuOpen(false)}
-            className="mt-2 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 px-4 py-2.5 text-center text-white transition hover:from-brand-400 hover:to-brand-600"
+            className="mt-2 rounded-full bg-brand-700 px-4 py-2.5 text-center text-white transition hover:bg-brand-600"
           >
-            Angebote
+            Kostenloses Gespräch
           </Link>
         </nav>
       </div>

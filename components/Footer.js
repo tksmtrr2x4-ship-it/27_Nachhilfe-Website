@@ -7,7 +7,7 @@ export default function Footer({ siteName, contactEmail, contactPhone, logo }) {
   const year = new Date().getFullYear();
   const business = resolveBusiness({ siteName, contactEmail, contactPhone });
   return (
-    <footer className="border-t border-slate-200 bg-gradient-to-b from-slate-50 to-white dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
+    <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>

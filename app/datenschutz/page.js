@@ -1,4 +1,5 @@
 import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
+import { SPEICHERTAGE } from "@/lib/gespraech/gespraech";
 
 // Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
 // gewünscht – daher "noindex, follow" und nicht in der Sitemap.
@@ -43,7 +44,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">2. Buchungsformular</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">2. Buchungsformular und Gesprächsanfrage</h2>
           <p className="mt-2">
             Bei einer Buchung erhebe ich Name, Klassenstufe und Fach der Schülerin/des Schülers
             sowie Name, E-Mail-Adresse und optional Telefonnummer der Erziehungsberechtigten, um
@@ -66,6 +67,14 @@ export default function DatenschutzPage() {
             solche besonderen Kategorien personenbezogener Daten nach Art. 9 DSGVO eine
             gesonderte ausdrückliche Einwilligung erfordern würden — solche Themen besprechen
             wir stattdessen persönlich.
+          </p>
+          <p className="mt-2">
+            Über das Formular „Kostenloses Gespräch anfragen“ auf der Startseite erhebe ich Ihren
+            Namen und Ihre Telefonnummer sowie freiwillig Klassenstufe, Fach und die gewünschte
+            Rückrufzeit, um Sie für ein Kennenlerngespräch zurückzurufen. Rechtsgrundlage ist
+            Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage). Name und
+            Telefonnummer sind für den Rückruf erforderlich. Kommt kein Vertrag zustande, lösche
+            ich die Anfrage spätestens {SPEICHERTAGE} Tage nach Eingang.
           </p>
         </section>
 

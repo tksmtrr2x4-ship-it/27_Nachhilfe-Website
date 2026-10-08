@@ -101,6 +101,7 @@ h3 {
    Bewegung
    Ein kleiner, wiederverwendbarer Satz statt Effekten an jeder Stelle einzeln:
    - .reveal      Inhalte blenden beim Hereinscrollen sanft auf (components/Reveal.js)
+   - .rise        Auftakt beim Laden, gestaffelt (erster Bildschirm der Startseite)
    - .lift        Karten heben sich beim Überfahren leicht an
    - .arrow-slide Pfeile in Links laufen ein Stück mit
    - .sheen       langsamer Lichtschimmer über Farbflächen
@@ -122,6 +123,25 @@ h3 {
   opacity: 0;
   transform: translate3d(0, 14px, 0);
   will-change: opacity, transform;
+}
+
+/* Auftakt beim Laden (Startseite, erster Bildschirm): Elemente steigen
+   gestaffelt auf. Reine CSS-Animation – ohne JavaScript läuft sie ebenso, und
+   am Ende steht alles sichtbar da. Staffelung über --reveal-delay. */
+@keyframes lernsprung-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: lernsprung-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
 
 .lift {
@@ -194,6 +214,10 @@ button:hover > .arrow-slide {
 
   .lift:hover {
     transform: none;
+  }
+
+  .rise {
+    animation: none;
   }
 }
 

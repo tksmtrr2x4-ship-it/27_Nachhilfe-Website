@@ -3,6 +3,7 @@ import { getSettings, listOffers } from "@/lib/db";
 import { getPortraitImage } from "@/lib/logo";
 import Picture from "@/components/Picture";
 import GespraechForm from "@/components/GespraechForm";
+import Reveal from "@/components/Reveal";
 import { pageMetadata, parseSearchConsoleToken } from "@/lib/seo";
 import { SUBJECTS } from "@/lib/subjects";
 import { resolveBusiness } from "@/lib/business";
@@ -33,6 +34,10 @@ export async function generateMetadata() {
 // Wichtige steht im ersten Bildschirm, daneben die Anfrage für ein kostenloses
 // Gespräch. Alles Weitere (Angebote, Fächer, Über mich, FAQ) bleibt über das
 // Menü erreichbar. Anrede: Sie.
+//
+// Bewegung (app/globals.css): Der erste Bildschirm steigt beim Laden gestaffelt
+// auf (.rise), alles darunter blendet beim Hereinscrollen ein (<Reveal>).
+// Bei „Bewegung reduzieren“ im Betriebssystem entfällt beides.
 
 const SCHRITTE = [
   { titel: "Kostenloses Gespräch", text: "Wir klären Fach, Klasse und Ziele – am Telefon, unverbindlich." },
@@ -79,27 +84,28 @@ export default async function HomePage() {
       <section className="px-5 pb-20 pt-12 sm:pt-16">
         <div className="mx-auto flex max-w-6xl flex-wrap items-start gap-12">
           <div className="min-w-0 flex-[1_1_440px]">
-            <h1>
+            <h1 className="rise">
               <span className="block text-[17px] font-semibold text-brand-700 dark:text-brand-300">Nachhilfe in Villingen-Schwenningen</span>
               <span className="mt-3 block text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em] text-slate-900 dark:text-white">
                 Einzelnachhilfe ab Klasse {minClass}. Persönlich und verständlich.
               </span>
             </h1>
-            <p className="mt-5 text-[clamp(1.15rem,2vw,1.4rem)] leading-snug text-slate-600 dark:text-slate-300">
+            <p style={{ "--reveal-delay": "90ms" }} className="rise mt-5 text-[clamp(1.15rem,2vw,1.4rem)] leading-snug text-slate-600 dark:text-slate-300">
               Lernen Sie mich in einem kostenlosen Gespräch kennen – danach entscheiden Sie in Ruhe.
             </p>
             {/* Auf schmalen Bildschirmen steht das Formular erst unter den
                 Fakten – der Knopf führt direkt hin. */}
             <a
               href="#anfrage"
-              className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand-700 px-7 text-[17px] font-semibold text-white transition hover:bg-brand-600 sm:w-auto min-[900px]:hidden"
+              style={{ "--reveal-delay": "160ms" }}
+              className="rise mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand-700 px-7 text-[17px] font-semibold text-white transition hover:bg-brand-600 sm:w-auto min-[900px]:hidden"
             >
               Kostenloses Gespräch anfragen
             </a>
 
             <ul className="mt-8 space-y-3.5">
-              {fakten.map((f) => (
-                <li key={f.stark} className="flex gap-3 text-[17px] leading-snug text-slate-700 dark:text-slate-200">
+              {fakten.map((f, i) => (
+                <li key={f.stark} style={{ "--reveal-delay": `${220 + i * 70}ms` }} className="rise flex gap-3 text-[17px] leading-snug text-slate-700 dark:text-slate-200">
                   <Haken />
                   <span>
                     <strong className="font-semibold text-slate-900 dark:text-white">{f.stark}</strong> – {f.rest}
@@ -108,7 +114,7 @@ export default async function HomePage() {
               ))}
             </ul>
 
-            <div className="mt-9 flex max-w-lg items-center gap-4 rounded-[20px] bg-slate-100 p-4 dark:bg-slate-900">
+            <div style={{ "--reveal-delay": "520ms" }} className="rise mt-9 flex max-w-lg items-center gap-4 rounded-[20px] bg-slate-100 p-4 dark:bg-slate-900">
               {portrait ? (
                 // Eigener Rahmen, sonst schrumpft das <picture> im Flex-Layout.
                 <span className="block h-16 w-16 flex-none overflow-hidden rounded-full">
@@ -120,7 +126,7 @@ export default async function HomePage() {
                 <p className="mt-0.5 text-[15px] leading-snug text-slate-600 dark:text-slate-400">
                   Abitur 2026 mit 1,8 · Leistungsfächer Mathematik, Biologie und Wirtschaft ·{" "}
                   <Link href="/ueber-mich" className="text-brand-700 hover:underline dark:text-brand-300">
-                    Über mich
+                    Über mich <span className="arrow-slide">›</span>
                   </Link>
                 </p>
               </div>
@@ -129,7 +135,8 @@ export default async function HomePage() {
 
           <div
             id="anfrage"
-            className="w-full min-w-0 max-w-[480px] flex-[1_1_380px] rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_2px_6px_rgba(0,0,0,0.04),0_20px_48px_rgba(0,0,0,0.08)] dark:border-slate-800 dark:bg-slate-950 sm:p-8"
+            style={{ "--reveal-delay": "200ms" }}
+            className="rise w-full min-w-0 max-w-[480px] flex-[1_1_380px] rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_2px_6px_rgba(0,0,0,0.04),0_20px_48px_rgba(0,0,0,0.08)] dark:border-slate-800 dark:bg-slate-950 sm:p-8"
           >
             <h2 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-slate-900 dark:text-white">Kostenloses Gespräch anfragen</h2>
             <p className="mt-2 text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">
@@ -147,16 +154,16 @@ export default async function HomePage() {
 
       <section aria-labelledby="ablauf-titel" className="bg-slate-100 px-5 py-20 dark:bg-slate-900">
         <div className="mx-auto max-w-6xl">
-          <h2 id="ablauf-titel" className="text-center text-[clamp(2rem,4.4vw,3rem)] font-bold leading-tight tracking-[-0.03em] text-slate-900 dark:text-white">
+          <Reveal as="h2" id="ablauf-titel" className="text-center text-[clamp(2rem,4.4vw,3rem)] font-bold leading-tight tracking-[-0.03em] text-slate-900 dark:text-white">
             So einfach geht’s.
-          </h2>
+          </Reveal>
           <ol className="mt-12 grid gap-5 md:grid-cols-3">
             {SCHRITTE.map((s, i) => (
-              <li key={s.titel} className="rounded-3xl bg-white p-8 dark:bg-slate-950">
+              <Reveal as="li" key={s.titel} delay={i * 120} className="rounded-3xl bg-white p-8 dark:bg-slate-950">
                 <p className="text-[40px] font-bold leading-none tracking-[-0.03em] text-brand-700 dark:text-brand-300">{i + 1}</p>
                 <h3 className="mt-4 text-[21px] font-semibold tracking-[-0.015em] text-slate-900 dark:text-white">{s.titel}</h3>
                 <p className="mt-1.5 text-[17px] leading-relaxed text-slate-600 dark:text-slate-400">{s.text}</p>
-              </li>
+              </Reveal>
             ))}
           </ol>
         </div>
@@ -164,46 +171,50 @@ export default async function HomePage() {
 
       <section id="faecher" className="px-5 py-20">
         <div className="mx-auto max-w-6xl">
-          <h2 className="text-center text-[clamp(2rem,4.4vw,3rem)] font-bold leading-tight tracking-[-0.03em] text-slate-900 dark:text-white">
+          <Reveal as="h2" className="text-center text-[clamp(2rem,4.4vw,3rem)] font-bold leading-tight tracking-[-0.03em] text-slate-900 dark:text-white">
             Vier Fächer. Ein Ansprechpartner.
-          </h2>
+          </Reveal>
           <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {SUBJECTS.map((subject) => (
-              <li key={subject.key}>
+            {SUBJECTS.map((subject, i) => (
+              <Reveal as="li" key={subject.key} delay={i * 80}>
                 <Link
                   href={subject.path}
-                  className="flex h-full flex-col gap-2 rounded-3xl bg-slate-100 p-7 text-slate-900 transition hover:bg-slate-200/70 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
+                  className="lift group flex h-full flex-col gap-2 rounded-3xl bg-slate-100 p-7 text-slate-900 hover:bg-slate-200/70 hover:shadow-lg hover:shadow-slate-900/5 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
                 >
                   <span className="text-[21px] font-semibold tracking-[-0.015em]">{subject.name}</span>
                   <span className="text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">{subject.teaser}</span>
-                  <span className="mt-auto pt-2 text-[15px] text-brand-700 dark:text-brand-300">Mehr erfahren ›</span>
+                  <span className="mt-auto pt-2 text-[15px] text-brand-700 dark:text-brand-300">
+                    Mehr erfahren <span className="arrow-slide">›</span>
+                  </span>
                 </Link>
-              </li>
+              </Reveal>
             ))}
           </ul>
           <p className="mt-8 text-center text-[17px]">
             <Link href="/angebote" className="text-brand-700 hover:underline dark:text-brand-300">
-              Alle Angebote und Preise ansehen ›
+              Alle Angebote und Preise ansehen <span className="arrow-slide">›</span>
             </Link>
           </p>
         </div>
       </section>
 
       <section className="bg-slate-100 px-5 py-20 text-center dark:bg-slate-900">
+        <Reveal>
         <h2 className="text-[clamp(2rem,4.4vw,3rem)] font-bold leading-tight tracking-[-0.03em] text-slate-900 dark:text-white">
           Erst kennenlernen, dann entscheiden.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-[19px] leading-snug text-slate-600 dark:text-slate-400">Das Gespräch ist kostenlos und verpflichtet zu nichts.</p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
-          <a href="#anfrage" className="inline-flex min-h-11 items-center rounded-full bg-brand-700 px-7 text-[17px] font-semibold text-white transition hover:bg-brand-600">
+          <a href="#anfrage" className="inline-flex min-h-11 items-center rounded-full bg-brand-700 px-7 text-[17px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-lg hover:shadow-brand-700/25">
             Gespräch anfragen
           </a>
           {business.phoneDisplay ? (
             <a href={business.phoneHref} className="text-[17px] text-brand-700 hover:underline dark:text-brand-300">
-              Oder anrufen: {business.phoneDisplay} ›
+              Oder anrufen: {business.phoneDisplay} <span className="arrow-slide">›</span>
             </a>
           ) : null}
         </div>
+        </Reveal>
       </section>
     </div>
   );

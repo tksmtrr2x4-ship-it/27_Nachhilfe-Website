@@ -22,6 +22,7 @@ export async function POST(request) {
 
   let customerId = link.customerId || null;
   let neu = false;
+  let fokus = link.fokus || null;
 
   if (link.art === "registrierung") {
     const daten = link.daten || {};
@@ -43,7 +44,8 @@ export async function POST(request) {
       customerId = kunde._id;
     }
 
-    await createStudent(schuelerAusSelbstauskunft(daten, customerId));
+    const kind = await createStudent(schuelerAusSelbstauskunft(daten, customerId));
+    fokus = kind?._id || null;
     neu = true;
 
     await benachrichtigeLehrkraft({
@@ -60,7 +62,7 @@ export async function POST(request) {
   }
 
   const token = await createKontoSession(customerId, { userAgent: request.headers.get("user-agent") });
-  const antwort = Response.json({ ok: true, neu });
+  const antwort = Response.json({ ok: true, neu, fokus });
   antwort.headers.append("Set-Cookie", kontoCookie(token));
   return antwort;
 }

@@ -17,6 +17,10 @@ export const metadata = pageMetadata({
 
 const FAQS = [
   {
+    q: "Was ist die Schülerakte – und warum zuerst?",
+    a: "Die Schülerakte ist der erste Schritt: Auf der Startseite werden Vorname und Klasse des Kindes sowie Name und E-Mail-Adresse eingetragen – mehr nicht. Nach der Bestätigung per E-Mail öffnet sich die Akte, und von dort geht es weiter: direkt einen Termin aussuchen oder erst ein kostenloses Telefonat vereinbaren. Später liegen in der Akte alle Stunden, Rechnungen, Quittungen und Nachrichten. Angemeldet wird ohne Passwort, per Link aus der E-Mail.",
+  },
+  {
     q: "Wie läuft eine Nachhilfestunde ab?",
     a: "Du sagst mir vorab kurz, wo es gerade klemmt (Thema, Klassenarbeit, Hausaufgaben). In der Stunde arbeite ich mit dir gezielt daran – mit Erklärung, Übungsaufgaben und direktem Feedback. Am Ende bekommst du oft kleine Übungen für zuhause mit.",
   },

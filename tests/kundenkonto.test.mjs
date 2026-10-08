@@ -42,7 +42,7 @@ test("Anmeldelink gilt genau einmal", async () => {
   assert.ok(!JSON.stringify([...db.docs.values()]).includes(code));
 
   assert.equal(await modul.claimLink("falscher-code"), null);
-  assert.deepEqual(await modul.claimLink(code), { art: "anmeldung", customerId: "kunde-1", daten: undefined });
+  assert.deepEqual(await modul.claimLink(code), { art: "anmeldung", customerId: "kunde-1", daten: undefined, fokus: null });
   assert.equal(await modul.claimLink(code), null, "ein zweites Mal geht nicht");
 });
 
@@ -280,7 +280,7 @@ test("Selbstauskunft: Pflichtangaben und Formate", () => {
   const { probleme } = pruefeSelbstauskunft(vollstaendig());
   assert.deepEqual(probleme, [], "vollständige Angaben laufen durch");
 
-  assert.match(pruefeSelbstauskunft({}).probleme.join(" "), /Namen angeben/);
+  assert.match(pruefeSelbstauskunft({}).probleme.join(" "), /Ihren Namen an/);
   assert.match(
     pruefeSelbstauskunft(vollstaendig({ eltern: { ...vollstaendig().eltern, email: "keine-adresse" } })).probleme.join(" "),
     /gültige E-Mail/

@@ -1,7 +1,10 @@
 import { KONTO_COOKIE, endKontoSession, kontoCookieGeloescht, sessionCustomerId } from "@/lib/kunden/konto";
 import { kontoUebersicht } from "@/lib/kunden/uebersicht";
+import { kontoDokumente } from "@/lib/kunden/dokumente";
+import { todayIsoBerlin } from "@/lib/adminError";
 
-// Die Übersicht des angemeldeten Kontos.
+// Die Übersicht des angemeldeten Kontos – samt Dokumentenmappe je Kind
+// (Stunden, Rechnungen, Quittungen; lib/kunden/dokumente.js).
 export async function GET(request) {
   const token = request.cookies.get(KONTO_COOKIE)?.value;
   const customerId = await sessionCustomerId(token);
@@ -15,7 +18,8 @@ export async function GET(request) {
     weg.headers.append("Set-Cookie", kontoCookieGeloescht());
     return weg;
   }
-  return Response.json(uebersicht);
+  const mappen = await kontoDokumente(customerId, uebersicht.schueler, todayIsoBerlin());
+  return Response.json({ ...uebersicht, mappen }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function DELETE(request) {

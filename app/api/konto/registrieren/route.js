@@ -13,12 +13,20 @@ import { sendeRegistrierungsMail } from "@/lib/kunden/mail";
 // kann.
 const NEUTRAL = {
   ok: true,
-  hinweis: "Fast geschafft: Bestätige den Link in der Mail, dann ist die Schülerakte angelegt.",
+  hinweis: "Fast geschafft: Bitte bestätigen Sie den Link in der E-Mail, dann ist die Schülerakte angelegt.",
 };
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
-  const { daten, probleme } = pruefeSelbstauskunft(body);
+  // Honigtopf (unsichtbares Feld): Bots bekommen dieselbe Antwort, es passiert
+  // aber nichts.
+  if (body.website) return Response.json(NEUTRAL);
+
+  // Die Kurzfassung der Startseite fragt nach dem Nötigsten; Klasse ist dort
+  // Pflicht, das Kursniveau nicht.
+  const kurz = body.kurz === true;
+  const { daten, probleme } = pruefeSelbstauskunft(body, { kurz });
+  if (kurz && !daten.schueler.klasse) probleme.push("Bitte wählen Sie die Klasse.");
   if (probleme.length > 0) {
     return Response.json({ error: probleme[0], probleme }, { status: 400 });
   }

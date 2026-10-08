@@ -100,13 +100,13 @@ export default function AkteBearbeiten({ studentId, onFertig, onAbbrechen }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+      <h1 className="text-[2rem] font-semibold text-tinte">
         {studentId ? "Angaben ändern" : "Weiteres Kind anlegen"}
       </h1>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
         {studentId
           ? "Was hier steht, steht auch in meiner Akte. Nach einer Änderung schaue ich noch einmal drüber."
-          : "Die Angaben zu dir sind schon ausgefüllt – es fehlt nur noch das Kind."}
+          : "Ihre Angaben sind schon ausgefüllt – es fehlt nur noch das Kind."}
       </p>
 
       {fehler ? (

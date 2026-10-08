@@ -79,7 +79,7 @@ export default function SelbstauskunftFormular({
             pflicht
             maxLength={200}
             gesperrt={emailGesperrt}
-            hinweis={emailGesperrt ? "Damit meldest du dich an. Änderung bitte per Mail." : null}
+            hinweis={emailGesperrt ? "Damit melden Sie sich an. Änderung bitte per Mail." : null}
           />
           <Eingabe label="Telefon" wert={werte.eltern.telefon} onChange={setzen("eltern", "telefon")} maxLength={40} />
           <Eingabe label="Weitere Nummer" wert={werte.eltern.telefon2} onChange={setzen("eltern", "telefon2")} maxLength={40} />
@@ -182,7 +182,7 @@ export default function SelbstauskunftFormular({
           <Auswahl label="Wie lange je Termin?" wert={werte.organisation.dauer} onChange={setzen("organisation", "dauer")} optionen={DAUERN} />
         </div>
         <Textfeld
-          label="Wann passt es euch?"
+          label="Wann passt es Ihnen?"
           wert={werte.organisation.zeiten}
           onChange={setzen("organisation", "zeiten")}
           platzhalter="z. B. dienstags und donnerstags ab 16 Uhr"
@@ -191,7 +191,7 @@ export default function SelbstauskunftFormular({
 
       <Abschnitt titel="Noch etwas?">
         <Auswahl
-          label="Wie hast du von Lernsprung erfahren?"
+          label="Wie haben Sie von Lernsprung erfahren?"
           wert={werte.sonstiges.aufmerksamDurch}
           onChange={setzen("sonstiges", "aufmerksamDurch")}
           optionen={AUFMERKSAM_DURCH}

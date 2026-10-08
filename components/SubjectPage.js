@@ -7,19 +7,20 @@ import { SUBJECTS } from "@/lib/subjects";
 export default function SubjectPage({ subject, business }) {
   const otherSubjects = SUBJECTS.filter((s) => s.key !== subject.key);
 
+  // Erster Schritt ist überall die Schülerakte (Startseite) – das Telefonat
+  // gibt es danach aus der Akte heraus.
   const steps = [
     {
-      title: "Kostenloses Vorgespräch am Telefon",
-      // TODO Jill: Rahmendaten nennen ein telefonisches Vorgespräch; in den Angeboten ist zusätzlich ein kostenloses „Kennenlern-Meeting“ (15 Minuten, online) aktiv – Formulierung ggf. angleichen.
-      text: `Wir klären kurz, in welcher Klasse du bist, welche Themen in ${subject.name} gerade schwierig sind und ob die Nachhilfe vor Ort oder online stattfinden soll.`,
+      title: "Schülerakte anlegen",
+      text: `Vorname, Klasse und eine E-Mail-Adresse – mehr braucht es nicht. ${subject.name} lässt sich dabei gleich als Fach ankreuzen.`,
     },
     {
-      title: "Termin anfragen",
-      text: "Auf der Angebotsseite wählst du eine Einzelstunde (45 Minuten) oder eine Doppelstunde (90 Minuten) und schickst deinen Wunschtermin. Ich bestätige den Termin per E-Mail.",
+      title: "Termin wählen oder erst telefonieren",
+      text: "Aus der Akte heraus geht es weiter: direkt eine Einzelstunde (45 Minuten) oder Doppelstunde (90 Minuten) anfragen – oder zuerst ein kostenloses Telefonat. Den Termin bestätige ich per E-Mail.",
     },
     {
       title: "Einzelstunde",
-      text: "Wir arbeiten eins zu eins an deinen Themen – vor Ort in Villingen-Schwenningen und Umgebung oder online per Video-Call mit digitalem Whiteboard.",
+      text: "Eins zu eins an den eigenen Themen – vor Ort in Villingen-Schwenningen und Umgebung oder online per Video-Call mit digitalem Whiteboard.",
     },
   ];
 
@@ -175,33 +176,19 @@ export default function SubjectPage({ subject, business }) {
         </div>
       </section>
 
-      <section className="grain relative mt-14 overflow-hidden rounded-[2rem] border border-white/10 bg-ink-900 px-8 py-11 shadow-2xl shadow-brand-950/30 sm:px-12">
-        <div
-          className="drift pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(50% 120% at 12% 0%, rgba(123,92,246,0.5), transparent 65%), radial-gradient(45% 120% at 88% 100%, rgba(245,154,31,0.25), transparent 60%)",
-          }}
-          aria-hidden="true"
-        />
-        <h2 className="relative text-2xl font-semibold text-white">Termin für {subject.label} anfragen</h2>
-        <p className="relative mt-3 max-w-md leading-relaxed text-slate-300">
-          Ruf kurz für das kostenlose Vorgespräch an oder frag direkt eine Einzelstunde mit deinem
-          Wunschtermin an.
+      <section className="relative mt-14 overflow-hidden rounded-[22px] bg-mappe px-8 py-11 sm:px-12">
+        <p className="relative font-hand text-[1.7rem] leading-none text-[#f8c38e]">Los geht’s</p>
+        <h2 className="relative mt-2 text-[1.9rem] font-semibold leading-tight !text-[#fbf6ee]">{subject.label} – erst die Akte</h2>
+        <p className="relative mt-3 max-w-md leading-relaxed text-[#dce8ef]">
+          Schülerakte in einer Minute anlegen, dann einen Termin aussuchen oder erst kostenlos telefonieren.
         </p>
         <div className="relative mt-7 flex flex-wrap gap-3">
-          <Link
-            href="/angebote"
-            className="group rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink-900 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            Termin anfragen <span className="arrow-slide">→</span>
+          <Link href="/#akte" className="knopf knopf-orange">
+            Schülerakte anlegen <span className="arrow-slide">→</span>
           </Link>
-          <a
-            href={business.phoneHref}
-            className="rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            Anrufen: {business.phoneDisplay}
-          </a>
+          <Link href="/angebote" className="knopf border-[1.5px] border-[#fbf6ee]/40 text-[#fbf6ee] hover:bg-[#fbf6ee]/10">
+            Angebote ansehen
+          </Link>
         </div>
       </section>
 

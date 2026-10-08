@@ -3,6 +3,40 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
+  --font-hand: var(--font-caveat);
+
+  /* Semantische Farben der Website (siehe Block „Website" weiter unten).
+     inline: Die Klassen verweisen auf die Variable selbst, damit das Dimmen
+     nur die Variablen umstellen muss. */
+  --color-papier: var(--papier);
+  --color-karte: var(--karte);
+  --color-mulde: var(--mulde);
+  --color-tinte: var(--tinte);
+  --color-text: var(--text);
+  --color-leise: var(--leise);
+  --color-linie: var(--linie);
+  --color-blau: var(--blau);
+  --color-blau-tief: var(--blau-tief);
+  --color-orange: var(--orange);
+  --color-orange-tief: var(--orange-tief);
+  --color-mappe: var(--mappe);
+  --color-etikett: var(--etikett);
+}
+
+/* Hell/gedimmt. „dark:" folgt dem Betriebssystem, solange niemand am
+   Lichtschalter (components/Lichtschalter.js) etwas anderes gewählt hat –
+   dann steht data-licht="hell" oder "gedimmt" am <html>. Die Verwaltung
+   benutzt keine dark:-Klassen und bleibt davon unberührt. */
+@custom-variant dark {
+  &:where([data-licht="gedimmt"], [data-licht="gedimmt"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-licht="hell"]), :root:not([data-licht="hell"]) *) {
+      @slot;
+    }
+  }
 }
 
 /* Markenfarben. „brand" ist das Violett-Indigo der Seite, „accent" das Warmorange
@@ -44,6 +78,635 @@
   --color-indigo-800: var(--color-brand-800);
   --color-indigo-900: var(--color-brand-900);
   --color-indigo-950: var(--color-brand-950);
+}
+
+/* ---------------------------------------------------------------------------
+   Website (alles außer /admin)
+
+   Sand statt Weiß, Petrolblau und Orange aus dem Logo. Der Rahmen
+   components/Site.js setzt .site um Kopf, Inhalt und Fuß – nur dort gelten
+   diese Werte, die Verwaltung behält ihre eigenen.
+
+   Statt jede Unterseite neu zu färben, zeigen die vorhandenen Tailwind-Töne
+   (slate, white, brand/indigo, accent) innerhalb von .site auf die neue
+   Palette. Neue Bauteile benutzen die sprechenden Namen (papier, karte,
+   tinte, …).
+
+   Gedimmt ist kein zweites Farbschema, sondern dieselbe Palette bei
+   heruntergedrehtem Licht: Sand wird zu warmem Dämmerbraun, Schrift zu
+   Creme, Blau und Orange bleiben, was sie sind.
+   --------------------------------------------------------------------------- */
+.site {
+  --papier: #f3eadc;
+  --karte: #fbf6ee;
+  --mulde: #ebdfcc;
+  --tinte: #18324a;
+  --text: #384757;
+  --leise: #6c6862;
+  --linie: #ddcdb5;
+  --blau: #1f4e6e;
+  --blau-tief: #163a53;
+  --orange: #f08a2c;
+  --orange-tief: #c9670f;
+  --mappe: #2b5d80;
+  --etikett: #f8f1e4;
+  --schatten: 40 30 15;
+
+  --color-white: #fbf7f0;
+  --color-slate-50: #f7f0e5;
+  --color-slate-100: #efe4d3;
+  --color-slate-200: #e4d5bf;
+  --color-slate-300: #cfbda3;
+  --color-slate-400: #a39889;
+  --color-slate-500: #78736d;
+  --color-slate-600: #58606a;
+  --color-slate-700: #404b57;
+  --color-slate-800: #2d3a47;
+  --color-slate-900: #1d2d3c;
+  --color-slate-950: #132230;
+
+  --color-brand-50: #eef4f7;
+  --color-brand-100: #dce8ef;
+  --color-brand-200: #b9d1df;
+  --color-brand-300: #8db3c9;
+  --color-brand-400: #5e90ae;
+  --color-brand-500: #3f7495;
+  --color-brand-600: #2d5f80;
+  --color-brand-700: #1f4e6e;
+  --color-brand-800: #1a425e;
+  --color-brand-900: #16374f;
+  --color-brand-950: #0e2536;
+
+  --color-accent-300: #f8c38e;
+  --color-accent-400: #f4a458;
+  --color-accent-500: #f08a2c;
+  --color-accent-600: #cc6e14;
+
+  /* Die indigo-Aliasse aus @theme lösen am :root auf – hier neu binden,
+     damit sie dem Petrol folgen. */
+  --color-indigo-50: var(--color-brand-50);
+  --color-indigo-100: var(--color-brand-100);
+  --color-indigo-200: var(--color-brand-200);
+  --color-indigo-300: var(--color-brand-300);
+  --color-indigo-400: var(--color-brand-400);
+  --color-indigo-500: var(--color-brand-500);
+  --color-indigo-600: var(--color-brand-600);
+  --color-indigo-700: var(--color-brand-700);
+  --color-indigo-800: var(--color-brand-800);
+  --color-indigo-900: var(--color-brand-900);
+  --color-indigo-950: var(--color-brand-950);
+
+  background-color: var(--papier);
+  color: var(--text);
+  font-family: var(--font-figtree), system-ui, sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Gedimmt – per Schalter oder, ohne Wahl, nach Betriebssystem. */
+:root[data-licht="gedimmt"] .site {
+  --papier: #26221d;
+  --karte: #2f2a24;
+  --mulde: #211d19;
+  --tinte: #f4ebdd;
+  --text: #d8cdbd;
+  --leise: #a89b8a;
+  --linie: #433b33;
+  --blau: #8fb8d2;
+  --blau-tief: #b5d1e2;
+  --orange: #f29a48;
+  --orange-tief: #f6b06c;
+  --mappe: #24506f;
+  --etikett: #e9dfcf;
+  --schatten: 0 0 0;
+
+  --color-white: #f4ebdd;
+  --color-slate-50: #f6efe4;
+  --color-slate-100: #efe6d8;
+  --color-slate-200: #e3d8c8;
+  --color-slate-300: #cfc2af;
+  --color-slate-400: #b0a291;
+  --color-slate-500: #918476;
+  --color-slate-600: #6f6458;
+  --color-slate-700: #51483f;
+  --color-slate-800: #3b342d;
+  --color-slate-900: #2b2621;
+  --color-slate-950: #221e1a;
+  --color-brand-300: #9cc0d6;
+  --color-brand-400: #7aa7c4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-licht="hell"]) .site {
+    --papier: #26221d;
+    --karte: #2f2a24;
+    --mulde: #211d19;
+    --tinte: #f4ebdd;
+    --text: #d8cdbd;
+    --leise: #a89b8a;
+    --linie: #433b33;
+    --blau: #8fb8d2;
+    --blau-tief: #b5d1e2;
+    --orange: #f29a48;
+    --orange-tief: #f6b06c;
+    --mappe: #24506f;
+    --etikett: #e9dfcf;
+    --schatten: 0 0 0;
+
+    --color-white: #f4ebdd;
+    --color-slate-50: #f6efe4;
+    --color-slate-100: #efe6d8;
+    --color-slate-200: #e3d8c8;
+    --color-slate-300: #cfc2af;
+    --color-slate-400: #b0a291;
+    --color-slate-500: #918476;
+    --color-slate-600: #6f6458;
+    --color-slate-700: #51483f;
+    --color-slate-800: #3b342d;
+    --color-slate-900: #2b2621;
+    --color-slate-950: #221e1a;
+    --color-brand-300: #9cc0d6;
+    --color-brand-400: #7aa7c4;
+  }
+}
+
+/* Überschriften in der Fraunces mit weichen Kanten – das „Organische". */
+.site :where(h1, h2, h3, .serif) {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* Feine Papierfaser über der ganzen Seite. Sehr leise – man soll es fühlen,
+   nicht sehen. */
+.site::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+.site > * {
+  position: relative;
+  z-index: 1;
+}
+.site > header {
+  z-index: 40;
+}
+
+/* Bauteile in der components-Ebene, damit Tailwind-Klassen wie hidden oder
+   w-full sie überstimmen können. */
+@layer components {
+/* Knöpfe der Website. Hauptknopf Orange mit Tinte – Orange mit weißer
+   Schrift wäre zu kontrastarm. */
+.knopf {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0 1.6rem;
+  font-weight: 650;
+  font-size: 1.0625rem;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.knopf:active {
+  transform: translateY(1px) scale(0.99);
+}
+.knopf-orange {
+  background: var(--orange);
+  color: #1a2a38;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.35) inset, 0 6px 16px -6px rgb(201 103 15 / 0.6);
+}
+.knopf-orange:hover {
+  background: var(--orange-tief);
+  color: #fffaf3;
+}
+.knopf-tinte {
+  background: var(--blau);
+  color: #fbf6ee;
+}
+.knopf-tinte:hover {
+  background: var(--blau-tief);
+}
+:root[data-licht="gedimmt"] .site .knopf-tinte {
+  color: #1a2a38;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-licht="hell"]) .site .knopf-tinte {
+    color: #1a2a38;
+  }
+}
+.knopf-rand {
+  border: 1.5px solid var(--linie);
+  color: var(--tinte);
+  background: transparent;
+}
+.knopf-rand:hover {
+  border-color: var(--tinte);
+}
+
+/* Eingabefelder der neuen Bauteile: Linie auf Papier statt Kasten. */
+.feld {
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px solid var(--linie);
+  background: var(--karte);
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+  color: var(--tinte);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.feld:focus {
+  outline: none;
+  border-color: var(--blau);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blau) 18%, transparent);
+}
+.feld::placeholder {
+  color: var(--leise);
+  opacity: 0.7;
+}
+
+}
+
+/* Handgezogene Unterstreichung unter einem Wort (Startseite). */
+.krakel {
+  position: relative;
+  white-space: nowrap;
+}
+.krakel svg {
+  position: absolute;
+  left: -2%;
+  bottom: -0.18em;
+  width: 104%;
+  height: 0.42em;
+  overflow: visible;
+}
+.krakel path {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: lernsprung-krakel 0.9s 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes lernsprung-krakel {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Die Schülerakte (components/akte/Mappe.js)
+
+   Eine Eckspanner-Mappe: Deckel in Petrol mit Leinenstruktur, Etikett, Reiter
+   und zwei Gummibändern. Darunter liegt das Blatt (Formular oder Dokumente).
+
+   Breit (ab 900 px): Der Deckel klappt wie ein Buchdeckel nach links auf, die
+   Mappe wird doppelt so breit; links liegt dann die Innenseite des Deckels.
+   Schmal: Der Deckel klappt zur Seite weg, das Blatt nimmt die volle Breite.
+   --------------------------------------------------------------------------- */
+.akte {
+  --akte-b: min(420px, 100%);
+  --akte-h: 560px;
+  --dauer: 0.85s;
+  --kurve: cubic-bezier(0.65, 0.05, 0.25, 1);
+  position: relative;
+  width: var(--akte-b);
+  perspective: 2600px;
+  transition: width var(--dauer) var(--kurve);
+}
+
+.akte-blatt {
+  position: relative;
+  min-height: var(--akte-h);
+  border-radius: 6px 14px 14px 6px;
+  background:
+    linear-gradient(90deg, rgb(var(--schatten) / 0.08), transparent 18px),
+    var(--etikett);
+  color: #23384c;
+  box-shadow:
+    3px 3px 0 -1px color-mix(in srgb, var(--etikett) 88%, #8a6a40),
+    6px 6px 0 -2px color-mix(in srgb, var(--etikett) 78%, #8a6a40),
+    0 24px 50px -24px rgb(var(--schatten) / 0.45);
+}
+.akte[data-offen="false"] .akte-blatt {
+  max-height: var(--akte-h);
+  overflow: hidden;
+}
+
+.akte-deckel {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform var(--dauer) var(--kurve);
+  z-index: 2;
+}
+.akte-vorne,
+.akte-hinten {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 6px 16px 16px 6px;
+}
+.akte-vorne {
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.06) 14px, transparent 30px),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.05) 0 2px, transparent 2px 5px),
+    var(--mappe);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.06),
+    0 2px 3px rgb(0 0 0 / 0.12),
+    0 30px 60px -28px rgb(var(--schatten) / 0.65);
+}
+.akte-hinten {
+  transform: rotateY(180deg);
+  background:
+    linear-gradient(270deg, rgb(0 0 0 / 0.18), transparent 26px),
+    color-mix(in srgb, var(--mappe) 5%, #ece1cf);
+  color: #23384c;
+  border-radius: 16px 6px 6px 16px;
+  overflow: hidden;
+}
+
+/* Reiter oben rechts. */
+.akte-reiter {
+  position: absolute;
+  top: -26px;
+  right: 34px;
+  height: 30px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px 10px 0 0;
+  background: var(--orange);
+  color: #1a2a38;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: inset 0 -6px 8px -6px rgb(0 0 0 / 0.25);
+}
+
+/* Gummibänder an den rechten Ecken. */
+.akte-band {
+  position: absolute;
+  right: -20px;
+  width: 88px;
+  height: 9px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f6a24f, #d9741c);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.25);
+}
+/* Mitte des Bands sitzt gleich weit von beiden Kanten – so läuft es schräg
+   über die Ecke und verschwindet hinter den Kanten. */
+.akte-band-oben {
+  top: 20px;
+  transform: rotate(45deg);
+}
+.akte-band-unten {
+  bottom: 20px;
+  transform: rotate(-45deg);
+}
+
+.akte-etikett {
+  position: absolute;
+  left: 50%;
+  top: 74px;
+  width: min(300px, 78%);
+  transform: translateX(-50%) rotate(-0.6deg);
+  border-radius: 10px;
+  background: var(--etikett);
+  color: #23384c;
+  padding: 18px 20px 16px;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.5) inset, 0 8px 18px -10px rgb(0 0 0 / 0.55);
+}
+.akte-zeile {
+  display: grid;
+  grid-template-columns: 5.2rem 1fr;
+  align-items: end;
+  gap: 0.4rem;
+  min-height: 2rem;
+  border-bottom: 1px dashed #b9a98f;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a6c58;
+}
+.akte-zeile b {
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #1f4e6e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.akte-stempel {
+  position: absolute;
+  right: 26px;
+  bottom: 70px;
+  transform: rotate(-9deg);
+  border: 2.5px solid var(--orange);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgb(0 0 0 / 0.1);
+  animation: lernsprung-stempel 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes lernsprung-stempel {
+  from {
+    opacity: 0;
+    transform: rotate(-9deg) scale(1.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-9deg) scale(1);
+  }
+}
+
+.akte-hinweis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  text-align: center;
+  font-family: var(--font-caveat), cursive;
+  font-size: 1.5rem;
+  color: #f8e7cf;
+}
+.akte-hinweis span {
+  display: inline-block;
+  animation: lernsprung-wippen 2.4s ease-in-out infinite;
+}
+@keyframes lernsprung-wippen {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+
+.akte-oeffner {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  cursor: pointer;
+}
+.akte-oeffner:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 4px;
+}
+
+/* Geschlossen: leichte Neigung beim Überfahren lädt zum Öffnen ein. */
+@media (hover: hover) {
+  .akte[data-offen="false"] .akte-deckel:hover {
+    transform: rotateY(-7deg);
+  }
+}
+
+/* Schmal: Deckel klappt weg und verschwindet. */
+.akte[data-offen="true"] .akte-deckel {
+  transform: rotateY(-108deg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform var(--dauer) var(--kurve),
+    opacity 0.3s ease calc(var(--dauer) * 0.55),
+    visibility 0s linear var(--dauer);
+}
+.akte-nur-breit {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .akte[data-offen="true"] {
+    width: calc(var(--akte-b) * 2);
+  }
+  .akte-blatt {
+    margin-left: auto;
+    width: var(--akte-b);
+    min-width: 0;
+  }
+  .akte .akte-deckel {
+    left: auto;
+    right: 0;
+    width: var(--akte-b);
+  }
+  .akte[data-offen="true"] .akte-deckel {
+    transform: rotateY(-180deg);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform var(--dauer) var(--kurve);
+  }
+  .akte-nur-breit {
+    display: block;
+  }
+  .akte-nur-schmal {
+    display: none;
+  }
+}
+
+@layer components {
+/* Auf dem Blatt (Akte, Karteikarte) bleibt es hell wie Papier – auch
+   gedimmt. Eigene Felder, Beschriftungen und Auswahlknöpfe dafür. */
+.blatt-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6d6150;
+}
+.feld-papier {
+  background: #fffaf2;
+  border-color: #d9c8ac;
+  color: #1d2d3c;
+}
+.feld-papier:focus {
+  border-color: #1f4e6e;
+  box-shadow: 0 0 0 3px rgb(31 78 110 / 0.16);
+}
+.chip {
+  min-height: 2.6rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  border: 1.5px solid #d9c8ac;
+  background: #fffaf2;
+  color: #1d2d3c;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.chip:hover:not(:disabled) {
+  border-color: #1f4e6e;
+}
+.chip[aria-pressed="true"] {
+  background: #1f4e6e;
+  border-color: #1f4e6e;
+  color: #fbf6ee;
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.knopf-blatt {
+  background: #1f4e6e;
+  color: #fbf6ee;
+}
+.knopf-blatt:hover {
+  background: #163a53;
+}
+
+}
+
+/* Karteikarte für die Anmeldung (components/akte/Karteikarte.js). */
+.karteikarte {
+  position: relative;
+  border-radius: 14px;
+  background: var(--etikett);
+  color: #23384c;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 26px 50px -26px rgb(var(--schatten) / 0.55);
+}
+.karteikarte::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 70px;
+  height: 2px;
+  background: color-mix(in srgb, var(--orange) 70%, transparent);
+}
+
+/* Überscrollen (Gummiband am Seitenrand) zeigt den Körper – auch der soll
+   Sand sein, nicht Weiß. */
+body:has(> .site) {
+  background-color: #f3eadc;
+}
+:root[data-licht="gedimmt"] body:has(> .site) {
+  background-color: #26221d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-licht="hell"]) body:has(> .site) {
+    background-color: #26221d;
+  }
+}
+
+html[data-licht="hell"] {
+  color-scheme: light;
+}
+html[data-licht="gedimmt"] {
+  color-scheme: dark;
 }
 
 html {
@@ -217,6 +880,16 @@ button:hover > .arrow-slide {
   }
 
   .rise {
+    animation: none;
+  }
+
+  .krakel path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .akte-hinweis span,
+  .akte-stempel {
     animation: none;
   }
 }

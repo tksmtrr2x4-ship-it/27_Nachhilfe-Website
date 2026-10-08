@@ -44,7 +44,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">2. Buchungsformular und Gesprächsanfrage</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">2. Buchungsformular</h2>
           <p className="mt-2">
             Bei einer Buchung erhebe ich Name, Klassenstufe und Fach der Schülerin/des Schülers
             sowie Name, E-Mail-Adresse und optional Telefonnummer der Erziehungsberechtigten, um
@@ -68,33 +68,37 @@ export default function DatenschutzPage() {
             gesonderte ausdrückliche Einwilligung erfordern würden — solche Themen besprechen
             wir stattdessen persönlich.
           </p>
-          <p className="mt-2">
-            Über das Formular „Kostenloses Gespräch anfragen“ auf der Startseite erhebe ich Ihren
-            Namen und Ihre Telefonnummer sowie freiwillig Klassenstufe, Fach und die gewünschte
-            Rückrufzeit, um Sie für ein Kennenlerngespräch zurückzurufen. Rechtsgrundlage ist
-            Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage). Name und
-            Telefonnummer sind für den Rückruf erforderlich. Kommt kein Vertrag zustande, lösche
-            ich die Anfrage spätestens {SPEICHERTAGE} Tage nach Eingang.
-          </p>
         </section>
 
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-white">3. Schülerakte (Kundenbereich)</h2>
+        <section id="schuelerakte">
+          <h2 className="font-semibold text-slate-900 dark:text-white">3. Schülerakte (Kundenbereich) und Rückruf</h2>
           <p className="mt-2">
-            Unter <strong>/konto</strong> können Sie eine Schülerakte anlegen und sich später ohne
-            Passwort anmelden. Dabei verarbeite ich Ihren Namen und Ihre Kontaktdaten einschließlich
-            Anschrift, die Angaben zu Ihrem Kind (Name, Klasse, Schulart, Schule) sowie die von Ihnen
-            gemachten Angaben zum Lernbedarf (Fächer, aktuelle Noten, Ziele, gewünschte Zeiten).
-            Diese Angaben ersetzen den Aufnahmebogen, den wir sonst gemeinsam ausfüllen würden.
-            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nachhilfevertrags bzw.
-            vorvertragliche Maßnahmen auf Ihre Anfrage).
+            Auf der Startseite können Sie eine Schülerakte anlegen. Dafür erhebe ich nur den
+            Vornamen und die Klasse Ihres Kindes, freiwillig die gewünschten Fächer, sowie Ihren
+            Namen und Ihre E-Mail-Adresse. Gespeichert wird erst, wenn Sie den Link in der
+            Bestätigungsmail öffnen (Double-Opt-in); bis dahin liegen die Angaben höchstens 24
+            Stunden in einem kurzlebigen Eintrag und werden danach automatisch gelöscht. Weitere
+            Angaben (etwa Anschrift, Schule, Lernbedarf) können Sie später in der Akte selbst
+            ergänzen; sie ersetzen den Aufnahmebogen, den wir sonst gemeinsam ausfüllen würden.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre
+            Anfrage bzw. Erfüllung des Nachhilfevertrags).
           </p>
           <p className="mt-2">
-            Die Anmeldung erfolgt über einen einmaligen Link per E-Mail; ein Passwort wird weder
-            vergeben noch gespeichert. Damit Sie angemeldet bleiben, setze ich einen technisch
-            notwendigen Cookie (<code>lernsprung_konto</code>, 30 Tage, siehe Abschnitt 7). In der
-            Schülerakte sehen Sie Ihre kommenden Termine und kurze Hinweise von mir zur nächsten
-            Stunde; meine eigenen Unterrichtsnotizen sind dort nicht sichtbar.
+            Die Anmeldung unter <strong>/konto</strong> erfolgt über einen einmaligen Link per
+            E-Mail; ein Passwort wird weder vergeben noch gespeichert. Der dort eingetragene Name
+            dient nur dazu, nach dem Link die passende Akte zu öffnen. Damit Sie angemeldet
+            bleiben, setze ich einen technisch notwendigen Cookie (<code>lernsprung_konto</code>,
+            30 Tage, siehe Abschnitt 7). In der Schülerakte sehen Sie Ihre Stunden, die an Sie
+            ausgestellten Rechnungen und Quittungen (als PDF) sowie kurze Hinweise von mir zur
+            nächsten Stunde; meine eigenen Unterrichtsnotizen sind dort nicht sichtbar.
+          </p>
+          <p className="mt-2">
+            Aus der Schülerakte heraus können Sie ein kostenloses Telefonat anfragen. Dafür
+            erhebe ich Ihre Telefonnummer, die gewünschte Rückrufzeit und freiwillig eine
+            Anmerkung; Name, Kind und Klasse kommen aus der Akte. Rechtsgrundlage ist Art. 6
+            Abs. 1 lit. b DSGVO. Die Telefonnummer übernehme ich in Ihre Kontaktdaten, falls dort
+            noch keine steht. Die Anfrage selbst lösche ich spätestens {SPEICHERTAGE} Tage nach
+            Eingang.
           </p>
           <p className="mt-2">
             Auch hier bitte ich ausdrücklich darum, keine Angaben zu Gesundheit, Diagnosen oder

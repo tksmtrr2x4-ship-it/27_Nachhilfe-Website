@@ -137,7 +137,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
           innenDeckel={<InnenDeckel portrait={portrait} onSchliessen={() => setOffen(false)} />}
         >
           <form onSubmit={absenden} className="px-6 pb-7 pt-6 sm:px-8" noValidate={false}>
-            <div className="flex items-baseline justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.14em] text-[#8a7a62]">
+            <div className="flex items-baseline justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.14em] text-[#6a5d4b]">
               <span>Neuaufnahme</span>
               <span>{heute()}</span>
             </div>
@@ -180,7 +180,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
 
             <fieldset className="mt-4">
               <legend className="blatt-label">
-                Fächer <span className="font-normal normal-case tracking-normal text-[#8a7a62]">(freiwillig)</span>
+                Fächer <span className="font-normal normal-case tracking-normal text-[#6a5d4b]">(freiwillig)</span>
               </legend>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {faecher.map((f) => {
@@ -252,7 +252,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
             <button type="submit" disabled={busy} className="knopf knopf-blatt mt-5 w-full disabled:opacity-60">
               {busy ? "Wird angelegt …" : "Akte anlegen"}
             </button>
-            <p className="mt-3 text-[12.5px] leading-snug text-[#7a6c58]">
+            <p className="mt-3 text-[12.5px] leading-snug text-[#625644]">
               Sie bekommen einen Bestätigungslink per E-Mail. Erst danach wird gespeichert.{" "}
               <a href="/datenschutz#schuelerakte" className="underline underline-offset-2">
                 Datenschutz
@@ -285,7 +285,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
 function InnenDeckel({ portrait, onSchliessen }) {
   return (
     <div className="flex h-full flex-col px-8 pb-7 pt-9">
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8a7a62]">Vorab</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6a5d4b]">Vorab</p>
       <h3 className="mt-2 text-[1.75rem] font-semibold leading-tight text-[#18324a]">Nur das Nötigste.</h3>
       <ul className="mt-4 space-y-2.5 text-[15px] leading-snug text-[#384757]">
         <li className="flex gap-2.5">
@@ -294,7 +294,7 @@ function InnenDeckel({ portrait, onSchliessen }) {
         <li className="flex gap-2.5">
           <Haken /> Ihr Name und Ihre E-Mail
         </li>
-        <li className="flex gap-2.5 text-[#7a6c58]">
+        <li className="flex gap-2.5 text-[#625644]">
           <span className="mt-[3px] inline-block h-4 w-4 flex-none text-center leading-4">–</span>
           Telefon, Anschrift und Schule erst, wenn Sie buchen
         </li>
@@ -323,7 +323,7 @@ function InnenDeckel({ portrait, onSchliessen }) {
 
 function Haken() {
   return (
-    <svg viewBox="0 0 20 20" className="mt-[2px] h-4 w-4 flex-none" fill="none" stroke="#c9670f" strokeWidth="2.4" aria-hidden="true">
+    <svg viewBox="0 0 20 20" className="mt-[2px] h-4 w-4 flex-none" fill="none" stroke="#96490a" strokeWidth="2.4" aria-hidden="true">
       <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

@@ -89,7 +89,7 @@ export default async function BuchenPage({ params }) {
             <p className="mt-2">{shopStatus.message}</p>
             <Link
               href="/angebote"
-              className="mt-4 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+              className="mt-4 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300"
             >
               Zurück zu den Angeboten
             </Link>

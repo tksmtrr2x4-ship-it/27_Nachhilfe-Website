@@ -28,7 +28,7 @@ export const LEER = {
 };
 
 const feld =
-  "mt-1 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
+  "mt-1 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm bg-karte text-tinte focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
 const beschriftung = "text-xs font-semibold text-slate-600 dark:text-slate-300";
 
 export default function SelbstauskunftFormular({
@@ -155,7 +155,7 @@ export default function SelbstauskunftFormular({
           {werte.bedarf.length < MAX_FAECHER ? (
             <button
               type="button"
-              className="text-sm font-semibold text-brand-700 hover:underline"
+              className="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300"
               onClick={() => setWerte((alt) => ({ ...alt, bedarf: [...alt.bedarf, { ...LEER.bedarf[0] }] }))}
             >
               + weiteres Fach
@@ -219,7 +219,7 @@ export default function SelbstauskunftFormular({
           <button
             type="button"
             onClick={onAbbrechen}
-            className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600"
+            className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300"
           >
             Abbrechen
           </button>

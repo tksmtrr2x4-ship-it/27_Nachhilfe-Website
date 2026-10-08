@@ -12,7 +12,7 @@ export default function Footer({ siteName, contactEmail, contactPhone, logo }) {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             {logo ? (
-              <div className="mb-3">
+              <div className="logo-marke mb-3">
                 <Picture
                   image={logo}
                   alt={`Logo von ${siteName} – Nachhilfe in Villingen-Schwenningen`}

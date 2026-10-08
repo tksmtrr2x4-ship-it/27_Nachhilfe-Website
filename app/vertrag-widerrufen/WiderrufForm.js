@@ -106,7 +106,7 @@ export default function WiderrufForm() {
       <label className="block">
         <span className="font-semibold text-slate-700 dark:text-slate-300">Buchungs- oder Rechnungsnummer *</span>
         <input className={feld} required maxLength={60} value={daten.referenz} onChange={setze("referenz")} />
-        <span className="mt-1 block text-xs text-slate-500">Steht in der Bestellbestätigung bzw. auf der Rechnung.</span>
+        <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">Steht in der Bestellbestätigung bzw. auf der Rechnung.</span>
       </label>
       <label className="block">
         <span className="font-semibold text-slate-700 dark:text-slate-300">Datum der Buchung *</span>

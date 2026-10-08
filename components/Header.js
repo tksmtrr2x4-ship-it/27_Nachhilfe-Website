@@ -35,7 +35,9 @@ export default function Header({ siteName, logo }) {
         <Link href="/" className="flex items-center gap-2.5 text-tinte" onClick={() => setMenuOpen(false)}>
           {logo ? (
             // Dekorativ: Der Name steht direkt daneben im Link.
-            <Picture image={logo} decorative loading="eager" className="h-9 w-auto" />
+            <span className="logo-marke">
+              <Picture image={logo} decorative loading="eager" className="h-9 w-auto" />
+            </span>
           ) : null}
           <span className="serif text-[1.35rem] font-semibold leading-none">{siteName}</span>
         </Link>

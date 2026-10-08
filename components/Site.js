@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 // hat ihr eigenes Erscheinungsbild und soll davon nichts abbekommen.
 export default function Site({ children }) {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin")) return children;
+  // Ebenfalls außen vor: die Bestätigungsseite der Verwaltungs-Anmeldung, die
+  // schon keine Kopf- und Fußzeile hat (components/SiteChrome.js).
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/anmeldung-bestaetigen")) return children;
   return <div className="site flex min-h-full flex-1 flex-col">{children}</div>;
 }

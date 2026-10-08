@@ -356,20 +356,20 @@ const LOGO = { src: "/logo-etikett.png", webp: "/logo-etikett.webp", width: 436,
 function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onTelefonat, onSchliessen }) {
   return (
     <div className={kompakt ? "" : "flex h-full flex-col px-8 pb-7 pt-9"}>
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8a7a62]">Steckbrief</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6a5d4b]">Steckbrief</p>
       <h2 className="mt-1.5 text-[1.9rem] font-semibold leading-tight text-[#18324a]">{kind.name}</h2>
       <dl className="mt-3 grid grid-cols-[6.5rem_1fr] gap-y-1.5 text-[15px] text-[#384757]">
-        <dt className="text-[#7a6c58]">Klasse</dt>
+        <dt className="text-[#625644]">Klasse</dt>
         <dd>{kind.klasse || "–"}</dd>
-        <dt className="text-[#7a6c58]">Fächer</dt>
+        <dt className="text-[#625644]">Fächer</dt>
         <dd>{faecherText(kind) || "noch offen"}</dd>
-        <dt className="text-[#7a6c58]">Kontakt</dt>
+        <dt className="text-[#625644]">Kontakt</dt>
         <dd className="min-w-0 break-words">{kunde.name}</dd>
       </dl>
 
       {naechste ? (
         <div className="mt-5 rounded-xl bg-[#fffaf2] p-4 shadow-[0_1px_0_rgb(0_0_0/0.04)]">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c9670f]">Nächste Stunde</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#96490a]">Nächste Stunde</p>
           <p className="mt-1 text-[17px] font-semibold text-[#18324a]">
             {naechste.fach} · {wochentag(naechste.datum)} {formatDate(naechste.datum)}
             {naechste.zeit ? `, ${naechste.zeit} Uhr` : ""}
@@ -439,12 +439,12 @@ function Register({ mappe, nachrichten }) {
             aria-selected={reiter === key}
             onClick={() => setReiter(key)}
             className={`relative flex-none whitespace-nowrap rounded-t-lg px-3 pb-2 pt-2.5 text-[13px] font-semibold transition sm:min-w-0 sm:flex-1 sm:px-1.5 ${
-              reiter === key ? "bg-[#fffaf2] text-[#18324a]" : "text-[#7a6c58] hover:text-[#18324a]"
+              reiter === key ? "bg-[#fffaf2] text-[#18324a]" : "text-[#625644] hover:text-[#18324a]"
             }`}
           >
             <span aria-hidden="true" className="absolute inset-x-2 top-0 h-[3px] rounded-full" style={{ background: farbe }} />
             {titel}
-            {anzahl[key] ? <span className="ml-1 text-[11.5px] font-medium text-[#8a7a62]">{anzahl[key]}</span> : null}
+            {anzahl[key] ? <span className="ml-1 text-[11.5px] font-medium text-[#6a5d4b]">{anzahl[key]}</span> : null}
           </button>
         ))}
       </div>
@@ -460,7 +460,7 @@ function Register({ mappe, nachrichten }) {
 }
 
 function Leer({ children }) {
-  return <p className="rounded-xl border-2 border-dashed border-[#d9c8ac] px-4 py-6 text-center text-[14.5px] leading-relaxed text-[#7a6c58]">{children}</p>;
+  return <p className="rounded-xl border-2 border-dashed border-[#d9c8ac] px-4 py-6 text-center text-[14.5px] leading-relaxed text-[#625644]">{children}</p>;
 }
 
 function Blatt({ children, href }) {
@@ -491,10 +491,10 @@ const ZUSTAND_FARBE = {
   geplant: "bg-[#dce8ef] text-[#1f4e6e]",
   gehalten: "bg-[#e6efdf] text-[#3d5a2c]",
   ausgefallen: "bg-[#fbe3d3] text-[#8a3b0a]",
-  abgesagt: "bg-[#ece4d6] text-[#6d6150]",
+  abgesagt: "bg-[#ece4d6] text-[#5e5242]",
   offen: "bg-[#fbe3d3] text-[#8a3b0a]",
   bezahlt: "bg-[#e6efdf] text-[#3d5a2c]",
-  storniert: "bg-[#ece4d6] text-[#6d6150]",
+  storniert: "bg-[#ece4d6] text-[#5e5242]",
 };
 
 function Marke({ zustand, children }) {
@@ -520,7 +520,7 @@ function Stunden({ stunden }) {
       </span>
       <span className="min-w-0 flex-1 text-[14.5px] leading-snug text-[#384757]">
         {s.fach}
-        {s.dauerMinuten ? <span className="block text-[13px] text-[#8a7a62]">{s.dauerMinuten} Min.</span> : null}
+        {s.dauerMinuten ? <span className="block text-[13px] text-[#6a5d4b]">{s.dauerMinuten} Min.</span> : null}
       </span>
       <Marke zustand={s.zustand}>{s.text}</Marke>
     </li>
@@ -556,7 +556,7 @@ function Rechnungen({ liste }) {
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14.5px] font-semibold text-[#18324a]">
               {r.art} {r.nummer} <Marke zustand={r.zustand}>{r.zustand ? r.zustand[0].toUpperCase() + r.zustand.slice(1) : ""}</Marke>
             </p>
-            <p className="text-[13.5px] text-[#6d6150]">
+            <p className="text-[13.5px] text-[#5e5242]">
               {formatDate(r.datum)} · {formatPrice(r.betragCents)}
               {r.zustand === "offen" && r.faelligAm ? ` · fällig ${formatDate(r.faelligAm)}` : ""}
             </p>
@@ -575,7 +575,7 @@ function Quittungen({ liste }) {
         <li key={q._id}>
           <Blatt href={`/api/konto/quittung/${encodeURIComponent(q._id)}`}>
             <p className="text-[14.5px] font-semibold text-[#18324a]">Quittung {q.nummer}</p>
-            <p className="text-[13.5px] text-[#6d6150]">
+            <p className="text-[13.5px] text-[#5e5242]">
               {formatDate(q.datum)} · {formatPrice(q.betragCents)}
             </p>
           </Blatt>
@@ -592,7 +592,7 @@ function Nachrichten({ liste }) {
       {liste.map((n) => (
         <li key={n._id} className={`rounded-xl p-4 ${n.neu ? "bg-[#fdebd8]" : "bg-[#fffaf2]"}`}>
           <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#23384c]">{n.text}</p>
-          <p className="mt-1.5 text-[12.5px] text-[#8a7a62]">
+          <p className="mt-1.5 text-[12.5px] text-[#6a5d4b]">
             {formatDate(String(n.erstelltAm).slice(0, 10))}
             {n.neu ? " · neu" : ""}
           </p>
@@ -647,7 +647,7 @@ function WieWeiter({ kind, kunde }) {
           <span className="mt-1.5 text-[15px] leading-relaxed text-[#dce8ef]">
             Angebote ansehen und direkt eine Stunde anfragen. Ihre Angaben sind schon eingetragen.
           </span>
-          <span className="mt-4 text-[15px] font-semibold text-[#f8c38e]">
+          <span className="mt-4 text-[15px] font-semibold text-[#fbd3a8]">
             Zu den Angeboten <span className="arrow-slide">→</span>
           </span>
         </Link>

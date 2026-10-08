@@ -41,7 +41,7 @@ export default function Karteikarte({ meldung = "", fehlerVorab = "" }) {
       <div className="karteikarte rise rotate-[-0.8deg] px-6 pb-7 pt-6 sm:px-9">
         <div className="flex h-[48px] items-start justify-between">
           <p className="serif text-[1.65rem] font-semibold leading-none text-[#18324a]">Zu Ihrer Akte</p>
-          <span className="rounded-md border-2 border-[#c9670f] px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#c9670f]">
+          <span className="rounded-md border-2 border-[#96490a] px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#96490a]">
             Kartei
           </span>
         </div>
@@ -66,7 +66,7 @@ export default function Karteikarte({ meldung = "", fehlerVorab = "" }) {
             <label className="flex h-[54px] items-end gap-3 border-b-[1.5px] border-[#c4d5e1]">
               <span className="blatt-label w-[4.8rem] flex-none pb-2.5">Name</span>
               <input
-                className="w-full bg-transparent pb-1.5 font-hand text-[1.6rem] leading-none text-[#1f4e6e] outline-none placeholder:text-[#b6a68c] focus:placeholder:text-transparent"
+                className="w-full bg-transparent pb-1.5 font-hand text-[1.6rem] leading-none text-[#1f4e6e] outline-none placeholder:text-[#8a7c66] focus:placeholder:text-transparent"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="off"
@@ -77,7 +77,7 @@ export default function Karteikarte({ meldung = "", fehlerVorab = "" }) {
             <label className="flex h-[54px] items-end gap-3 border-b-[1.5px] border-[#c4d5e1]">
               <span className="blatt-label w-[4.8rem] flex-none pb-2.5">E-Mail</span>
               <input
-                className="w-full bg-transparent pb-1.5 font-hand text-[1.6rem] leading-none text-[#1f4e6e] outline-none placeholder:text-[#b6a68c] focus:placeholder:text-transparent"
+                className="w-full bg-transparent pb-1.5 font-hand text-[1.6rem] leading-none text-[#1f4e6e] outline-none placeholder:text-[#8a7c66] focus:placeholder:text-transparent"
                 type="email"
                 required
                 value={email}
@@ -103,7 +103,7 @@ export default function Karteikarte({ meldung = "", fehlerVorab = "" }) {
             <button type="submit" disabled={busy} className="knopf knopf-blatt mt-6 w-full disabled:opacity-60">
               {busy ? "Wird geschickt …" : "Link zur Akte schicken"}
             </button>
-            <p className="mt-3 text-[13px] leading-snug text-[#7a6c58]">
+            <p className="mt-3 text-[13px] leading-snug text-[#625644]">
               Kein Passwort nötig: Sie bekommen einen Link per E-Mail, der Ihre Mappe öffnet.
             </p>
           </form>

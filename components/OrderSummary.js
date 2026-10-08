@@ -7,12 +7,12 @@ import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricin
 // kommen aus dem Angebotsdatensatz, nichts ist hartkodiert.
 export default function OrderSummary({ offer, subject, kleinunternehmer }) {
   return (
-    <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50/50 p-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+    <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50/50 p-5 dark:border-indigo-500/30 dark:bg-indigo-500/10">
+      <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
         Bestellübersicht
       </p>
-      <h3 className="mt-1 text-base font-semibold text-slate-900">{offer.title}</h3>
-      <dl className="mt-3 space-y-1 text-sm text-slate-700">
+      <h3 className="mt-1 text-base font-semibold text-slate-900 dark:text-white">{offer.title}</h3>
+      <dl className="mt-3 space-y-1 text-sm text-slate-700 dark:text-slate-300">
         <div>
           <dt className="inline font-semibold">Fach: </dt>
           <dd className="inline">{subject || offer.subject}</dd>
@@ -38,10 +38,10 @@ export default function OrderSummary({ offer, subject, kleinunternehmer }) {
           </div>
         ) : null}
       </dl>
-      <p className="mt-3 text-lg font-semibold text-slate-900">
+      <p className="mt-3 text-lg font-semibold text-slate-900 dark:text-white">
         Gesamtpreis: {formatPrice(offer.priceCents)}
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
         {kleinunternehmer
           ? "Kleinunternehmer nach § 19 UStG, keine Umsatzsteuer ausgewiesen."
           : "inkl. gesetzlicher Umsatzsteuer."}{" "}

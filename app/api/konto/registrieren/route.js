@@ -18,8 +18,13 @@ const NEUTRAL = {
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   // Honigtopf (unsichtbares Feld): Bots bekommen dieselbe Antwort, es passiert
-  // aber nichts.
-  if (body.website) return Response.json(NEUTRAL);
+  // aber nichts. Vermerkt wird es trotzdem (ohne Daten), damit eine echte
+  // Anmeldung, die hier hängen bleibt, im Protokoll auffällt. „website“ war
+  // der alte Feldname – den füllte das automatische Ausfüllen mancher Browser.
+  if (body.kontrollfeld || body.website) {
+    console.warn("Registrierung verworfen: Honigtopf-Feld war ausgefüllt.");
+    return Response.json(NEUTRAL);
+  }
 
   // Die Kurzfassung der Startseite fragt nach dem Nötigsten; Klasse ist dort
   // Pflicht, das Kursniveau nicht.

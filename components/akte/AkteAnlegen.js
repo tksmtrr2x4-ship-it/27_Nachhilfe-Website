@@ -28,7 +28,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
   const [gesendet, setGesendet] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState("");
-  const [werte, setWerte] = useState({ kind: "", klasse: "", faecher: [], name: "", email: "", website: "" });
+  const [werte, setWerte] = useState({ kind: "", klasse: "", faecher: [], name: "", email: "", kontrollfeld: "" });
   const buehne = useRef(null);
 
   const setze = (feld) => (e) => setWerte((w) => ({ ...w, [feld]: e.target.value }));
@@ -85,7 +85,7 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
           eltern: { name: werte.name, email: werte.email },
           schueler: { name: werte.kind, klasse: werte.klasse },
           bedarf: werte.faecher.map((fach) => ({ fach })),
-          website: werte.website,
+          kontrollfeld: werte.kontrollfeld,
           kurz: true,
         }),
       });
@@ -231,14 +231,19 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
                   placeholder="name@beispiel.de"
                 />
               </label>
-              {/* Honigtopf: für Menschen unsichtbar, Bots füllen ihn aus. */}
+              {/* Honigtopf: für Menschen unsichtbar, Bots füllen ihn aus.
+                  Bewusst NICHT „website“ o. Ä.: Solche Namen füllt das
+                  automatische Ausfüllen von Browsern und Passwortmanagern
+                  mit – dann verschwand eine echte Anmeldung stillschweigend. */}
               <input
                 type="text"
-                name="website"
+                name="kontrollfeld_x7"
                 tabIndex={-1}
                 autoComplete="off"
-                value={werte.website}
-                onChange={setze("website")}
+                data-1p-ignore="true"
+                data-lpignore="true"
+                value={werte.kontrollfeld}
+                onChange={setze("kontrollfeld")}
                 className="absolute -left-[9999px] h-0 w-0 opacity-0"
                 aria-hidden="true"
               />

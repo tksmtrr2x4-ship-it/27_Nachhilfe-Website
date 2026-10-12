@@ -123,6 +123,17 @@ test("Mailbremse: je Adresse und insgesamt", async () => {
   assert.equal(durch, 20);
 });
 
+test("Mailbremse: Anmeldeversuche bremsen keine Bestätigungsmails aus", async () => {
+  const { modul } = await ladeMitDb("../lib/kunden/konto.js");
+  for (let i = 0; i < 30; i += 1) await modul.darfMailSenden(`login:ip${i}`, { proSchluessel: 10, insgesamt: 300, minuten: 15 });
+  assert.equal(await modul.darfMailSenden("registrierung:neu@example.de"), true, "30 Logins dürfen die 20er-Grenze der Registrierung nicht füllen");
+});
+
+test("Honigtopf heißt nicht wie ein Feld, das Browser automatisch ausfüllen", () => {
+  const formular = fs.readFileSync(new URL("../components/akte/AkteAnlegen.js", import.meta.url), "utf8");
+  assert.doesNotMatch(formular, /name="(website|url|homepage|company|firma)"/);
+});
+
 test("Die Kundenansicht zeigt keine internen Notizen", async () => {
   const db = fakeDb();
   db.docs.set("s1", {

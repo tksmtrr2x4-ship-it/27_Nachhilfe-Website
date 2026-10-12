@@ -3,6 +3,7 @@ import { createStudent } from "@/lib/students/db";
 import { claimLink, createKontoSession, kontoCookie } from "@/lib/kunden/konto";
 import { kundeAusSelbstauskunft, schuelerAusSelbstauskunft } from "@/lib/kunden/selbstauskunft";
 import { benachrichtigeLehrkraft } from "@/lib/kunden/mail";
+import { sendeZugang } from "@/lib/kunden/zugangVersand";
 
 // Einlösen eines Links aus der Mail – für die Anmeldung wie für die
 // Bestätigung einer neu angelegten Schülerakte. Erst hier entstehen bei einer
@@ -23,6 +24,7 @@ export async function POST(request) {
   let customerId = link.customerId || null;
   let neu = false;
   let fokus = link.fokus || null;
+  let passwort = null;
 
   if (link.art === "registrierung") {
     const daten = link.daten || {};
@@ -48,6 +50,10 @@ export async function POST(request) {
     fokus = kind?._id || null;
     neu = true;
 
+    // Das Passwort vergibt der Server und schickt es gleich per Mail. Einmal
+    // zeigt es auch die Seite an – falls die Mail auf sich warten lässt.
+    if (fokus) passwort = (await sendeZugang(fokus, { anlass: "neu" }).catch(() => null))?.passwort || null;
+
     await benachrichtigeLehrkraft({
       elternName: daten.eltern.name,
       email: daten.eltern.email,
@@ -61,8 +67,12 @@ export async function POST(request) {
     return Response.json({ error: "Zu diesem Link gibt es keine Schülerakte mehr." }, { status: 404 });
   }
 
-  const token = await createKontoSession(customerId, { userAgent: request.headers.get("user-agent") });
-  const antwort = Response.json({ ok: true, neu, fokus });
+  // Eine neu angelegte Akte öffnet nur sich selbst – wie später mit Passwort.
+  const token = await createKontoSession(customerId, {
+    userAgent: request.headers.get("user-agent"),
+    studentId: neu ? fokus : null,
+  });
+  const antwort = Response.json({ ok: true, neu, fokus, passwort });
   antwort.headers.append("Set-Cookie", kontoCookie(token));
   return antwort;
 }

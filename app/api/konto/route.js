@@ -1,4 +1,4 @@
-import { KONTO_COOKIE, endKontoSession, kontoCookieGeloescht, sessionCustomerId } from "@/lib/kunden/konto";
+import { KONTO_COOKIE, endKontoSession, kontoCookieGeloescht, sessionKonto } from "@/lib/kunden/konto";
 import { kontoUebersicht } from "@/lib/kunden/uebersicht";
 import { kontoDokumente } from "@/lib/kunden/dokumente";
 import { todayIsoBerlin } from "@/lib/adminError";
@@ -7,11 +7,12 @@ import { todayIsoBerlin } from "@/lib/adminError";
 // (Stunden, Rechnungen, Quittungen; lib/kunden/dokumente.js).
 export async function GET(request) {
   const token = request.cookies.get(KONTO_COOKIE)?.value;
-  const customerId = await sessionCustomerId(token);
-  if (!customerId) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
+  const konto = await sessionKonto(token);
+  if (!konto) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
+  const { customerId, studentId } = konto;
 
-  const uebersicht = await kontoUebersicht(customerId);
-  if (!uebersicht) {
+  const uebersicht = await kontoUebersicht(customerId, { studentId });
+  if (!uebersicht || (studentId && uebersicht.schueler.length === 0)) {
     // Die Akte wurde gelöscht, während die Sitzung noch lief.
     await endKontoSession(token);
     const weg = Response.json({ error: "Nicht angemeldet." }, { status: 401 });
@@ -19,7 +20,7 @@ export async function GET(request) {
     return weg;
   }
   const mappen = await kontoDokumente(customerId, uebersicht.schueler, todayIsoBerlin());
-  return Response.json({ ...uebersicht, mappen }, { headers: { "Cache-Control": "private, no-store" } });
+  return Response.json({ ...uebersicht, mappen, eineAkte: Boolean(studentId) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function DELETE(request) {

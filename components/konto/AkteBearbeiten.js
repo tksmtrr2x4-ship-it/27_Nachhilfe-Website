@@ -90,7 +90,13 @@ export default function AkteBearbeiten({ studentId, onFertig, onAbbrechen }) {
         setFehler(antwort.error || "Das hat nicht geklappt.");
         return;
       }
-      onFertig(studentId ? "Angaben gespeichert." : "Schülerakte angelegt.");
+      onFertig(
+        studentId
+          ? "Angaben gespeichert."
+          : antwort.passwortVerschickt
+            ? "Schülerakte angelegt. Sie hat ein eigenes Passwort – es ist per Mail unterwegs."
+            : "Schülerakte angelegt."
+      );
     } catch {
       setFehler("Keine Verbindung zum Server.");
     } finally {

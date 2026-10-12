@@ -30,6 +30,10 @@ export async function POST(request) {
     locationType,
     locationAddress,
   } = body || {};
+  // Wer bucht: Erziehungsberechtigte:r (Standard) oder die Schülerin / der
+  // Schüler selbst – dann mit der Bestätigung, dass der Vertragsschluss mit
+  // einer erwachsenen Begleitperson durchgeführt wurde.
+  const durchSchueler = body?.bucher === "schueler";
 
   const settings = await getSettings();
   const shopStatus = getShopStatus(settings);
@@ -87,8 +91,9 @@ export async function POST(request) {
   if (!contractConsent) {
     return Response.json(
       {
-        error:
-          "Bitte bestätigen, dass Sie erziehungsberechtigt sind und die AGB/Widerrufsbelehrung akzeptieren.",
+        error: durchSchueler
+          ? "Bitte bestätigen, dass der Vertragsschluss mit einer erwachsenen Begleitperson durchgeführt wurde."
+          : "Bitte bestätigen, dass Sie erziehungsberechtigt sind und die AGB/Widerrufsbelehrung akzeptieren.",
       },
       { status: 400 }
     );
@@ -139,7 +144,9 @@ export async function POST(request) {
   const consentTimestamp = new Date().toISOString();
   const consents = {
     privacy: { text: CONSENT_TEXT.privacy, checkedAt: consentTimestamp },
-    contract: { text: CONSENT_TEXT.contract, checkedAt: consentTimestamp },
+    ...(durchSchueler
+      ? { contractStudent: { text: CONSENT_TEXT.contractStudent, checkedAt: consentTimestamp } }
+      : { contract: { text: CONSENT_TEXT.contract, checkedAt: consentTimestamp } }),
     ...(earlyStartRequired
       ? { earlyStart: { text: CONSENT_TEXT.earlyStart, checkedAt: consentTimestamp } }
       : {}),
@@ -173,7 +180,11 @@ export async function POST(request) {
     parentEmail: parentEmail.trim(),
     parentPhone: parentPhone?.trim() || "",
     notes: notes?.trim() || "",
-    guardianConsent: true,
+    // true = die/der Erziehungsberechtigte hat selbst gebucht; bei einer
+    // Buchung durch die Schülerin / den Schüler steht die Bestätigung der
+    // Begleitperson in consents.contractStudent.
+    guardianConsent: !durchSchueler,
+    bookedBy: durchSchueler ? "schueler" : "eltern",
     consents,
     // AGB-Version, der zugestimmt wurde, samt Zeitpunkt und Kanal (Website).
     termsVersion: TERMS_VERSION,

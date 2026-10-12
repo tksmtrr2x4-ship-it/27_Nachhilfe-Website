@@ -9,13 +9,14 @@ import Karteikarte from "@/components/akte/Karteikarte";
 
 // Die Schülerakte für Familien.
 //
-// Nicht angemeldet: eine Karteikarte – Name und E-Mail, Link per Mail.
+// Nicht angemeldet: eine Karteikarte – Name des Kindes und Passwort (vom
+// Server vergeben, kam per Mail). Ein Passwort öffnet genau eine Akte.
 // Angemeldet: die Mappe des Kindes. Auf dem Etikett das Wichtigste, beim
 // Öffnen die Dokumente wie in einer echten Mappe, nach Registern sortiert:
 // Stunden, Rechnungen, Quittungen, Nachrichten.
 //
 // Frisch angelegt (noch keine Stunde): obenauf die Wahl, wie es weitergeht –
-// Termin aussuchen oder erst ein kostenloses Telefonat.
+// Termin aussuchen oder erst ein kostenloses Kennenlern-Meeting per Video.
 //
 // Der Code aus dem Mail-Link steht hinter dem Doppelkreuz und wird von dieser
 // Seite per JavaScript nachgereicht – er erreicht den Server also nie als Teil
@@ -24,12 +25,6 @@ import Karteikarte from "@/components/akte/Karteikarte";
 const MELDUNG_SCHLUESSEL = "konto_meldung";
 const WOCHENTAGE = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const KURZNAMEN = { Mathematik: "Mathe" };
-const RUECKRUF = [
-  ["egal", "egal wann"],
-  ["vormittags", "vormittags"],
-  ["nachmittags", "nachmittags"],
-  ["abends", "abends"],
-];
 
 function wochentag(iso) {
   const [j, m, t] = String(iso || "").split("-").map(Number);
@@ -49,7 +44,7 @@ function faecherText(kind) {
 export default function KontoSeite() {
   const [stand, setStand] = useState("laedt"); // laedt | anmelden | angemeldet
   const [daten, setDaten] = useState(null);
-  const [meldung, setMeldung] = useState({ hinweis: "", fehler: "", fokus: null, neu: false });
+  const [meldung, setMeldung] = useState({ hinweis: "", fehler: "", fokus: null, neu: false, passwort: "" });
   // null = Mappe, sonst { studentId } – studentId null heißt „weiteres Kind".
   const [bearbeiten, setBearbeiten] = useState(null);
 
@@ -98,6 +93,7 @@ export default function KontoSeite() {
               hinweis: antwort.neu ? "Ihre Schülerakte ist angelegt. Willkommen!" : "",
               fokus: antwort.fokus || null,
               neu: Boolean(antwort.neu),
+              passwort: antwort.passwort || "",
             };
         } catch {
           gemerkt = { fehler: "Keine Verbindung zum Server." };
@@ -116,7 +112,7 @@ export default function KontoSeite() {
         if (gemerkt) {
           sessionStorage.removeItem(MELDUNG_SCHLUESSEL);
           const m = JSON.parse(gemerkt);
-          setMeldung({ hinweis: m.hinweis || "", fehler: m.fehler || "", fokus: m.fokus || null, neu: Boolean(m.neu) });
+          setMeldung({ hinweis: m.hinweis || "", fehler: m.fehler || "", fokus: m.fokus || null, neu: Boolean(m.neu), passwort: m.passwort || "" });
         }
       } catch {
         // egal
@@ -139,7 +135,7 @@ export default function KontoSeite() {
     await fetch("/api/konto", { method: "DELETE" }).catch(() => {});
     setDaten(null);
     setStand("anmelden");
-    setMeldung({ hinweis: "Sie sind abgemeldet.", fehler: "", fokus: null, neu: false });
+    setMeldung({ hinweis: "Sie sind abgemeldet.", fehler: "", fokus: null, neu: false, passwort: "" });
   }
 
   if (stand === "laedt") {
@@ -187,7 +183,14 @@ export default function KontoSeite() {
           In Ihrer Schülerakte liegen Stunden, Rechnungen, Quittungen und Nachrichten – jederzeit abrufbar.
         </p>
       </div>
-      <Karteikarte meldung={meldung.hinweis} fehlerVorab={meldung.fehler} />
+      <Karteikarte
+        meldung={meldung.hinweis}
+        fehlerVorab={meldung.fehler}
+        onAngemeldet={(fokus) => {
+          setMeldung({ hinweis: "", fehler: "", fokus, neu: false, passwort: "" });
+          laden();
+        }}
+      />
       <p className="mx-auto mt-10 max-w-md text-center text-[12.5px] leading-relaxed text-leise">
         Gespeichert wird, was Sie in der Akte eintragen. Die Anmeldung merkt sich Ihr Gerät über einen technisch
         notwendigen Cookie. Mehr dazu in der{" "}
@@ -205,7 +208,7 @@ export default function KontoSeite() {
 // ---------------------------------------------------------------------------
 
 function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
-  const { kunde, schueler, mappen = {}, naechste, weitere = [], nachrichten = [] } = daten;
+  const { kunde, schueler, mappen = {}, naechste, weitere = [], nachrichten = [], kennenlernen = {} } = daten;
   const anrede = kunde.name || "";
   const startKind = schueler.find((s) => s._id === meldung.fokus)?._id || schueler[0]?._id || null;
   const [aktiv, setAktiv] = useState(startKind);
@@ -274,9 +277,20 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
           </p>
         ) : null}
 
+        {meldung.passwort ? (
+          <div className="mt-5 max-w-xl rounded-2xl border-2 border-dashed border-linie bg-karte p-5">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-orange-tief">Ihr Zugang</p>
+            <p className="mt-2 text-[16px] text-text">
+              Künftig öffnen Sie die Akte mit dem Namen <strong className="text-tinte">{kind.name}</strong> und diesem Passwort:
+            </p>
+            <p className="mt-2 font-mono text-[1.35rem] font-semibold tracking-[0.12em] text-tinte">{meldung.passwort}</p>
+            <p className="mt-2 text-[13.5px] text-leise">Es ist auch per Mail unterwegs. Ändern lässt es sich nicht – bewahren Sie die Mail gut auf.</p>
+          </div>
+        ) : null}
+
         {nochKeineStunde || weiterOffen ? (
           <div ref={weiterRef}>
-            <WieWeiter kind={kind} kunde={kunde} />
+            <WieWeiter kind={kind} kunde={kunde} offen={kennenlernen[kind._id] || null} />
           </div>
         ) : null}
 
@@ -319,7 +333,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
                 kunde={kunde}
                 naechste={naechsteDesKindes}
                 onBearbeiten={() => onBearbeiten(kind._id)}
-                onTelefonat={zeigeWeiter}
+                onKennenlernen={zeigeWeiter}
                 onSchliessen={() => setOffen(false)}
               />
             }
@@ -331,7 +345,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
                 kunde={kunde}
                 naechste={naechsteDesKindes}
                 onBearbeiten={() => onBearbeiten(kind._id)}
-                onTelefonat={zeigeWeiter}
+                onKennenlernen={zeigeWeiter}
                 onSchliessen={() => setOffen(false)}
               />
             </div>
@@ -353,7 +367,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
 // der freigestellten Fassung (lib/logo.js, getAktenLogoImage).
 const LOGO = { src: "/logo-etikett.png", webp: "/logo-etikett.webp", width: 436, height: 440 };
 
-function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onTelefonat, onSchliessen }) {
+function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onKennenlernen, onSchliessen }) {
   return (
     <div className={kompakt ? "" : "flex h-full flex-col px-8 pb-7 pt-9"}>
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6a5d4b]">Steckbrief</p>
@@ -389,8 +403,8 @@ function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onTe
         <Link href="/angebote" className="underline underline-offset-4">
           Termin buchen
         </Link>
-        <button type="button" onClick={onTelefonat} className="underline underline-offset-4">
-          Rückruf anfragen
+        <button type="button" onClick={onKennenlernen} className="underline underline-offset-4">
+          Kennenlern-Meeting
         </button>
         <button type="button" onClick={onBearbeiten} className="underline underline-offset-4">
           Angaben ändern
@@ -603,29 +617,30 @@ function Nachrichten({ liste }) {
 }
 
 // ---------------------------------------------------------------------------
-// Wie geht es weiter? Termin oder erst telefonieren.
+// Wie geht es weiter? Termin oder erst ein Kennenlern-Meeting per Video.
 // ---------------------------------------------------------------------------
 
-function WieWeiter({ kind, kunde }) {
-  const [telefonat, setTelefonat] = useState(false);
-  const [werte, setWerte] = useState({ telefon: "", rueckruf: "egal", notiz: "" });
+function WieWeiter({ kind, kunde, offen }) {
+  const [formular, setFormular] = useState(false);
+  const [werte, setWerte] = useState({ datum: "", zeit: "", notiz: "" });
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState("");
-  const [erledigt, setErledigt] = useState(false);
+  const [raum, setRaum] = useState(offen);
+  const heute = new Date().toISOString().slice(0, 10);
 
   async function senden(e) {
     e.preventDefault();
     setBusy(true);
     setFehler("");
     try {
-      const res = await fetch("/api/konto/gespraech", {
+      const res = await fetch("/api/konto/kennenlernen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...werte, studentId: kind._id }),
       });
       const antwort = await res.json().catch(() => ({}));
       if (!res.ok) setFehler(antwort.error || "Das hat leider nicht geklappt.");
-      else setErledigt(true);
+      else setRaum({ datum: antwort.datum, zeit: antwort.zeit, link: antwort.link, bestaetigt: false });
     } catch {
       setFehler("Keine Verbindung. Bitte prüfen Sie Ihre Internetverbindung.");
     } finally {
@@ -653,44 +668,46 @@ function WieWeiter({ kind, kunde }) {
         </Link>
 
         <div className="flex flex-col rounded-2xl border-2 border-linie bg-karte p-6">
-          <span className="serif text-[1.4rem] font-semibold text-tinte">Erst telefonieren</span>
-          {erledigt ? (
-            <p role="status" className="mt-1.5 text-[15px] leading-relaxed text-text">
-              Danke! Ich rufe Sie {werte.rueckruf === "egal" ? "bald" : werte.rueckruf} unter {werte.telefon} an – kostenlos und
-              unverbindlich.
-            </p>
-          ) : telefonat ? (
+          <span className="serif text-[1.4rem] font-semibold text-tinte">Erst kennenlernen</span>
+          {raum ? (
+            <div role="status" className="mt-1.5">
+              <p className="text-[15px] leading-relaxed text-text">
+                Ihr Video-Raum ist angelegt: <strong className="text-tinte">{wochentag(raum.datum)} {formatDate(raum.datum)}{raum.zeit ? `, ${raum.zeit} Uhr` : ""}</strong>.{" "}
+                {raum.bestaetigt ? "Der Termin ist bestätigt." : "Ich schaue mir den Termin an und bestätige ihn per Mail."}
+              </p>
+              {raum.link ? (
+                <a href={raum.link} className="knopf knopf-orange mt-4 self-start">
+                  Zum Video-Raum
+                </a>
+              ) : null}
+              <p className="mt-2 text-[12.5px] leading-snug text-leise">Der Link kam auch per Mail. Er funktioniert im Browser, ohne App.</p>
+            </div>
+          ) : formular ? (
             <form onSubmit={senden} className="mt-3 space-y-3">
-              <label className="block">
-                <span className="text-[13px] font-semibold text-leise">Telefonnummer</span>
-                <input
-                  className="feld mt-1"
-                  type="tel"
-                  required
-                  value={werte.telefon}
-                  onChange={(e) => setWerte((w) => ({ ...w, telefon: e.target.value }))}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  maxLength={40}
-                  placeholder="0176 …"
-                />
-              </label>
-              <fieldset>
-                <legend className="text-[13px] font-semibold text-leise">Am besten erreichbar</legend>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {RUECKRUF.map(([wert, text]) => (
-                    <button
-                      key={wert}
-                      type="button"
-                      aria-pressed={werte.rueckruf === wert}
-                      onClick={() => setWerte((w) => ({ ...w, rueckruf: wert }))}
-                      className="chip !min-h-9 !text-[14px]"
-                    >
-                      {text}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-[13px] font-semibold text-leise">Wunschtag</span>
+                  <input
+                    className="feld mt-1"
+                    type="date"
+                    required
+                    min={heute}
+                    value={werte.datum}
+                    onChange={(e) => setWerte((w) => ({ ...w, datum: e.target.value }))}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[13px] font-semibold text-leise">Uhrzeit</span>
+                  <input
+                    className="feld mt-1"
+                    type="time"
+                    required
+                    step={900}
+                    value={werte.zeit}
+                    onChange={(e) => setWerte((w) => ({ ...w, zeit: e.target.value }))}
+                  />
+                </label>
+              </div>
               <label className="block">
                 <span className="text-[13px] font-semibold text-leise">Anmerkung (freiwillig)</span>
                 <textarea
@@ -707,19 +724,20 @@ function WieWeiter({ kind, kunde }) {
                 </p>
               ) : null}
               <button type="submit" disabled={busy} className="knopf knopf-orange w-full disabled:opacity-60">
-                {busy ? "Wird gesendet …" : "Rückruf anfragen"}
+                {busy ? "Raum wird angelegt …" : "Video-Raum anlegen"}
               </button>
               <p className="text-[12.5px] leading-snug text-leise">
-                Ich rufe {kunde.name ? `${kunde.name} ` : ""}zurück. Kostenlos, es entsteht kein Vertrag.
+                Etwa 30 Minuten per Video, mit {kunde.name ? `${kunde.name} und ` : ""}{kind.name}. Kostenlos, es entsteht kein Vertrag.
               </p>
             </form>
           ) : (
             <>
               <span className="mt-1.5 text-[15px] leading-relaxed text-text">
-                Kostenloses Telefonat: Wir besprechen Fächer, Ziele und den Ablauf. Danach entscheiden Sie in Ruhe.
+                Kostenloses Kennenlern-Meeting per Video: Wir sprechen über Fächer, Ziele und den Ablauf – danach entscheiden Sie in
+                Ruhe.
               </span>
-              <button type="button" onClick={() => setTelefonat(true)} className="knopf knopf-rand mt-4 self-start">
-                Rückruf anfragen
+              <button type="button" onClick={() => setFormular(true)} className="knopf knopf-rand mt-4 self-start">
+                Termin wählen
               </button>
             </>
           )}

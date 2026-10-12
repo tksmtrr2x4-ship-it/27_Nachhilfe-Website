@@ -2,6 +2,8 @@ import crypto from "crypto";
 import { updateBooking, getBooking, deleteBooking } from "@/lib/db";
 import { isAdminAuthorized, forbiddenResponse } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/orderConfirmation";
+import { sendeKennenlernMail } from "@/lib/kunden/mail";
+import { siteOrigin } from "@/lib/mailBrief";
 import { setBookingHeldStatus } from "@/lib/invoicing/db";
 import { loescheBuchung } from "@/lib/admin/loeschen";
 import { adminErrorResponse } from "@/lib/adminError";
@@ -55,10 +57,26 @@ export async function PATCH(request, { params }) {
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
 
   if (status === "confirmed") {
-    await sendOrderConfirmationEmail(booking);
+    if (booking.kennenlernen) await bestaetigeKennenlernen(booking);
+    else await sendOrderConfirmationEmail(booking);
   }
 
   return Response.json({ booking });
+}
+
+// Kennenlernen ist kein Vertrag: statt Bestellbestätigung mit AGB nur eine
+// kurze Terminbestätigung mit dem Raum.
+async function bestaetigeKennenlernen(booking) {
+  if (!booking.parentEmail || !booking.meetingToken) return { skipped: true };
+  return sendeKennenlernMail({
+    to: booking.parentEmail,
+    name: booking.parentName,
+    schuelerName: booking.studentName,
+    datum: booking.requestedDate,
+    zeit: booking.requestedTime,
+    link: `${siteOrigin()}/meeting/${booking.meetingToken}`,
+    bestaetigt: true,
+  });
 }
 
 // Erneut sendet auf Wunsch die Bestellbestätigung (falls Kontaktdaten
@@ -70,6 +88,10 @@ export async function POST(request, { params }) {
   const { id } = await params;
   const booking = await getBooking(id);
   if (!booking) return Response.json({ error: "Buchung nicht gefunden." }, { status: 404 });
+  if (booking.kennenlernen) {
+    const r = await bestaetigeKennenlernen(booking);
+    return r.error ? Response.json({ error: "Mailversand fehlgeschlagen." }, { status: 502 }) : Response.json({ ok: true });
+  }
   await updateBooking(id, { confirmationEmailSentAt: null });
   const result = await sendOrderConfirmationEmail({ ...booking, confirmationEmailSentAt: null });
   if (result.error) {

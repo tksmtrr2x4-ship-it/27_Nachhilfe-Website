@@ -7,7 +7,11 @@ export async function GET(request, { params }) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
     const { id } = await params;
-    return Response.json(await getStudentOverview(id));
+    const uebersicht = await getStudentOverview(id);
+    // Das verschlüsselte Passwort braucht die Oberfläche nicht – angezeigt wird
+    // es nur über /zugang.
+    if (uebersicht?.student?.zugang) uebersicht.student = { ...uebersicht.student, zugang: { vorhanden: true } };
+    return Response.json(uebersicht);
   } catch (err) {
     return adminErrorResponse(err, "Schüler");
   }

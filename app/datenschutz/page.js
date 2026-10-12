@@ -1,5 +1,4 @@
 import { canonical, NOINDEX_FOLLOW } from "@/lib/seo";
-import { SPEICHERTAGE } from "@/lib/gespraech/gespraech";
 
 // Rechtstext: für Besucher:innen erreichbar, aber nicht als Suchtreffer
 // gewünscht – daher "noindex, follow" und nicht in der Sitemap.
@@ -71,7 +70,7 @@ export default function DatenschutzPage() {
         </section>
 
         <section id="schuelerakte">
-          <h2 className="font-semibold text-slate-900 dark:text-white">3. Schülerakte (Kundenbereich) und Rückruf</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-white">3. Schülerakte (Kundenbereich) und Kennenlern-Meeting</h2>
           <p className="mt-2">
             Auf der Startseite können Sie eine Schülerakte anlegen. Dafür erhebe ich nur den
             Vornamen und die Klasse Ihres Kindes, freiwillig die gewünschten Fächer, sowie Ihren
@@ -84,21 +83,22 @@ export default function DatenschutzPage() {
             Anfrage bzw. Erfüllung des Nachhilfevertrags).
           </p>
           <p className="mt-2">
-            Die Anmeldung unter <strong>/konto</strong> erfolgt über einen einmaligen Link per
-            E-Mail; ein Passwort wird weder vergeben noch gespeichert. Der dort eingetragene Name
-            dient nur dazu, nach dem Link die passende Akte zu öffnen. Damit Sie angemeldet
+            Die Anmeldung unter <strong>/konto</strong> erfolgt mit dem Namen des Kindes und einem
+            Passwort, das ich automatisch vergebe und Ihnen per E-Mail schicke; jede Akte hat ihr
+            eigenes. Ich speichere es verschlüsselt und kann es in meiner Verwaltung einsehen, um
+            es Ihnen bei Bedarf erneut zu schicken oder ein neues zu vergeben. Damit Sie angemeldet
             bleiben, setze ich einen technisch notwendigen Cookie (<code>lernsprung_konto</code>,
             30 Tage, siehe Abschnitt 7). In der Schülerakte sehen Sie Ihre Stunden, die an Sie
             ausgestellten Rechnungen und Quittungen (als PDF) sowie kurze Hinweise von mir zur
             nächsten Stunde; meine eigenen Unterrichtsnotizen sind dort nicht sichtbar.
           </p>
           <p className="mt-2">
-            Aus der Schülerakte heraus können Sie ein kostenloses Telefonat anfragen. Dafür
-            erhebe ich Ihre Telefonnummer, die gewünschte Rückrufzeit und freiwillig eine
-            Anmerkung; Name, Kind und Klasse kommen aus der Akte. Rechtsgrundlage ist Art. 6
-            Abs. 1 lit. b DSGVO. Die Telefonnummer übernehme ich in Ihre Kontaktdaten, falls dort
-            noch keine steht. Die Anfrage selbst lösche ich spätestens {SPEICHERTAGE} Tage nach
-            Eingang.
+            Aus der Schülerakte heraus können Sie ein kostenloses Kennenlern-Meeting per Video
+            vereinbaren. Dafür erhebe ich nur Ihren Wunschtermin und freiwillig eine Anmerkung;
+            Name, Kind und Klasse kommen aus der Akte. Das Meeting findet über meinen eigenen
+            Jitsi-Server statt (Abschnitt zum Online-Unterricht); der Termin steht danach wie eine
+            Unterrichtsstunde in Ihrer Akte und wird mit ihr gelöscht. Rechtsgrundlage ist Art. 6
+            Abs. 1 lit. b DSGVO.
           </p>
           <p className="mt-2">
             Auch hier bitte ich ausdrücklich darum, keine Angaben zu Gesundheit, Diagnosen oder

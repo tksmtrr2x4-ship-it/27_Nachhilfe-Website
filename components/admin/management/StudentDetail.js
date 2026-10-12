@@ -9,6 +9,7 @@ import { JOURNAL_START_DATE, hatAusfallVerguetung, isBeforeJournalStart, isBilla
 import { AUSFALL_KURZ } from "@/lib/ausfall/berechnung";
 import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
 import ElternNachricht from "@/components/admin/management/ElternNachricht";
+import AkteZugang from "@/components/admin/management/AkteZugang";
 import SelbstauskunftKarte from "@/components/admin/management/SelbstauskunftKarte";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
@@ -293,6 +294,10 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
                   AGB per E-Mail senden
                 </button>
               </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold text-[var(--ck-muted)]">Zugang zur Schülerakte</dt>
+              <AkteZugang id={student._id} name={student.name} adminFetch={adminFetch} setNotice={setNotice} />
             </div>
             <div>
               <dt className="flex items-center justify-between gap-2 text-xs font-semibold text-[var(--ck-muted)]">

@@ -14,7 +14,8 @@ import { isSubjectAllowed } from "@/lib/subjectRules";
 // Angelegt wird die Akte erst, wenn die Adresse bestätigt ist (Double
 // Opt-in, app/api/konto/registrieren). Über den Link aus der Mail öffnet
 // sich die Akte unter /konto, dort geht es weiter: Termin aussuchen oder erst
-// telefonieren.
+// ein Kennenlern-Meeting per Video. Das Passwort für spätere Besuche vergibt
+// der Server und schickt es per Mail.
 
 const KURZNAMEN = { Mathematik: "Mathe" };
 
@@ -267,7 +268,8 @@ export default function AkteAnlegen({ intro, logo, portrait, klassen, faecher })
             <p className="mt-1.5">
               Wir haben einen Link an <strong className="text-tinte">{werte.email}</strong> geschickt. Ein Klick darauf – dann ist
               die Akte angelegt und Sie entscheiden: <strong className="text-tinte">Termin aussuchen</strong> oder{" "}
-              <strong className="text-tinte">erst ein kostenloses Telefonat</strong>.
+              <strong className="text-tinte">erst ein kostenloses Kennenlern-Meeting</strong>. Das Passwort für die Akte kommt
+              danach in einer eigenen Mail.
             </p>
             <p className="mt-3 text-[13.5px] text-leise">
               Nichts angekommen? Schauen Sie bitte auch im Spam-Ordner nach.{" "}
@@ -300,7 +302,7 @@ function InnenDeckel({ portrait, onSchliessen }) {
         </li>
       </ul>
       <p className="mt-5 text-[15px] leading-relaxed text-[#384757]">
-        Danach entscheiden Sie in Ruhe: gleich einen Termin aussuchen – oder erst ein kostenloses Telefonat mit mir.
+        Danach entscheiden Sie in Ruhe: gleich einen Termin aussuchen – oder erst ein kostenloses Kennenlern-Meeting per Video.
       </p>
 
       <div className="mt-auto flex items-end justify-between gap-4 pt-6">

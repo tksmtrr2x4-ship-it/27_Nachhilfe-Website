@@ -1,13 +1,14 @@
 import { getDb } from "@/lib/mongo";
 import { getCustomer, updateCustomer } from "@/lib/invoicing/db";
 import { createStudent, getStudent, updateStudent } from "@/lib/students/db";
-import { KONTO_COOKIE, sessionCustomerId } from "@/lib/kunden/konto";
+import { KONTO_COOKIE, sessionKonto, sitzungSieht } from "@/lib/kunden/konto";
 import {
   kundeAusSelbstauskunft,
   pruefeSelbstauskunft,
   schuelerAusSelbstauskunft,
 } from "@/lib/kunden/selbstauskunft";
 import { benachrichtigeLehrkraft } from "@/lib/kunden/mail";
+import { sendeZugang } from "@/lib/kunden/zugangVersand";
 
 // Die eigene Akte pflegen: ein weiteres Kind anlegen (POST) oder die Angaben
 // zu einem Kind ändern (PUT).
@@ -19,8 +20,12 @@ import { benachrichtigeLehrkraft } from "@/lib/kunden/mail";
 // der Akte, die Notizen der Lehrkraft, Preise und Stunden bleiben außen vor –
 // und die Anmeldeadresse ebenfalls: Sie zu ändern hieße, den Zugang zu
 // verschieben, und das gehört bestätigt. Darum kümmert sich die Lehrkraft.
+async function sitzung(request) {
+  return sessionKonto(request.cookies.get(KONTO_COOKIE)?.value);
+}
+
 async function angemeldet(request) {
-  return sessionCustomerId(request.cookies.get(KONTO_COOKIE)?.value);
+  return (await sitzung(request))?.customerId || null;
 }
 
 // Vorhandene Angaben der Kundin/des Kunden nur ergänzen, nie überschreiben,
@@ -55,11 +60,15 @@ export async function POST(request) {
     nachricht: daten.sonstiges?.absprachen,
   });
 
-  return Response.json({ ok: true, studentId: schueler._id });
+  // Jede Akte hat ihr eigenes Passwort – das neue geht per Mail an die Familie.
+  const zugang = await sendeZugang(schueler._id, { anlass: "neu" }).catch(() => null);
+
+  return Response.json({ ok: true, studentId: schueler._id, passwortVerschickt: Boolean(zugang?.an) });
 }
 
 export async function PUT(request) {
-  const customerId = await angemeldet(request);
+  const konto = await sitzung(request);
+  const customerId = konto?.customerId;
   if (!customerId) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
 
   const kunde = await getCustomer(customerId);
@@ -69,7 +78,7 @@ export async function PUT(request) {
   const studentId = typeof body.studentId === "string" ? body.studentId : "";
   const schueler = await getStudent(studentId);
   // Fremde Akten sind nicht zu sehen und nicht zu ändern.
-  if (!schueler || schueler.customerId !== customerId) {
+  if (!schueler || schueler.customerId !== customerId || !sitzungSieht(konto, studentId)) {
     return Response.json({ error: "Diese Schülerakte gehört nicht zu diesem Konto." }, { status: 404 });
   }
 
@@ -95,14 +104,15 @@ export async function PUT(request) {
 
 // Die eigenen Angaben zum Bearbeiten holen.
 export async function GET(request) {
-  const customerId = await angemeldet(request);
+  const konto = await sitzung(request);
+  const customerId = konto?.customerId;
   if (!customerId) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
   const kunde = await getCustomer(customerId);
   if (!kunde) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
 
   const schueler = await (await getDb())
     .collection("students")
-    .find({ customerId })
+    .find(konto.studentId ? { customerId, _id: konto.studentId } : { customerId })
     .project({ name: 1, studentClass: 1, schoolType: 1, school: 1, email: 1, phone: 1, subjects: 1, defaultLocationType: 1, locationAddress: 1, selbstauskunft: 1 })
     .toArray();
 

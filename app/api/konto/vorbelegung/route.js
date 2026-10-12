@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/mongo";
 import { getCustomer } from "@/lib/invoicing/db";
-import { KONTO_COOKIE, sessionCustomerId } from "@/lib/kunden/konto";
+import { KONTO_COOKIE, sessionKonto } from "@/lib/kunden/konto";
 import { vorbelegungAus } from "@/lib/kunden/selbstauskunft";
 
 // Für die Buchungsstrecke: Wer angemeldet ist, muss Name, Anschrift und die
@@ -11,15 +11,16 @@ import { vorbelegungAus } from "@/lib/kunden/selbstauskunft";
 // ruft sie bei jedem Aufruf ab – auch bei Nichtangemeldeten, wo sie
 // schlicht 401 bekommt und alles wie bisher leer bleibt.
 export async function GET(request) {
-  const customerId = await sessionCustomerId(request.cookies.get(KONTO_COOKIE)?.value);
-  if (!customerId) return Response.json({ angemeldet: false }, { status: 401 });
+  const konto = await sessionKonto(request.cookies.get(KONTO_COOKIE)?.value);
+  if (!konto) return Response.json({ angemeldet: false }, { status: 401 });
+  const { customerId, studentId } = konto;
 
   const kunde = await getCustomer(customerId);
   if (!kunde) return Response.json({ angemeldet: false }, { status: 401 });
 
   const schueler = await (await getDb())
     .collection("students")
-    .find({ customerId, status: { $ne: "ended" } })
+    .find(studentId ? { customerId, _id: studentId } : { customerId, status: { $ne: "ended" } })
     .project({
       name: 1,
       studentClass: 1,

@@ -101,15 +101,21 @@ test("Anmeldung mit Name öffnet die passende Mappe – aber nur eindeutig", () 
 test("PDF-Abrufe der Akte prüfen Sitzung und Zugehörigkeit", () => {
   for (const pfad of ["app/api/konto/rechnung/[id]/route.js", "app/api/konto/quittung/[id]/route.js"]) {
     const quelle = fs.readFileSync(new URL(`../${pfad}`, import.meta.url), "utf8");
-    assert.match(quelle, /sessionCustomerId/);
+    assert.match(quelle, /sessionKonto/);
     assert.match(quelle, /DesKontos\(customerId, id\)/);
+    // Mit Passwort angemeldet: nur Unterlagen dieser einen Akte.
+    assert.match(quelle, /inDerAkte\(customerId, studentId, "(rechnungen|quittungen)", id\)/);
   }
   const dok = fs.readFileSync(new URL("../lib/kunden/dokumente.js", import.meta.url), "utf8");
   assert.match(dok, /findOne\(\{ _id: String\(id\), customerId, status: \{ \$in: SICHTBARE_RECHNUNGEN \} \}\)/);
 });
 
-test("Telefonat nur aus der Akte: der öffentliche Endpunkt ist weg", () => {
+test("Kennenlern-Meeting nur aus der Akte; Telefonat-Endpunkte sind weg", () => {
   assert.ok(!fs.existsSync(new URL("../app/api/gespraech/route.js", import.meta.url)));
-  const quelle = fs.readFileSync(new URL("../app/api/konto/gespraech/route.js", import.meta.url), "utf8");
-  assert.match(quelle, /sessionCustomerId/);
+  assert.ok(!fs.existsSync(new URL("../app/api/konto/gespraech/route.js", import.meta.url)));
+  const quelle = fs.readFileSync(new URL("../app/api/konto/kennenlernen/route.js", import.meta.url), "utf8");
+  assert.match(quelle, /sessionKonto/);
+  assert.match(quelle, /sitzungSieht\(konto, kind\._id\)/);
+  assert.match(quelle, /kennenlernen: true/);
+  assert.match(quelle, /priceCents: 0/);
 });

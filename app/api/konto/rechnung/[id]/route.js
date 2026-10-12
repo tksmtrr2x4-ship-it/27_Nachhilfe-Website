@@ -1,5 +1,5 @@
-import { KONTO_COOKIE, sessionCustomerId } from "@/lib/kunden/konto";
-import { rechnungDesKontos } from "@/lib/kunden/dokumente";
+import { KONTO_COOKIE, sessionKonto } from "@/lib/kunden/konto";
+import { inDerAkte, rechnungDesKontos } from "@/lib/kunden/dokumente";
 import { readPdf } from "@/lib/invoicing/storage";
 import { invoiceFilename } from "@/lib/invoicing/einvoice";
 
@@ -8,10 +8,11 @@ import { invoiceFilename } from "@/lib/invoicing/einvoice";
 // hier nicht, fremde Rechnungen auch nicht: Die Abfrage verlangt die
 // Kundennummer der Sitzung.
 export async function GET(request, { params }) {
-  const customerId = await sessionCustomerId(request.cookies.get(KONTO_COOKIE)?.value);
-  if (!customerId) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
+  const konto = await sessionKonto(request.cookies.get(KONTO_COOKIE)?.value);
+  if (!konto) return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
+  const { customerId, studentId } = konto;
   const { id } = await params;
-  const rechnung = await rechnungDesKontos(customerId, id);
+  const rechnung = (await inDerAkte(customerId, studentId, "rechnungen", id)) ? await rechnungDesKontos(customerId, id) : null;
   if (!rechnung?.pdf?.storageKey) return Response.json({ error: "Nicht gefunden." }, { status: 404 });
   try {
     const pdf = await readPdf(rechnung.pdf.storageKey, rechnung.pdf.sha256);

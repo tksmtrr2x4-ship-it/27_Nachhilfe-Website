@@ -7,7 +7,9 @@ import { normalizeStudentInput } from "@/lib/students/validation";
 export async function GET(request) {
   if (!(await isAdminAuthorized(request))) return forbiddenResponse();
   try {
-    const [students, unassigned, customers] = await Promise.all([listStudentsWithStats(), listUnassignedBookings(), listCustomers()]);
+    const [alle, unassigned, customers] = await Promise.all([listStudentsWithStats(), listUnassignedBookings(), listCustomers()]);
+    // Verschlüsseltes Passwort nicht mitschicken (angezeigt nur über /zugang).
+    const students = alle.map(({ zugang, ...s }) => ({ ...s, zugang: zugang ? { vorhanden: true } : null }));
     return Response.json({
       students,
       unassignedBookings: unassigned,

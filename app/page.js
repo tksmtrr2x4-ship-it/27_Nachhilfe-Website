@@ -30,7 +30,7 @@ export async function generateMetadata() {
 }
 
 // Startseite. Erster Schritt ist die Schülerakte (components/akte/
-// AkteAnlegen.js) – alles andere, auch das kostenlose Telefonat, folgt aus
+// AkteAnlegen.js) – alles andere, auch das kostenlose Kennenlern-Meeting, folgt aus
 // der angelegten Akte heraus. Anrede: Sie.
 //
 // Bewegung: der erste Bildschirm steigt gestaffelt auf (.rise), alles darunter
@@ -44,7 +44,7 @@ const SCHRITTE = [
   },
   {
     titel: "Bestätigen und wählen",
-    text: "Der Link aus der E-Mail öffnet Ihre Akte. Dort suchen Sie einen Termin aus – oder vereinbaren erst ein kostenloses Telefonat.",
+    text: "Der Link aus der E-Mail öffnet Ihre Akte, das Passwort dafür kommt gleich hinterher. Dort suchen Sie einen Termin aus – oder lernen uns erst kostenlos per Video kennen.",
   },
   {
     titel: "Lernen",
@@ -95,7 +95,7 @@ export default async function HomePage() {
       </h1>
       <p style={{ "--reveal-delay": "90ms" }} className="rise mt-6 max-w-[34rem] text-[clamp(1.1rem,1.8vw,1.3rem)] leading-relaxed text-text">
         Legen Sie zuerst die Schülerakte an. Danach entscheiden Sie: direkt einen Termin aussuchen oder erst ein
-        kostenloses Telefonat mit mir.
+        kostenloses Kennenlern-Meeting per Video.
       </p>
 
       <a href="#akte" style={{ "--reveal-delay": "150ms" }} className="rise knopf knopf-orange mt-6 w-full sm:w-auto min-[900px]:hidden">
@@ -250,7 +250,7 @@ export default async function HomePage() {
             <p className="font-hand text-[1.7rem] leading-none text-[#f8c38e]">Neu hier?</p>
             <h2 className="mt-3 text-[2rem] font-semibold leading-tight !text-[#fbf6ee]">Legen Sie die Schülerakte an.</h2>
             <p className="mt-3 text-[16px] leading-relaxed text-[#dce8ef]">
-              Eine Minute, vier Angaben. Danach wählen Sie: Termin oder erst ein kostenloses Telefonat.
+              Eine Minute, vier Angaben. Danach wählen Sie: Termin oder erst ein kostenloses Kennenlern-Meeting.
             </p>
             <a href="#akte" className="knopf knopf-orange mt-auto self-start !mt-8">
               Akte anlegen <span className="arrow-slide">↑</span>
@@ -260,7 +260,7 @@ export default async function HomePage() {
             <p className="font-hand text-[1.7rem] leading-none text-orange-tief">Schon dabei?</p>
             <h2 className="mt-3 text-[2rem] font-semibold leading-tight text-tinte">Zu Ihrer Akte.</h2>
             <p className="mt-3 text-[16px] leading-relaxed text-text">
-              Name und E-Mail eintragen, Link aus der Mail öffnen – fertig. Ohne Passwort.
+              Name des Kindes und Passwort eintragen – fertig. Das Passwort kam per Mail, als die Akte angelegt wurde.
             </p>
             <Link href="/konto" className="knopf knopf-rand mt-auto self-start !mt-8">
               Zur Anmeldung <span className="arrow-slide">→</span>

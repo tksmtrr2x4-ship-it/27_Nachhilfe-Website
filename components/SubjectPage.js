@@ -7,16 +7,16 @@ import { SUBJECTS } from "@/lib/subjects";
 export default function SubjectPage({ subject, business }) {
   const otherSubjects = SUBJECTS.filter((s) => s.key !== subject.key);
 
-  // Erster Schritt ist überall die Schülerakte (Startseite) – das Telefonat
-  // gibt es danach aus der Akte heraus.
+  // Erster Schritt ist überall die Schülerakte (Startseite) – das
+  // Kennenlern-Meeting gibt es danach aus der Akte heraus.
   const steps = [
     {
       title: "Schülerakte anlegen",
       text: `Vorname, Klasse und eine E-Mail-Adresse – mehr braucht es nicht. ${subject.name} lässt sich dabei gleich als Fach ankreuzen.`,
     },
     {
-      title: "Termin wählen oder erst telefonieren",
-      text: "Aus der Akte heraus geht es weiter: direkt eine Einzelstunde (45 Minuten) oder Doppelstunde (90 Minuten) anfragen – oder zuerst ein kostenloses Telefonat. Den Termin bestätige ich per E-Mail.",
+      title: "Termin wählen oder erst kennenlernen",
+      text: "Aus der Akte heraus geht es weiter: direkt eine Einzelstunde (45 Minuten) oder Doppelstunde (90 Minuten) anfragen – oder zuerst ein kostenloses Kennenlern-Meeting per Video. Den Termin bestätige ich per E-Mail.",
     },
     {
       title: "Einzelstunde",
@@ -180,7 +180,7 @@ export default function SubjectPage({ subject, business }) {
         <p className="relative font-hand text-[1.7rem] leading-none text-[#f8c38e]">Los geht’s</p>
         <h2 className="relative mt-2 text-[1.9rem] font-semibold leading-tight !text-[#fbf6ee]">{subject.label} – erst die Akte</h2>
         <p className="relative mt-3 max-w-md leading-relaxed text-[#dce8ef]">
-          Schülerakte in einer Minute anlegen, dann einen Termin aussuchen oder erst kostenlos telefonieren.
+          Schülerakte in einer Minute anlegen, dann einen Termin aussuchen oder erst kostenlos per Video kennenlernen.
         </p>
         <div className="relative mt-7 flex flex-wrap gap-3">
           <Link href="/#akte" className="knopf knopf-orange">

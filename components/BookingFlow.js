@@ -64,6 +64,9 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     // berechtigung), jetzt zu einer zusammengefasst – siehe Begründung in
     // lib/legal/consents.js.
     contractConsent: false,
+    // Wer bucht: "eltern" (Erziehungsberechtigte:r) oder "schueler" – dann mit
+    // erwachsener Begleitperson als Vertragspartner:in (lib/legal/consents.js).
+    bucher: "eltern",
     earlyStartConsent: false,
     // Freiwillig (keine Pflicht für die Buchung), siehe lib/legal/consents.js.
     eInvoiceConsent: false,
@@ -148,6 +151,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
     });
   }
 
+  const alsSchueler = form.bucher === "schueler";
   const subjectOptions = allowedSubjects(allSubjects, form.studentClass);
   const levelOptions = allowedLevels(form.subject, form.studentClass);
   const hints = selectionHints(allSubjects, form.studentClass, form.subject);
@@ -162,7 +166,11 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       return;
     }
     if (!form.contractConsent) {
-      setError("Bitte bestätigen Sie die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung.");
+      setError(
+        alsSchueler
+          ? "Bitte bestätige, dass der Vertragsschluss mit einer erwachsenen Begleitperson durchgeführt wurde."
+          : "Bitte bestätigen Sie die Erziehungsberechtigung sowie AGB und Widerrufsbelehrung."
+      );
       return;
     }
     if (isSession) {
@@ -346,11 +354,43 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       </div>
 
       <div className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Ihre Angaben (Erziehungsberechtigte:r)</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Wer bucht?</h2>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Wer bucht?">
+          {[
+            ["eltern", "Ich bin erziehungsberechtigt", "Mutter, Vater oder andere sorgeberechtigte Person"],
+            ["schueler", "Ich bin die Schülerin / der Schüler", "Gemeinsam mit einer erwachsenen Begleitperson"],
+          ].map(([wert, titel, hinweis]) => (
+            <button
+              key={wert}
+              type="button"
+              role="radio"
+              aria-checked={form.bucher === wert}
+              onClick={() => setForm((f) => ({ ...f, bucher: wert, contractConsent: false }))}
+              className={`rounded-xl border-2 p-3.5 text-left transition ${
+                form.bucher === wert
+                  ? "border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10"
+                  : "border-slate-200 hover:border-slate-300 dark:border-slate-700"
+              }`}
+            >
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">{titel}</span>
+              <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{hinweis}</span>
+            </button>
+          ))}
+        </div>
+
+        <h2 className="mt-8 text-lg font-semibold text-slate-900 dark:text-white">
+          {alsSchueler ? "Erwachsene Begleitperson (Vertragspartner:in)" : "Ihre Angaben (Erziehungsberechtigte:r)"}
+        </h2>
+        {alsSchueler ? (
+          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
+            Den Vertrag schließt eine erwachsene Person mit dir gemeinsam ab, zum Beispiel ein Elternteil. An ihre Adresse gehen
+            Bestätigung und Rechnung.
+          </p>
+        ) : null}
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="parentName" className={labelClass}>
-              Ihr Name *
+              {alsSchueler ? "Name der Begleitperson *" : "Ihr Name *"}
             </label>
             <input
               id="parentName"
@@ -363,7 +403,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
           <div>
             <label htmlFor="parentEmail" className={labelClass}>
-              Ihre E-Mail-Adresse *
+              {alsSchueler ? "E-Mail der Begleitperson *" : "Ihre E-Mail-Adresse *"}
             </label>
             <input
               id="parentEmail"
@@ -377,7 +417,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
 
           <div>
             <label htmlFor="parentPhone" className={labelClass}>
-              Ihre Telefonnummer (optional)
+              {alsSchueler ? "Telefon der Begleitperson (optional)" : "Ihre Telefonnummer (optional)"}
             </label>
             <input
               id="parentPhone"
@@ -524,8 +564,9 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600"
         />
         <span>
-          Ich bin erziehungsberechtigt für die angemeldete Schülerin / den angemeldeten Schüler,
-          schließe diesen Vertrag im eigenen Namen ab und habe die{" "}
+          {alsSchueler
+            ? "Ich bin die angemeldete Schülerin / der angemeldete Schüler. Der Vertragsschluss wurde gemeinsam mit der oben genannten erwachsenen Begleitperson durchgeführt: Sie ist Vertragspartner:in, hat die "
+            : "Ich bin erziehungsberechtigt für die angemeldete Schülerin / den angemeldeten Schüler, schließe diesen Vertrag im eigenen Namen ab und habe die "}
           <a href="/agb" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
             AGB (Version {TERMS_VERSION})
           </a>{" "}
@@ -533,7 +574,7 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           <a href="/widerruf" target="_blank" className="text-indigo-600 underline underline-offset-2 dark:text-indigo-400">
             Widerrufsbelehrung
           </a>{" "}
-          gelesen und stimme ihnen zu. *
+          {alsSchueler ? "gelesen und stimmt ihnen zu. *" : "gelesen und stimme ihnen zu. *"}
         </span>
       </label>
 

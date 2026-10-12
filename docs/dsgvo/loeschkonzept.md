@@ -15,11 +15,11 @@ Konzepts (siehe letzte Spalte).
 | Admin-PIN (Session) | `sessionStorage` im Browser der Betreiberin | Bis Tab/Fenster geschlossen oder Abmeldung | Automatisch durch den Browser bzw. "Abmelden"-Funktion | Kein manueller Schritt nötig |
 | Rückmeldungen/Testimonials | MongoDB (Strato-Server), Collection `testimonials` | Keine feste Frist — freiwillig eingereicht, bleibt bis zum Widerruf durch die Person oder Entfernung durch die Betreiberin sichtbar | Manuell im Admin-Bereich löschen | Betreiberin, bei Widerrufswunsch der/des Betroffenen sofort |
 | Schülerakten samt Selbstauskunft (Stammdaten, Fächer, Ziele, Absprachen) | MongoDB, `students` | 3 Jahre nach der letzten Stunde (§ 195 BGB); zahlungsrelevante Angaben stecken in den Buchungen und unterliegen dort 8 Jahren | Manuell im Admin-Bereich löschen | Betreiberin, jährliche Durchsicht |
-| Löschprotokoll (Kopien gelöschter Buchungen samt Grund) | MongoDB, `admin_loeschungen` | Wie die gelöschte Buchung selbst gehabt hätte: 3 Jahre, bei Zahlungsbezug 8 Jahre (§ 147 AO) | Manuell; Einträge sind sonst unveränderlich | Betreiberin, jährliche Durchsicht |
+| Löschprotokoll (nur Vermerk: Art, Zeitpunkt, freiwilliger Grund – keine Kopie, kein Personenbezug) | MongoDB, `admin_loeschungen` | Keine feste Frist | Einzeln oder gesammelt in Finanzen → Gelöschtes | Betreiberin, nach Bedarf |
 | Kundenkonto: Anmelde- und Bestätigungslinks | MongoDB, `kunden_links` | 30 Minuten bzw. 24 Stunden | **Automatisch** durch MongoDB (TTL-Index auf `verfaelltAm`) | Kein manueller Schritt nötig |
 | Kundenkonto: Sitzungen | MongoDB, `kunden_sitzungen` | 30 Tage | **Automatisch** (TTL-Index); Abmelden löscht sofort | Kein manueller Schritt nötig |
 | Kundenkonto: Mengenbremse | MongoDB, `kunden_bremse` | 1 Stunde | **Automatisch** (TTL-Index) | Kein manueller Schritt nötig |
-| Nachrichten an Eltern | MongoDB, `kunden_nachrichten` | Mit der zugehörigen Schülerakte | Manuell zusammen mit der Akte | Betreiberin, bei Löschung der Akte |
+| Nachrichten an Eltern | MongoDB, `kunden_nachrichten` | Mit dem Konto der Familie | **Automatisch**, wenn die Kund:in in der Verwaltung gelöscht wird | Betreiberin |
 | Umsatzrechner: eigene Einträge (Name, Fach, Einheiten, Preis, Notiz); Journalzeilen werden nicht gespeichert, sondern bei jedem Abruf aus dem Journal abgeleitet | MongoDB, `umsatz_eintraege` | Keine Aufbewahrungspflicht – **keine** Buchführungsunterlage, siehe [../cockpit.md](../cockpit.md). Spätestens mit der Schülerakte | Einzeln im Umsatzrechner löschen (mit Rückfrage) | Betreiberin, jährliche Durchsicht zusammen mit den Akten |
 | Eigene To-dos im Cockpit (freier Text) | MongoDB, `admin_todos` | Keine Frist; bei Bedarf löschen | Im Cockpit über das × an der Zeile | Betreiberin, laufend |
 

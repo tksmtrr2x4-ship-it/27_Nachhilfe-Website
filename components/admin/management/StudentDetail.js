@@ -142,8 +142,8 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
     }
   }
 
-  // Wie im Bereich Unterricht und im Cockpit-Drawer: Löschen geht immer,
-  // braucht aber einen Grund fürs Löschprotokoll (useBuchungLoeschen).
+  // Wie im Bereich Unterricht und im Cockpit-Drawer: eine Rückfrage, dann ist
+  // die Stunde endgültig weg (useBuchungLoeschen).
   async function deleteLesson(lesson) {
     if (await loescheBuchung(lesson)) refresh();
   }
@@ -170,7 +170,7 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
   }
 
   async function removeStudent() {
-    if (!confirm(`Profil von ${student.name} mit allen Notizen löschen?\n\nStunden, Rechnungen und Buchhaltungseinträge bleiben wegen der Aufbewahrungspflicht erhalten.`)) return;
+    if (!confirm(`Profil von ${student.name} mit allen Notizen endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Stunden, Rechnungen und Buchhaltungseinträge sind eigene Dokumente und bleiben bestehen.`)) return;
     try {
       await adminFetch(`/api/admin/students/${id}`, { method: "DELETE" });
       setNotice("Profil gelöscht.");

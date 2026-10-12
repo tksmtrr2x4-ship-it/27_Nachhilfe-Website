@@ -278,7 +278,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     <Button
                       variant="danger"
                       onClick={loeschen}
-                      title="Entfernt den Eintrag ganz – mit Grund im Löschprotokoll. Zum Absagen oben „Absagen“ nehmen."
+                      title="Entfernt den Eintrag endgültig aus der Datenbank. Zum Absagen oben „Absagen“ nehmen."
                     >
                       Löschen
                     </Button>

@@ -1099,7 +1099,7 @@ function CustomersView({ customers, adminFetch, setNotice, onChanged, onCreateIn
   async function remove(c) {
     if (
       !confirm(
-        `${c.name || c.email} wirklich löschen? Offene Rechnungsentwürfe dieser Person werden mitgelöscht. Ausgestellte Rechnungen bleiben erhalten – solange eine davon in der 8-jährigen Aufbewahrung liegt, ist das Löschen gesperrt.`
+        `${c.name || c.email} endgültig löschen? Das lässt sich nicht rückgängig machen. Rechnungsentwürfe, Mitteilungen und der Zugang zur Schülerakte dieser Person werden mitgelöscht, die Schülerprofile bleiben. Solange eine ausgestellte Rechnung in der 8-jährigen Aufbewahrung liegt, ist das Löschen gesperrt.`
       )
     )
       return;

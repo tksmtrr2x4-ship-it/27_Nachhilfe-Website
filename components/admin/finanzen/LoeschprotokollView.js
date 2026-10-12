@@ -2,19 +2,21 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
-import { Badge, DataTable, Toolbar, errorText, formatDateTime } from "@/components/admin/ui";
+import { Badge, Button, DataTable, Toolbar, errorText, formatDateTime, useDialogs } from "@/components/admin/ui";
 
-// Was gelöscht wurde, warum und was dagegen sprach.
+// Was wann gelöscht wurde – nur als Vermerk.
 //
-// Löschen ist erlaubt – ein Tippfehler ist kein Geschäftsvorfall. Damit es
-// nachvollziehbar bleibt, landet jede Löschung hier, mit Grund und einer
-// vollständigen Kopie des Datensatzes. Einträge lassen sich nicht ändern und
-// nicht entfernen; die Ansicht kann deshalb nur lesen.
+// Gelöscht heißt endgültig: Es bleibt keine Kopie, in diesem Protokoll steht
+// nur Art, Zeitpunkt und ein freiwilliger Grund. Einträge aus der Zeit davor
+// tragen noch eine vollständige Kopie des Datensatzes; die lassen sich hier
+// einzeln oder alle auf einmal endgültig entfernen.
+const ART = { buchung: "Stunde / Buchung" };
+
 export default function LoeschprotokollView() {
   const { adminFetch, notify } = useAdmin();
+  const { confirm } = useDialogs();
   const [eintraege, setEintraege] = useState([]);
   const [geladen, setGeladen] = useState(false);
-  const [offen, setOffen] = useState(null);
 
   const laden = useCallback(async () => {
     try {
@@ -32,12 +34,58 @@ export default function LoeschprotokollView() {
     laden();
   }, [laden]);
 
+  async function entfernen(e) {
+    const ok = await confirm({
+      title: "Eintrag endgültig entfernen?",
+      message: e.daten ? "Auch die darin gespeicherte Kopie des gelöschten Datensatzes wird unwiderruflich gelöscht." : "Der Vermerk wird unwiderruflich gelöscht.",
+      confirmLabel: "Endgültig entfernen",
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await adminFetch(`/api/admin/loeschungen/${e._id}`, { method: "DELETE" });
+      notify("Endgültig entfernt.");
+      laden();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  async function alleEntfernen() {
+    const ok = await confirm({
+      title: `Alle ${eintraege.length} Einträge endgültig entfernen?`,
+      message: "Das Protokoll wird vollständig geleert – samt aller darin noch gespeicherten Kopien. Das lässt sich nicht rückgängig machen.",
+      confirmLabel: "Alle endgültig entfernen",
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await adminFetch("/api/admin/loeschungen", { method: "DELETE" });
+      notify("Protokoll geleert.");
+      laden();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  const mitKopie = eintraege.filter((e) => e.daten).length;
+
   return (
     <div className="space-y-5">
       <Toolbar
         title="Gelöschtes"
-        hint="Jede gelöschte Buchung mit Grund und vollständiger Kopie. Nur lesbar – Einträge lassen sich weder ändern noch entfernen."
-      />
+        hint={
+          mitKopie > 0
+            ? `${mitKopie} ältere Einträge enthalten noch eine Kopie des gelöschten Datensatzes – bitte entfernen, wenn sie nicht mehr gebraucht wird.`
+            : "Nur Vermerke: was wann gelöscht wurde. Es bleibt keine Kopie der Daten."
+        }
+      >
+        {eintraege.length > 0 ? (
+          <Button variant="danger" onClick={alleEntfernen}>
+            Alle endgültig entfernen
+          </Button>
+        ) : null}
+      </Toolbar>
 
       <DataTable
         rows={eintraege}
@@ -51,45 +99,15 @@ export default function LoeschprotokollView() {
             priority: "primary",
             cell: (e) => (
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-[var(--ck-text)]">
-                  {[e.daten?.requestedDate, e.daten?.studentName, e.daten?.subject || e.daten?.subjectName]
-                    .filter(Boolean)
-                    .join(" · ") || e.datensatzId}
-                </span>
-                {e.hinweise?.length ? <Badge tone="amber">trotz Sperre</Badge> : null}
+                <span className="font-semibold text-[var(--ck-text)]">{ART[e.art] || e.art}</span>
+                {e.daten ? <Badge tone="amber">enthält Kopie</Badge> : null}
               </span>
             ),
           },
-          { key: "grund", header: "Grund", cell: (e) => e.grund },
+          { key: "grund", header: "Grund", cell: (e) => e.grund || "–" },
         ]}
-        actions={(e) => [{ label: "Kopie ansehen", onClick: () => setOffen(e) }]}
+        actions={(e) => [{ label: "Endgültig entfernen", onClick: () => entfernen(e), tone: "red" }]}
       />
-
-      {offen ? (
-        <div className="rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="font-semibold text-[var(--ck-text)]">Kopie des gelöschten Datensatzes</h3>
-              <p className="mt-0.5 text-xs text-[var(--ck-muted)]">
-                Gelöscht {formatDateTime(offen.geloeschtAm)} · Grund: {offen.grund}
-              </p>
-            </div>
-            <button type="button" onClick={() => setOffen(null)} className="text-sm text-[var(--ck-muted)] hover:underline">
-              schließen
-            </button>
-          </div>
-          {offen.hinweise?.length ? (
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--ck-warn)]">
-              {offen.hinweise.map((h, i) => (
-                <li key={i}>{h}</li>
-              ))}
-            </ul>
-          ) : null}
-          <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-[var(--ck-surface2)] p-3 text-xs text-[var(--ck-text)]">
-            {JSON.stringify(offen.daten, null, 2)}
-          </pre>
-        </div>
-      ) : null}
     </div>
   );
 }

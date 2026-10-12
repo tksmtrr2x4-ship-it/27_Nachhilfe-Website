@@ -1,5 +1,4 @@
-import { findCustomerByEmail } from "@/lib/invoicing/db";
-import { createRegistrationLink, darfMailSenden } from "@/lib/kunden/konto";
+import { createRegistrationLink, darfMailSenden, kontoZuAdresse } from "@/lib/kunden/konto";
 import { pruefeSelbstauskunft } from "@/lib/kunden/selbstauskunft";
 import { sendeRegistrierungsMail } from "@/lib/kunden/mail";
 
@@ -35,8 +34,8 @@ export async function POST(request) {
 
   // Gibt es die Adresse schon, ist es keine Neuanlage, sondern eine weitere
   // Akte beim selben Konto – die Antwort bleibt trotzdem dieselbe.
-  const vorhanden = await findCustomerByEmail(daten.eltern.email);
-  const code = await createRegistrationLink({ ...daten, customerId: vorhanden?._id || null });
+  const vorhanden = await kontoZuAdresse(daten.eltern.email);
+  const code = await createRegistrationLink(daten, { customerId: vorhanden?._id || null });
   await sendeRegistrierungsMail({ to: daten.eltern.email, name: daten.eltern.name, code });
   return Response.json(NEUTRAL);
 }

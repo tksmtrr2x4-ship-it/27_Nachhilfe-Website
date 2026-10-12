@@ -61,6 +61,27 @@ test("Registrierung legt erst mit der Bestätigung Daten an", async () => {
   assert.deepEqual(eingeloest.daten, daten);
 });
 
+test("Weitere Akte zur bekannten Adresse hängt sich ans vorhandene Konto", async () => {
+  const { modul } = await ladeMitDb("../lib/kunden/konto.js");
+  const code = await modul.createRegistrationLink({ eltern: { email: "a@example.de" } }, { customerId: "kunde-7" });
+  const eingeloest = await modul.claimLink(code);
+  assert.equal(eingeloest.customerId, "kunde-7", "sonst entstünde bei jeder weiteren Akte ein zweites Konto");
+  assert.equal(eingeloest.daten.customerId, undefined, "die Kundennummer gehört nicht in die Selbstauskunft");
+});
+
+test("Mehrere Datensätze zur selben Adresse: der mit den Akten gewinnt", async () => {
+  const { modul } = await ladeMitDb("../lib/kunden/konto.js");
+  const kunden = [
+    { _id: "alt", createdAt: "2026-09-30T10:00:00Z" },
+    { _id: "leer", createdAt: "2026-10-08T10:00:00Z" },
+    { _id: "mitKind", createdAt: "2026-10-09T10:00:00Z" },
+  ];
+  assert.equal(modul.waehleKonto(kunden, new Map([["mitKind", 1]]))._id, "mitKind");
+  assert.equal(modul.waehleKonto(kunden, new Map())._id, "alt", "ohne Akten der älteste");
+  assert.equal(modul.waehleKonto(kunden, new Map([["alt", 1], ["mitKind", 2]]))._id, "mitKind", "die meisten Akten");
+  assert.equal(modul.waehleKonto([], new Map()), null);
+});
+
 test("Abgelaufene Links öffnen nichts", async () => {
   const { modul, db } = await ladeMitDb("../lib/kunden/konto.js");
   const code = await modul.createLoginLink("kunde-1");

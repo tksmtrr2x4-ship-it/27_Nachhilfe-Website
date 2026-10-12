@@ -1,5 +1,4 @@
-import { findCustomerByEmail } from "@/lib/invoicing/db";
-import { createLoginLink, darfMailSenden, kurz } from "@/lib/kunden/konto";
+import { createLoginLink, darfMailSenden, kontoZuAdresse, kurz } from "@/lib/kunden/konto";
 import { sendeAnmeldeMail } from "@/lib/kunden/mail";
 import { getDb } from "@/lib/mongo";
 import { passendesKind } from "@/lib/kunden/dokumente";
@@ -29,7 +28,7 @@ export async function POST(request) {
     return Response.json({ error: "Bitte geben Sie eine gültige E-Mail-Adresse an." }, { status: 400 });
   }
 
-  const kunde = await findCustomerByEmail(email);
+  const kunde = await kontoZuAdresse(email);
   if (!kunde) return Response.json(NEUTRAL);
 
   // Bremse gegen Postfachfluten – zählt je Adresse und insgesamt.

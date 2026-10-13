@@ -17,14 +17,11 @@ const NEUTRAL = {
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
-  // Honigtopf (unsichtbares Feld): Bots bekommen dieselbe Antwort, es passiert
-  // aber nichts. Vermerkt wird es trotzdem (ohne Daten), damit eine echte
-  // Anmeldung, die hier hängen bleibt, im Protokoll auffällt. „website“ war
-  // der alte Feldname – den füllte das automatische Ausfüllen mancher Browser.
-  if (body.kontrollfeld || body.website) {
-    console.warn("Registrierung verworfen: Honigtopf-Feld war ausgefüllt.");
-    return Response.json(NEUTRAL);
-  }
+  // Bewusst KEIN Honigtopf (unsichtbares Feld gegen Bots) mehr: Browser und
+  // Passwortmanager füllten ihn automatisch aus, echte Anmeldungen wurden
+  // dann stillschweigend verworfen (Oktober 2026, dreimal hintereinander bei
+  // derselben Familie). Schutz gegen Missbrauch bieten das Double Opt-in
+  // (ohne Klick entsteht nichts) und die Mailbremse unten.
 
   // Die Kurzfassung der Startseite fragt nach dem Nötigsten; Klasse ist dort
   // Pflicht, das Kursniveau nicht.
@@ -35,12 +32,17 @@ export async function POST(request) {
     return Response.json({ error: probleme[0], probleme }, { status: 400 });
   }
 
-  if (!(await darfMailSenden(`registrierung:${daten.eltern.email}`))) return Response.json(NEUTRAL);
+  if (!(await darfMailSenden(`registrierung:${daten.eltern.email}`))) {
+    console.warn("Registrierung: Mailbremse hat gegriffen, keine Mail verschickt.");
+    return Response.json(NEUTRAL);
+  }
 
   // Gibt es die Adresse schon, ist es keine Neuanlage, sondern eine weitere
   // Akte beim selben Konto – die Antwort bleibt trotzdem dieselbe.
   const vorhanden = await kontoZuAdresse(daten.eltern.email);
   const code = await createRegistrationLink(daten, { customerId: vorhanden?._id || null });
-  await sendeRegistrierungsMail({ to: daten.eltern.email, name: daten.eltern.name, code });
+  const mail = await sendeRegistrierungsMail({ to: daten.eltern.email, name: daten.eltern.name, code });
+  // Ohne Daten – nur damit sich im Protokoll nachvollziehen lässt, ob die Mail rausging.
+  console.log(`Registrierung: Bestätigungsmail ${mail?.skipped ? "übersprungen (SMTP fehlt)" : mail?.error ? "fehlgeschlagen" : "verschickt"}.`);
   return Response.json(NEUTRAL);
 }

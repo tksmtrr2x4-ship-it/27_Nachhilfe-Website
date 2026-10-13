@@ -129,9 +129,11 @@ test("Mailbremse: Anmeldeversuche bremsen keine Bestätigungsmails aus", async (
   assert.equal(await modul.darfMailSenden("registrierung:neu@example.de"), true, "30 Logins dürfen die 20er-Grenze der Registrierung nicht füllen");
 });
 
-test("Honigtopf heißt nicht wie ein Feld, das Browser automatisch ausfüllen", () => {
+test("Kein Honigtopf mehr: ein ausgefülltes Zusatzfeld verwirft keine Anmeldung", () => {
   const formular = fs.readFileSync(new URL("../components/akte/AkteAnlegen.js", import.meta.url), "utf8");
-  assert.doesNotMatch(formular, /name="(website|url|homepage|company|firma)"/);
+  const route = fs.readFileSync(new URL("../app/api/konto/registrieren/route.js", import.meta.url), "utf8");
+  assert.doesNotMatch(formular, /aria-hidden="true"\s*\/>/, "kein verstecktes Eingabefeld");
+  assert.doesNotMatch(route, /body\.(website|kontrollfeld)/, "die Route wirft nichts wegen eines Zusatzfelds weg");
 });
 
 test("Die Kundenansicht zeigt keine internen Notizen", async () => {

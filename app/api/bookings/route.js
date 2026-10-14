@@ -3,14 +3,22 @@ import { getShopStatus } from "@/lib/shopStatus";
 import { CONSENT_TEXT, requiresEarlyStartConsent } from "@/lib/legal/consents";
 import { TERMS_VERSION } from "@/lib/legal/terms";
 import { notifyAdminOfBooking } from "@/lib/adminNotify";
-import { autoLinkBooking } from "@/lib/students/db";
+import { getDb } from "@/lib/mongo";
+import { KONTO_COOKIE, sessionKonto, sitzungSieht } from "@/lib/kunden/konto";
 import { classOptionsForOffer, offerSubjects, subjectLabel, validateSelection } from "@/lib/subjectRules";
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+const AKTE_NOETIG = "Bitte legen Sie zuerst eine Schülerakte an oder melden Sie sich mit Ihrer Akte an.";
+
 export async function POST(request) {
+  // Erster Schritt ist immer die Schülerakte: Angefragt wird nur aus einer
+  // angemeldeten Akte heraus, die Buchung hängt dann fest an diesem Kind.
+  const konto = await sessionKonto(request.cookies.get(KONTO_COOKIE)?.value);
+  if (!konto) return Response.json({ error: AKTE_NOETIG, akteNoetig: true }, { status: 401 });
+
   const body = await request.json();
   const {
     offerId,
@@ -42,6 +50,14 @@ export async function POST(request) {
       { error: `Aktuell keine neuen Buchungen möglich. ${shopStatus.message}` },
       { status: 409 }
     );
+  }
+
+  const akteId = konto.studentId || (typeof body?.studentId === "string" ? body.studentId : "");
+  const akte = akteId
+    ? await (await getDb()).collection("students").findOne({ _id: akteId, customerId: konto.customerId })
+    : null;
+  if (!akte || !sitzungSieht(konto, akte._id)) {
+    return Response.json({ error: AKTE_NOETIG, akteNoetig: true }, { status: 401 });
   }
 
   const offer = offerId ? await getOffer(offerId) : null;
@@ -168,7 +184,9 @@ export async function POST(request) {
       validityText: offer.validityText,
       mode: offer.mode,
     },
-    studentName: studentName.trim(),
+    // Name und Zuordnung kommen aus der Akte, nicht aus dem Formular.
+    studentName: akte.name || studentName.trim(),
+    studentId: akte._id,
     studentClass: String(studentClass),
     // Anzeigename inkl. Kursniveau (z. B. "Mathematik (Leistungsfach)"), damit
     // Admin, E-Mails, Meeting-Seite und Rechnung es ohne Zusatzlogik zeigen;
@@ -200,14 +218,6 @@ export async function POST(request) {
         }
       : {}),
   });
-
-  // Bestehendem Schülerprofil zuordnen (gleicher Name, gleiche Eltern-E-Mail).
-  // Best-Effort: die Buchung selbst darf daran nie scheitern.
-  try {
-    await autoLinkBooking(booking);
-  } catch (err) {
-    console.error("Automatische Profilzuordnung fehlgeschlagen:", err);
-  }
 
   // Einzelstunden und Pakete sind Anfragen: Die Lehrkraft bestätigt im
   // Admin-Bereich, bezahlt wird danach per Rechnung.

@@ -26,6 +26,17 @@ const MELDUNG_SCHLUESSEL = "konto_meldung";
 const WOCHENTAGE = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const KURZNAMEN = { Mathematik: "Mathe" };
 
+// Von der Buchungsseite kommend (?weiter=/buchen/<id>): nach der Anmeldung
+// dorthin zurück. Nur eigene, bekannte Ziele – keine offene Weiterleitung.
+function weiterZiel() {
+  try {
+    const ziel = new URLSearchParams(window.location.search).get("weiter") || "";
+    return /^\/(buchen\/[A-Za-z0-9_-]+|angebote)$/.test(ziel) ? ziel : "";
+  } catch {
+    return "";
+  }
+}
+
 function wochentag(iso) {
   const [j, m, t] = String(iso || "").split("-").map(Number);
   if (!j || !m || !t) return "";
@@ -117,7 +128,10 @@ export default function KontoSeite() {
       } catch {
         // egal
       }
-      await laden();
+      const angemeldet = await laden();
+      const ziel = weiterZiel();
+      if (angemeldet && ziel) window.location.replace(ziel);
+      else if (ziel) setMeldung((m) => ({ ...m, hinweis: m.hinweis || "Melden Sie sich mit Ihrer Akte an – danach geht es direkt weiter zur Buchung." }));
     })();
   }, [laden]);
 
@@ -187,6 +201,11 @@ export default function KontoSeite() {
         meldung={meldung.hinweis}
         fehlerVorab={meldung.fehler}
         onAngemeldet={(fokus) => {
+          const ziel = weiterZiel();
+          if (ziel) {
+            window.location.assign(ziel);
+            return;
+          }
           setMeldung({ hinweis: "", fehler: "", fokus, neu: false, passwort: "" });
           laden();
         }}

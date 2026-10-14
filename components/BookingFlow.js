@@ -193,10 +193,15 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offerId: offer._id, ...form }),
+        body: JSON.stringify({ offerId: offer._id, studentId: gewaehltesKind, ...form }),
       });
       const data = await res.json();
       if (!res.ok) {
+        // Anmeldung abgelaufen: neu laden zeigt den Weg über die Akte.
+        if (data.akteNoetig) {
+          window.location.reload();
+          return;
+        }
         setError(data.error || "Buchung konnte nicht erstellt werden.");
         return;
       }
@@ -262,6 +267,8 @@ export default function BookingFlow({ offer, classOptions, bookingSettings }) {
           <input
             id="studentName"
             required
+            // Aus der Akte – wer für ein anderes Kind bucht, wählt oben die Akte.
+            readOnly={Boolean(konto)}
             value={form.studentName}
             onChange={(e) => update("studentName", e.target.value)}
             className={inputClass}

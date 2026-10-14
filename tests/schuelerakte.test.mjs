@@ -119,3 +119,12 @@ test("Kennenlern-Meeting nur aus der Akte; Telefonat-Endpunkte sind weg", () => 
   assert.match(quelle, /kennenlernen: true/);
   assert.match(quelle, /priceCents: 0/);
 });
+
+test("Buchen nur aus einer angemeldeten Schülerakte", () => {
+  const route = fs.readFileSync(new URL("../app/api/bookings/route.js", import.meta.url), "utf8");
+  assert.match(route, /sessionKonto/);
+  assert.match(route, /akteNoetig: true/);
+  assert.match(route, /studentId: akte\._id/, "die Buchung hängt fest an der Akte");
+  const seite = fs.readFileSync(new URL("../app/buchen/[id]/page.js", import.meta.url), "utf8");
+  assert.match(seite, /!mitAkte \? \(\s*<AkteZuerst/, "ohne Akte kein Formular");
+});

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { cancelRuleLong } from "@/lib/legal/terms";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { KONTO_COOKIE, sessionKonto } from "@/lib/kunden/konto";
+import AkteZuerst from "@/components/akte/AkteZuerst";
 import { getOffer, getSettings } from "@/lib/db";
 import { buildDurationSummary, MODE_LABEL, formatClassRange } from "@/lib/pricing";
 import { getShopStatus } from "@/lib/shopStatus";
@@ -31,6 +34,8 @@ export default async function BuchenPage({ params }) {
   if (!offer || !offer.active) notFound();
 
   const shopStatus = getShopStatus(settings);
+  // Ohne angemeldete Schülerakte kein Formular – erst die Akte.
+  const mitAkte = Boolean(await sessionKonto((await cookies()).get(KONTO_COOKIE)?.value));
 
   // Nur Klassen, für die dieses Angebot gilt (z. B. Privatstunde "Klasse 8–9").
   const classOptions = classOptionsForOffer(offer, settings);
@@ -94,6 +99,8 @@ export default async function BuchenPage({ params }) {
               Zurück zu den Angeboten
             </Link>
           </div>
+        ) : !mitAkte ? (
+          <AkteZuerst zurueck={`/buchen/${offer._id}`} />
         ) : (
           <BookingFlow
             offer={offer}

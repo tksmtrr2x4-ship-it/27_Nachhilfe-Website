@@ -2,6 +2,7 @@ import { KONTO_COOKIE, endKontoSession, kontoCookieGeloescht, sessionKonto } fro
 import { kontoUebersicht } from "@/lib/kunden/uebersicht";
 import { kontoDokumente } from "@/lib/kunden/dokumente";
 import { todayIsoBerlin } from "@/lib/adminError";
+import { getSettings } from "@/lib/db";
 
 // Die Übersicht des angemeldeten Kontos – samt Dokumentenmappe je Kind
 // (Stunden, Rechnungen, Quittungen; lib/kunden/dokumente.js).
@@ -19,8 +20,10 @@ export async function GET(request) {
     weg.headers.append("Set-Cookie", kontoCookieGeloescht());
     return weg;
   }
-  const mappen = await kontoDokumente(customerId, uebersicht.schueler, todayIsoBerlin());
-  return Response.json({ ...uebersicht, mappen, eineAkte: Boolean(studentId) }, { headers: { "Cache-Control": "private, no-store" } });
+  const [mappen, settings] = await Promise.all([kontoDokumente(customerId, uebersicht.schueler, todayIsoBerlin()), getSettings()]);
+  // Für Hinweise wie „bitte direkt melden“ bei einer späten Absage.
+  const kontakt = { email: settings.contactEmail || "", telefon: settings.contactPhone || "" };
+  return Response.json({ ...uebersicht, mappen, kontakt, eineAkte: Boolean(studentId) }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function DELETE(request) {

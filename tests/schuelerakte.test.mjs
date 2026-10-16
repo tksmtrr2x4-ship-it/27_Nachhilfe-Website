@@ -128,3 +128,14 @@ test("Buchen nur aus einer angemeldeten Schülerakte", () => {
   const seite = fs.readFileSync(new URL("../app/buchen/[id]/page.js", import.meta.url), "utf8");
   assert.match(seite, /!mitAkte \? \(\s*<AkteZuerst/, "ohne Akte kein Formular");
 });
+
+test("Absagen und Widerruf aus der Akte: Server prüft Frist und Zugehörigkeit selbst", () => {
+  const storno = fs.readFileSync(new URL("../app/api/konto/stornieren/route.js", import.meta.url), "utf8");
+  assert.match(storno, /sitzungSieht\(konto, kind\._id\)/);
+  assert.match(storno, /stornoStatus\(buchung\)/);
+  assert.match(storno, /status: buchung\.status \}/, "kein doppeltes Absagen");
+  const widerruf = fs.readFileSync(new URL("../app/api/konto/widerruf/route.js", import.meta.url), "utf8");
+  assert.match(widerruf, /widerrufStatus\(buchung\)/);
+  assert.match(widerruf, /schritt !== "bestaetigen"/, "zwei Schritte nach § 356a BGB");
+  assert.match(widerruf, /erfasseWiderruf\(eingabe/);
+});

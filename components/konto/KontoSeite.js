@@ -179,6 +179,7 @@ export default function KontoSeite() {
       <AktenRegal
         daten={daten}
         meldung={meldung}
+        onNeuLaden={laden}
         onAbmelden={abmelden}
         onBearbeiten={(studentId) => {
           setMeldung((m) => ({ ...m, hinweis: "" }));
@@ -226,7 +227,7 @@ export default function KontoSeite() {
 // Angemeldet
 // ---------------------------------------------------------------------------
 
-function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
+function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten, onNeuLaden }) {
   const { kunde, schueler, mappen = {}, naechste, weitere = [], nachrichten = [], kennenlernen = {} } = daten;
   const anrede = kunde.name || "";
   const startKind = schueler.find((s) => s._id === meldung.fokus)?._id || schueler[0]?._id || null;
@@ -368,7 +369,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten }) {
                 onSchliessen={() => setOffen(false)}
               />
             </div>
-            <Register mappe={mappe} nachrichten={nachrichtenDesKindes} />
+            <Register mappe={mappe} nachrichten={nachrichtenDesKindes} kontakt={daten.kontakt} onGeaendert={onNeuLaden} />
           </Mappe>
         </div>
 
@@ -447,15 +448,18 @@ function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onKe
 
 const REGISTER = [
   ["stunden", "Stunden", "#1f4e6e"],
+  ["vertraege", "Verträge", "#9a6fb0"],
   ["rechnungen", "Rechnungen", "#f08a2c"],
   ["quittungen", "Quittungen", "#7aa7c4"],
   ["nachrichten", "Nachrichten", "#e4b77f"],
 ];
 
-function Register({ mappe, nachrichten }) {
+function Register({ mappe, nachrichten, kontakt, onGeaendert }) {
   const [reiter, setReiter] = useState("stunden");
+  const vertraege = mappe.vertraege || [];
   const anzahl = {
     stunden: mappe.stunden.length,
+    vertraege: vertraege.length,
     rechnungen: mappe.rechnungen.length,
     quittungen: mappe.quittungen.length,
     nachrichten: nachrichten.length,
@@ -483,7 +487,8 @@ function Register({ mappe, nachrichten }) {
       </div>
 
       <div role="tabpanel" className="pt-4">
-        {reiter === "stunden" ? <Stunden stunden={mappe.stunden} /> : null}
+        {reiter === "stunden" ? <Stunden stunden={mappe.stunden} kontakt={kontakt} onGeaendert={onGeaendert} /> : null}
+        {reiter === "vertraege" ? <Vertraege liste={vertraege} onGeaendert={onGeaendert} /> : null}
         {reiter === "rechnungen" ? <Rechnungen liste={mappe.rechnungen} /> : null}
         {reiter === "quittungen" ? <Quittungen liste={mappe.quittungen} /> : null}
         {reiter === "nachrichten" ? <Nachrichten liste={nachrichten} /> : null}
@@ -528,6 +533,7 @@ const ZUSTAND_FARBE = {
   offen: "bg-[#fbe3d3] text-[#8a3b0a]",
   bezahlt: "bg-[#e6efdf] text-[#3d5a2c]",
   storniert: "bg-[#ece4d6] text-[#5e5242]",
+  angefragt: "bg-[#fdf0d8] text-[#8a5a0a]",
 };
 
 function Marke({ zustand, children }) {
@@ -535,27 +541,53 @@ function Marke({ zustand, children }) {
   return <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${ZUSTAND_FARBE[zustand] || ZUSTAND_FARBE.abgesagt}`}>{children}</span>;
 }
 
-function Stunden({ stunden }) {
+function Stunden({ stunden, kontakt, onGeaendert }) {
   const kommend = useMemo(
-    () => stunden.filter((s) => s.zustand === "geplant").sort((a, b) => `${a.datum} ${a.zeit}`.localeCompare(`${b.datum} ${b.zeit}`)),
+    () =>
+      stunden
+        .filter((s) => s.zustand === "geplant" || s.zustand === "angefragt")
+        .sort((a, b) => `${a.datum} ${a.zeit}`.localeCompare(`${b.datum} ${b.zeit}`)),
     [stunden]
   );
-  const bisher = useMemo(() => stunden.filter((s) => s.zustand !== "geplant"), [stunden]);
+  const bisher = useMemo(() => stunden.filter((s) => s.zustand !== "geplant" && s.zustand !== "angefragt"), [stunden]);
+  const [frage, setFrage] = useState(null); // Stunde, die abgesagt werden soll
   if (stunden.length === 0) return <Leer>Noch keine Stunden. Sobald ein Termin feststeht, steht er hier.</Leer>;
 
   const zeile = (s) => (
-    <li key={s._id} className="flex items-center gap-3 border-b border-dashed border-[#e1d3bc] py-2.5 last:border-0">
-      <span className="w-[6.4rem] flex-none whitespace-nowrap text-[14px] tabular-nums text-[#5b5040]">
-        <span className="block font-semibold text-[#18324a]">
-          {wochentag(s.datum)} {kurzDatum(s.datum)}
+    <li key={s._id} className="border-b border-dashed border-[#e1d3bc] py-2.5 last:border-0">
+      <div className="flex items-center gap-3">
+        <span className="w-[6.4rem] flex-none whitespace-nowrap text-[14px] tabular-nums text-[#5b5040]">
+          <span className="block font-semibold text-[#18324a]">
+            {wochentag(s.datum)} {kurzDatum(s.datum)}
+          </span>
+          {s.zeit ? `${s.zeit} Uhr` : ""}
         </span>
-        {s.zeit ? `${s.zeit} Uhr` : ""}
-      </span>
-      <span className="min-w-0 flex-1 text-[14.5px] leading-snug text-[#384757]">
-        {s.fach}
-        {s.dauerMinuten ? <span className="block text-[13px] text-[#6a5d4b]">{s.dauerMinuten} Min.</span> : null}
-      </span>
-      <Marke zustand={s.zustand}>{s.text}</Marke>
+        <span className="min-w-0 flex-1 text-[14.5px] leading-snug text-[#384757]">
+          {s.fach}
+          {s.dauerMinuten ? <span className="block text-[13px] text-[#6a5d4b]">{s.dauerMinuten} Min.</span> : null}
+        </span>
+        <span className="flex flex-col items-end gap-1.5">
+          <Marke zustand={s.zustand}>{s.text}</Marke>
+          {s.storno ? <AbsageKnopf stunde={s} offen={frage?._id === s._id} onClick={() => setFrage(frage?._id === s._id ? null : s)} /> : null}
+        </span>
+      </div>
+      {s.storno && !s.storno.moeglich && s.storno.grund === "zu-spaet" && frage?._id === s._id ? (
+        <p className="mt-2 rounded-lg bg-[#fbf3e6] px-3 py-2 text-[13px] leading-snug text-[#5e5242]">
+          Weniger als 24 Stunden vor Beginn geht die Absage nur direkt bei mir
+          {kontakt?.telefon ? ` (${kontakt.telefon}` : ""}
+          {kontakt?.telefon && kontakt?.email ? ` oder ${kontakt.email})` : kontakt?.telefon ? ")" : ""}. Dann gilt § 6 der AGB.
+        </p>
+      ) : null}
+      {s.storno?.moeglich && frage?._id === s._id ? (
+        <AbsageFrage
+          stunde={s}
+          onFertig={() => {
+            setFrage(null);
+            onGeaendert?.();
+          }}
+          onZurueck={() => setFrage(null)}
+        />
+      ) : null}
     </li>
   );
 
@@ -565,6 +597,7 @@ function Stunden({ stunden }) {
         <div>
           <p className="blatt-label">Kommend</p>
           <ul className="mt-1">{kommend.map(zeile)}</ul>
+          <p className="mt-2 text-[12.5px] leading-snug text-[#6a5d4b]">Kostenlos absagen bis 24 Stunden vor Beginn (AGB § 6).</p>
         </div>
       ) : null}
       {bisher.length ? (
@@ -573,6 +606,247 @@ function Stunden({ stunden }) {
           <ul className="mt-1">{bisher.map(zeile)}</ul>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+// Grau, sobald die 24 Stunden unterschritten sind – mit Erklärung beim Antippen.
+function AbsageKnopf({ stunde, offen, onClick }) {
+  const frei = stunde.storno.moeglich;
+  const text = stunde.zustand === "angefragt" ? "Zurückziehen" : "Absagen";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={offen}
+      aria-disabled={!frei}
+      title={frei ? `${text} – kostenfrei` : "Weniger als 24 Std. vor Beginn – bitte direkt melden"}
+      className={`rounded-full border px-3 py-1 text-[12.5px] font-semibold transition ${
+        frei ? "border-[#c9a77d] text-[#8a3b0a] hover:bg-[#fbe3d3]" : "cursor-help border-[#ddd2c1] bg-[#efe8dc] text-[#9a8f80]"
+      }`}
+    >
+      {text}
+    </button>
+  );
+}
+
+function AbsageFrage({ stunde, onFertig, onZurueck }) {
+  const [grund, setGrund] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [fehler, setFehler] = useState("");
+  const anfrage = stunde.zustand === "angefragt";
+
+  async function absagen() {
+    setBusy(true);
+    setFehler("");
+    try {
+      const res = await fetch("/api/konto/stornieren", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: stunde._id, grund }),
+      });
+      const antwort = await res.json().catch(() => ({}));
+      if (!res.ok) setFehler(antwort.error || "Das hat leider nicht geklappt.");
+      else onFertig();
+    } catch {
+      setFehler("Keine Verbindung. Bitte prüfen Sie Ihre Internetverbindung.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-2.5 rounded-xl border border-[#e1cfb1] bg-[#fffaf2] p-3.5">
+      <p className="text-[14.5px] font-semibold text-[#18324a]">
+        {anfrage ? "Anfrage zurückziehen" : "Stunde absagen"}: {wochentag(stunde.datum)} {kurzDatum(stunde.datum)}
+        {stunde.zeit ? `, ${stunde.zeit} Uhr` : ""}
+      </p>
+      <p className="mt-0.5 text-[13px] text-[#5b5040]">Kostenfrei. Sie bekommen eine Bestätigung per Mail.</p>
+      <input
+        className="feld mt-2.5 !min-h-10 !text-[14px]"
+        value={grund}
+        onChange={(e) => setGrund(e.target.value)}
+        maxLength={300}
+        placeholder="Grund (freiwillig), z. B. krank"
+      />
+      {fehler ? (
+        <p role="alert" className="mt-2 text-[13.5px] font-medium text-[#8a3b0a]">
+          {fehler}
+        </p>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" disabled={busy} onClick={absagen} className="knopf knopf-orange !min-h-10 !px-4 !text-[14px] disabled:opacity-60">
+          {busy ? "Einen Moment …" : anfrage ? "Ja, zurückziehen" : "Ja, absagen"}
+        </button>
+        <button type="button" onClick={onZurueck} className="knopf knopf-rand !min-h-10 !px-4 !text-[14px]">
+          Zurück
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Verträge und gesetzlicher Widerruf (§§ 355, 356, 356a, 357a BGB)
+// ---------------------------------------------------------------------------
+
+const WIDERRUF_TEXT = {
+  offen: (v) => `Widerruf möglich bis ${fristText(v.widerruf.bis)}`,
+  erloschen: () => "Widerrufsrecht erloschen – die Stunde ist erbracht, dem vorzeitigen Beginn hatten Sie zugestimmt.",
+  abgelaufen: () => "Widerrufsfrist abgelaufen.",
+  widerrufen: () => "Widerrufen.",
+};
+
+function fristText(iso) {
+  return new Date(iso).toLocaleString("de-DE", { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }) + ", 24 Uhr";
+}
+
+function Vertraege({ liste, onGeaendert }) {
+  const [offen, setOffen] = useState(null);
+  if (liste.length === 0) {
+    return <Leer>Hier stehen die Verträge, die Sie über die Website geschlossen haben – mit Ihrem Widerrufsrecht.</Leer>;
+  }
+  return (
+    <div>
+      <ul>
+        {liste.map((v) => (
+          <li key={v._id} className="border-b border-dashed border-[#e1d3bc] py-3 last:border-0">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <span className="min-w-0">
+                <span className="block text-[14.5px] font-semibold text-[#18324a]">
+                  {v.titel}
+                  {v.fach ? ` · ${v.fach}` : ""}
+                </span>
+                <span className="block text-[13px] text-[#5b5040]">
+                  {v.art}
+                  {v.nummer ? ` · ${v.nummer}` : ""}
+                  {v.vertragsschluss ? ` · geschlossen am ${formatDate(v.vertragsschluss.slice(0, 10))}` : ""}
+                </span>
+                {v.widerruf.art !== "kein" ? (
+                  <span className={`mt-1 block text-[13px] ${v.widerruf.art === "offen" ? "text-[#1f4e6e]" : "text-[#6a5d4b]"}`}>
+                    {(WIDERRUF_TEXT[v.widerruf.art] || (() => ""))(v)}
+                  </span>
+                ) : null}
+              </span>
+              {v.widerruf.art === "offen" ? (
+                <button
+                  type="button"
+                  onClick={() => setOffen(offen === v._id ? null : v._id)}
+                  aria-expanded={offen === v._id}
+                  className="rounded-full border border-[#c9a77d] px-3 py-1 text-[12.5px] font-semibold text-[#8a3b0a] transition hover:bg-[#fbe3d3]"
+                >
+                  Vertrag widerrufen
+                </button>
+              ) : null}
+            </div>
+            {offen === v._id ? (
+              <WiderrufSchritte
+                vertrag={v}
+                onFertig={() => onGeaendert?.()}
+                onZurueck={() => setOffen(null)}
+              />
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[12.5px] leading-snug text-[#6a5d4b]">
+        Das gesetzliche Widerrufsrecht gilt 14 Tage ab Vertragsschluss.{" "}
+        <a href="/widerruf" className="underline underline-offset-2">
+          Widerrufsbelehrung
+        </a>
+      </p>
+    </div>
+  );
+}
+
+// Zwei Schritte wie bei der Widerrufsfunktion vorgeschrieben (§ 356a BGB):
+// erst die Angaben sehen, dann „Widerruf bestätigen“.
+function WiderrufSchritte({ vertrag, onFertig, onZurueck }) {
+  const [daten, setDaten] = useState(null);
+  const [fertig, setFertig] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [fehler, setFehler] = useState("");
+
+  async function schicke(schritt) {
+    setBusy(true);
+    setFehler("");
+    try {
+      const res = await fetch("/api/konto/widerruf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: vertrag._id, schritt }),
+      });
+      const antwort = await res.json().catch(() => ({}));
+      if (!res.ok) setFehler(antwort.error || "Das hat leider nicht geklappt.");
+      else if (schritt === "pruefen") setDaten(antwort.zusammenfassung);
+      else setFertig(antwort);
+    } catch {
+      setFehler("Keine Verbindung. Bitte prüfen Sie Ihre Internetverbindung.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    schicke("pruefen");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (fertig) {
+    return (
+      <div role="status" className="mt-2.5 rounded-xl border border-[#c4d5e1] bg-[#eef4f8] p-3.5 text-[14px] text-[#18324a]">
+        <p className="font-semibold">Ihr Widerruf ist eingegangen – am {fertig.eingangText}.</p>
+        <p className="mt-1 text-[13px] text-[#384757]">
+          {fertig.bestaetigungGesendet ? "Die Eingangsbestätigung ist per Mail unterwegs." : "Die Eingangsbestätigung schicke ich Ihnen zusätzlich persönlich."}
+        </p>
+        <button type="button" onClick={onFertig} className="mt-2 text-[13.5px] font-semibold text-[#1f4e6e] underline underline-offset-4">
+          Fertig
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2.5 rounded-xl border border-[#e1cfb1] bg-[#fffaf2] p-3.5 text-[14px] text-[#384757]">
+      {daten ? (
+        <>
+          <p className="font-semibold text-[#18324a]">Diesen Vertrag widerrufen?</p>
+          <dl className="mt-2 grid grid-cols-[7.5rem_1fr] gap-y-1 text-[13.5px]">
+            <dt className="text-[#6a5d4b]">Vertrag</dt>
+            <dd>{daten.vertrag || daten.referenz}</dd>
+            <dt className="text-[#6a5d4b]">Nummer</dt>
+            <dd>{daten.referenz}</dd>
+            <dt className="text-[#6a5d4b]">Name</dt>
+            <dd>{daten.name}</dd>
+            <dt className="text-[#6a5d4b]">Bestätigung an</dt>
+            <dd className="break-all">{daten.email}</dd>
+          </dl>
+          {daten.wertersatz ? (
+            <p className="mt-2 text-[13px] leading-snug text-[#5b5040]">
+              Sie hatten verlangt, dass der Unterricht vor Ablauf der Widerrufsfrist beginnt. Für bereits erbrachte Stunden ist ein
+              anteiliger Betrag zu zahlen (§ 357a Abs. 2 BGB).
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p className="text-[13.5px]">{busy ? "Einen Moment …" : ""}</p>
+      )}
+      {fehler ? (
+        <p role="alert" className="mt-2 text-[13.5px] font-medium text-[#8a3b0a]">
+          {fehler}
+        </p>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {daten ? (
+          <button type="button" disabled={busy} onClick={() => schicke("bestaetigen")} className="knopf knopf-orange !min-h-10 !px-4 !text-[14px] disabled:opacity-60">
+            {busy ? "Einen Moment …" : "Widerruf bestätigen"}
+          </button>
+        ) : null}
+        <button type="button" onClick={onZurueck} className="knopf knopf-rand !min-h-10 !px-4 !text-[14px]">
+          Zurück
+        </button>
+      </div>
     </div>
   );
 }

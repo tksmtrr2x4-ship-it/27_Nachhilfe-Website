@@ -353,7 +353,7 @@ export function OfferForm({ initial, onCancel, onSave }) {
             <span className="block text-xs text-[var(--ck-muted)]">
               Nur bei Paketen mit typischerweise kurzfristigem Start (z.B. Last-Minute-Boarding).
               Blendet im Buchungsformular die Pflicht-Checkbox zum vorzeitigen Leistungsbeginn
-              ein (§ 356 Abs. 4 BGB). Bei Einzelstunden wird das automatisch aus dem gewählten
+              ein (§ 356 Abs. 5 BGB). Bei Einzelstunden wird das automatisch aus dem gewählten
               Termin bestimmt.
             </span>
           </span>

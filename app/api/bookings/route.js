@@ -140,7 +140,7 @@ export async function POST(request) {
     }
   }
 
-  // Checkbox 3 (§ 356 Abs. 4 BGB): serverseitig unabhängig vom Client neu
+  // Checkbox 3 (§ 356 Abs. 5 BGB): serverseitig unabhängig vom Client neu
   // bestimmt, ob sie für diese Buchung Pflicht ist – bei Einzelstunden aus
   // dem echten Terminwunsch, bei Paketen aus offer.earlyStartPossible.
   const earlyStartRequired = requiresEarlyStartConsent(offer, requestedDate);

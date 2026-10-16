@@ -63,3 +63,12 @@ test("Raum: Host-Ticket nur für genau diesen Raum und nur befristet; TURN ohne 
   assert.equal(z.brauchtZahlungsschritt({ offerSnapshot: { type: "session", priceCents: 1500 }, locationType: "online", status: "confirmed" }), true);
   assert.equal(z.brauchtZahlungsschritt({ offerSnapshot: { type: "session", priceCents: 0 }, locationType: "online", status: "confirmed" }), false, "Kennenlernen frei");
 });
+
+test("Tafel bleibt weiß: kein desynchronized-Canvas, Raum erzwingt helles Farbschema", async () => {
+  const fs = await import("node:fs");
+  const tafel = fs.readFileSync(new URL("../components/raum/Tafel.js", import.meta.url), "utf8");
+  assert.doesNotMatch(tafel, /desynchronized:\s*true/);
+  assert.match(tafel, /background: "#ffffff"/);
+  const seite = fs.readFileSync(new URL("../app/meeting/[token]/page.js", import.meta.url), "utf8");
+  assert.match(seite, /colorScheme: "only light"/);
+});

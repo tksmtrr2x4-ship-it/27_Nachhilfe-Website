@@ -19,6 +19,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// Der Raum ist immer hell – auch wenn Gerät oder Browser einen Dunkelmodus
+// erzwingen (Chrome/Samsung Internet auf Android dunkeln sonst die weiße
+// Tafel ab). „only light“ schließt das automatische Abdunkeln aus.
+export const viewport = {
+  colorScheme: "only light",
+  themeColor: "#18324a",
+};
+
 export default async function MeetingPage({ params }) {
   const { token } = await params;
   const booking = await getBookingByMeetingToken(token);

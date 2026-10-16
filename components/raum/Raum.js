@@ -188,7 +188,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
 
   if (!bereit) {
     return (
-      <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-5 py-10 text-white">
+      <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-5 py-10 text-white" style={{ colorScheme: "only light" }}>
         <div className="w-full max-w-md text-center">
           <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6b06c]">Lernsprung · Unterrichtsraum</p>
           <h1 className="mt-3 text-[2rem] font-semibold leading-tight">{titel}</h1>
@@ -219,7 +219,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   );
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#18324a] text-white">
+    <div className="flex h-[100dvh] flex-col bg-[#18324a] text-white" style={{ colorScheme: "only light" }}>
       <header className="flex items-center gap-3 px-4 py-2.5" style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}>
         <span className="hidden text-[13px] font-semibold uppercase tracking-[0.12em] text-[#f6b06c] sm:inline">Lernsprung</span>
         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{titel}</span>

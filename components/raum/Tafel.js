@@ -26,8 +26,7 @@ import { tafelLaden, tafelLoeschen, tafelSpeichern } from "@/components/raum/spe
 // Flüssig auf dem iPad:
 //   - zwei Ebenen: fertige Striche (wird nur bei Bedarf neu gezeichnet) und
 //     der Strich, der gerade entsteht (jeder Frame)
-//   - alle Zwischenpunkte des Pencils (getCoalescedEvents), Canvas mit
-//     „desynchronized“ für geringe Latenz
+//   - alle Zwischenpunkte des Pencils (getCoalescedEvents)
 //   - sobald ein Pencil im Spiel ist, zeichnet nur noch der Pencil; Finger
 //     scrollen die Seite (Handballen malen nicht mit)
 //
@@ -183,7 +182,10 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         canvas.width = w;
         canvas.height = h;
       }
-      const ctx = canvas.getContext("2d", { desynchronized: true });
+      // Bewusst ohne „desynchronized“: Chrome macht die Fläche damit auf
+      // manchen Geräten undurchsichtig schwarz (Oktober 2026 beim Gast so
+      // gesehen). Safari kennt den Modus ohnehin nicht.
+      const ctx = canvas.getContext("2d", { alpha: true });
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.setTransform(mass.faktor * dpr, 0, 0, mass.faktor * dpr, 0, 0);

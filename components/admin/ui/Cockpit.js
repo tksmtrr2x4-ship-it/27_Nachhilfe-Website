@@ -72,11 +72,11 @@ export function DayTile({ day, month, today = false }) {
   return (
     <span
       className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[14px] ${
-        today ? "bg-[var(--ck-accent)] text-black" : "bg-[var(--ck-surface2)] group-hover:bg-[var(--ck-surface3)]"
+        today ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface2)] group-hover:bg-[var(--ck-surface3)]"
       }`}
     >
       <b className="text-[17px] leading-none">{day}</b>
-      <span className={`mt-0.5 text-[10.5px] uppercase tracking-[0.6px] ${today ? "text-black/60" : "text-[var(--ck-muted)]"}`}>
+      <span className={`mt-0.5 text-[10.5px] uppercase tracking-[0.6px] ${today ? "text-white/75" : "text-[var(--ck-muted)]"}`}>
         {today ? "Heute" : month}
       </span>
     </span>
@@ -194,7 +194,8 @@ function chartLabel(values, labels) {
 
 // ---------- Drawer ----------
 
-// Schiebt von rechts herein, verdunkelt den Hintergrund. Schließt per Kreuz,
+// Das Bearbeitungsfenster (Blatt): am iPhone von unten, ab iPad/Mac mittig –
+// wie Sheets in iOS und macOS. Schließt per Kreuz,
 // Klick daneben und Escape. Der Fokus bleibt drin, solange er offen ist.
 export function Drawer({ open, onClose, labelledBy, children }) {
   const panel = useRef(null);
@@ -242,7 +243,7 @@ export function Drawer({ open, onClose, labelledBy, children }) {
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`fixed inset-0 z-40 bg-black/55 transition-opacity duration-250 sm:backdrop-blur-[3px] ${
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-250 md:backdrop-blur-[2px] ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -253,11 +254,15 @@ export function Drawer({ open, onClose, labelledBy, children }) {
         aria-labelledby={labelledBy}
         aria-hidden={open ? undefined : "true"}
         inert={!open}
-        className={`fixed inset-y-0 right-0 z-50 flex w-[min(620px,100vw)] flex-col overscroll-contain border-l border-[var(--ck-line)] bg-[var(--ck-panel)] transition-[transform,visibility] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] ${
-          open ? "visible translate-x-0" : "invisible translate-x-full"
+        className={`ck-glas-stark fixed inset-x-0 bottom-0 top-[max(env(safe-area-inset-top),2.5rem)] z-50 flex flex-col overflow-hidden overscroll-contain rounded-t-[26px] transition-[transform,opacity,visibility] duration-300 ease-[cubic-bezier(.2,.85,.25,1)] md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(880px,calc(100dvh-64px))] md:w-[min(720px,calc(100vw-48px))] md:rounded-[28px] ${
+          open
+            ? "visible translate-y-0 opacity-100 md:-translate-x-1/2 md:-translate-y-1/2 md:scale-100"
+            : "invisible translate-y-full md:translate-y-[-46%] md:-translate-x-1/2 md:scale-[0.97] md:opacity-0"
         }`}
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
+        {/* Griff wie bei iOS-Blättern */}
+        <span aria-hidden="true" className="mx-auto mt-2 block h-1.5 w-10 shrink-0 rounded-full bg-[var(--ck-surface3)] md:hidden" />
         {children}
       </aside>
     </>
@@ -281,7 +286,7 @@ export function DrawerClose({ onClose }) {
 // Abschnitt im Drawer.
 export function Section({ title, children }) {
   return (
-    <div className="mb-3.5 rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4.5">
+    <div className="mb-3.5 ck-glas rounded-[var(--ck-r)] p-4.5">
       {title ? (
         <h4 className="mb-2.5 text-[13px] font-semibold uppercase tracking-[0.6px] text-[var(--ck-muted)]">{title}</h4>
       ) : null}
@@ -329,9 +334,31 @@ export function Timeline({ steps }) {
 
 // views: [[key, label]] – die Auswahl steht in der Adresse (?ansicht=),
 // damit jede Unteransicht verlinkbar bleibt.
-// Unterreiter mit Symbol. Am Handy eine waagrecht wischbare Reihe (ohne
-// Umbruch, bis an den Rand), ab sm umbrechend.
-export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
+// Unterreiter. Bis vier Ansichten (oder mit segmentiert) ein Segmentschalter
+// wie in iOS/macOS, sonst eine wischbare Reihe mit Symbolen (am Handy ohne
+// Umbruch bis an den Rand, ab sm umbrechend).
+export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten", segmentiert = false }) {
+  if (segmentiert || views.length <= 4) {
+    return (
+      <nav aria-label={label} className="ck-glas inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {views.map(([key, text]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onWaehlen(key)}
+            aria-current={aktiv === key ? "page" : undefined}
+            className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[14px] sm:px-4 font-medium transition ${
+              aktiv === key ? "bg-[var(--ck-segment)] text-[var(--ck-text)] shadow-[0_1px_4px_rgba(0,0,0,.16)]" : "text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
+            }`}
+          >
+            {/* Am Handy nur Text, damit vier Felder nebeneinander passen. */}
+            <Ikone name={SYMBOL_FUER_ANSICHT[key]} className="hidden h-[16px] w-[16px] sm:block" />
+            {text}
+          </button>
+        ))}
+      </nav>
+    );
+  }
   return (
     <nav
       className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
@@ -343,13 +370,11 @@ export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
           type="button"
           onClick={() => onWaehlen(key)}
           aria-current={aktiv === key ? "page" : undefined}
-          className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full py-2 pl-3 pr-4 text-sm font-semibold transition active:scale-[0.97] ${
-            aktiv === key
-              ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]"
-              : "bg-[var(--ck-surface)] text-[var(--ck-muted)] ring-1 ring-[var(--ck-line)] hover:text-[var(--ck-text)]"
+          className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full py-2 pl-3 pr-4 text-[14px] font-medium transition active:scale-[0.97] ${
+            aktiv === key ? "bg-[var(--ck-accent)] text-white" : "ck-glas text-[var(--ck-text)] hover:bg-[var(--ck-surface3)]"
           }`}
         >
-          <Ikone name={SYMBOL_FUER_ANSICHT[key]} className="h-[18px] w-[18px]" />
+          <Ikone name={SYMBOL_FUER_ANSICHT[key]} className="h-[17px] w-[17px]" />
           {text}
         </button>
       ))}
@@ -362,7 +387,7 @@ export function SubNav({ views, aktiv, onWaehlen, label = "Ansichten" }) {
 // Breite, Monat mittig.
 export function MonatsWahl({ name, onZurueck, onWeiter, onHeute }) {
   const pfeil =
-    "grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--ck-surface2)] text-[var(--ck-text)] transition hover:bg-[var(--ck-surface3)] active:scale-95";
+    "ck-glas grid h-10 w-10 shrink-0 place-items-center rounded-full text-[var(--ck-accent)] transition active:scale-95";
   return (
     <div className="flex w-full items-center gap-2 sm:w-auto">
       <button type="button" onClick={onZurueck} aria-label="Vorheriger Monat" className={pfeil}>
@@ -382,5 +407,54 @@ export function MonatsWahl({ name, onZurueck, onWeiter, onHeute }) {
         </button>
       ) : null}
     </div>
+  );
+}
+
+// ---------- Gruppierte Aktionsliste (wie Einstellungen in iOS/macOS) ----------
+
+// Mehrere <Aktion> in einer abgerundeten Gruppe mit Trennlinien. Leere
+// Gruppen (alle Einträge ausgeblendet) verschwinden ganz.
+export function AktionsGruppe({ children, titel }) {
+  const eintraege = (Array.isArray(children) ? children : [children]).flat().filter(Boolean);
+  if (eintraege.length === 0) return null;
+  return (
+    <div className="mb-3.5">
+      {titel ? <p className="mb-1.5 px-4 text-[12px] font-medium uppercase tracking-[0.04em] text-[var(--ck-muted)]">{titel}</p> : null}
+      <div className="ck-glas overflow-hidden rounded-[var(--ck-r)] [&>*+*]:border-t [&>*+*]:border-[var(--ck-line)]">{eintraege}</div>
+    </div>
+  );
+}
+
+export function Aktion({ symbol, text, hinweis, onClick, href, extern, disabled, gefahr }) {
+  const inhalt = (
+    <>
+      {symbol ? (
+        <span
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-[8px] ${
+            gefahr ? "bg-[var(--ck-neg)] text-white" : "bg-[var(--ck-accent)] text-white"
+          } ${disabled ? "opacity-40" : ""}`}
+        >
+          <Ikone name={symbol} className="h-[17px] w-[17px]" strich={2} />
+        </span>
+      ) : null}
+      <span className="min-w-0 flex-1">
+        <span className={`block text-[15px] ${gefahr ? "text-[var(--ck-neg)]" : "text-[var(--ck-text)]"} ${disabled ? "opacity-40" : ""}`}>{text}</span>
+        {hinweis ? <span className="block truncate text-[12.5px] text-[var(--ck-muted)]">{hinweis}</span> : null}
+      </span>
+      {!gefahr && !disabled ? <Ikone name="pfeil" className="h-4 w-4 shrink-0 text-[var(--ck-faint)]" strich={2.2} /> : null}
+    </>
+  );
+  const klasse = `flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition ${disabled ? "cursor-not-allowed" : "hover:bg-[var(--ck-surface2)] active:bg-[var(--ck-surface3)]"}`;
+  if (href && !disabled) {
+    return (
+      <a href={href} className={klasse} {...(extern ? { target: "_blank", rel: "noreferrer" } : {})}>
+        {inhalt}
+      </a>
+    );
+  }
+  return (
+    <button type="button" onClick={disabled ? undefined : onClick} disabled={disabled} className={klasse}>
+      {inhalt}
+    </button>
   );
 }

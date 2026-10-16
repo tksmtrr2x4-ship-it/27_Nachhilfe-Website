@@ -27,7 +27,7 @@ export function SettingsForm({ settings, onSave }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 grid gap-5 rounded-2xl border border-[var(--ck-line)] p-6 sm:grid-cols-2"
+      className="ck-glas grid gap-5 rounded-[var(--ck-r)] p-6 sm:grid-cols-2"
     >
       <div>
         <label htmlFor="s-siteName" className="text-sm font-semibold text-[var(--ck-text)]">
@@ -247,7 +247,7 @@ export function SettingsForm({ settings, onSave }) {
       <div className="sm:col-span-2">
         <button
           type="submit"
-          className="rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-black hover:brightness-110"
+          className="rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-white hover:brightness-110"
         >
           Speichern
         </button>

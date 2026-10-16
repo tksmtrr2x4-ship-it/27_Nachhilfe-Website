@@ -7,14 +7,12 @@ import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { Badge, Button, DataTable, SubNav, Toolbar, formatPrice, useDialogs } from "@/components/admin/ui";
 import OfferForm, { EMPTY_OFFER } from "@/components/admin/website/OfferForm";
 import TestimonialForm, { EMPTY_TESTIMONIAL } from "@/components/admin/website/TestimonialForm";
-import SettingsForm from "@/components/admin/website/SettingsForm";
-import ZugangView from "@/components/admin/website/ZugangView";
 
 // Bereich "Website": Angebote, Rückmeldungen und die Website-Einstellungen.
 // Alles, was Besucher:innen sehen – getrennt von der täglichen Arbeit mit
 // Unterricht, Schüler:innen und Finanzen.
 export default function WebsiteView({ view: viewParam, onView }) {
-  const { adminFetch, notify, settings, saveSettings } = useAdmin();
+  const { adminFetch, notify } = useAdmin();
   const { confirm } = useDialogs();
   const view = subViewFrom("website", viewParam);
 
@@ -272,14 +270,6 @@ export default function WebsiteView({ view: viewParam, onView }) {
           </div>
         ))}
 
-      {view === "zugang" && <ZugangView />}
-
-      {view === "einstellungen" && (
-        <div className="space-y-4">
-          <Toolbar title="Einstellungen" hint="Texte, Kontaktdaten und Buchungsfenster der Website." />
-          {settings ? <SettingsForm settings={settings} onSave={(patch) => saveSettings(patch)} /> : <p className="text-sm text-[var(--ck-muted)]">Lädt …</p>}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { input, label } from "@/components/admin/ui/tokens";
 
 // Kopfzeile eines Bereichs: Titel links, Hauptaktionen rechts.
@@ -71,6 +72,43 @@ export function FilterChips({ chips, onReset }) {
           Alle Filter zurücksetzen
         </button>
       ) : null}
+    </div>
+  );
+}
+
+// Filterfläche: ab lg alle Filter offen in einer Reihe. Darunter (iPad
+// hochkant, iPhone) nur die Suche und ein Knopf „Filter“, der die übrigen
+// Auswahlfelder aufklappt – wie in den Apple-Apps, damit die Liste oben steht.
+// suche: { value, onChange, placeholder }
+export function FilterPanel({ suche, chips, onReset, children }) {
+  const [offen, setOffen] = useState(false);
+  const aktiv = (chips || []).filter(Boolean).length;
+  const suchfeld = suche ? <SearchInput value={suche.value} onChange={suche.onChange} placeholder={suche.placeholder} /> : null;
+  return (
+    <div className="ck-glas space-y-3 rounded-[var(--ck-r)] p-4">
+      <div className="flex items-end gap-2 lg:hidden">
+        <div className="min-w-0 flex-1 [&>label]:sm:min-w-0">{suchfeld}</div>
+        <button
+          type="button"
+          onClick={() => setOffen((o) => !o)}
+          aria-expanded={offen}
+          className={`inline-flex h-[44px] shrink-0 items-center gap-1.5 rounded-[12px] px-3.5 text-[15px] font-semibold transition ${
+            offen || aktiv ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface2)] text-[var(--ck-accent)]"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M4 7h16M7 12h10M10 17h4" />
+          </svg>
+          Filter{aktiv ? ` (${aktiv})` : ""}
+        </button>
+      </div>
+      <div className={offen ? "" : "hidden lg:block"}>
+        <FilterRow>
+          {children}
+          {suchfeld ? <div className="hidden min-w-[14rem] flex-1 lg:block">{suchfeld}</div> : null}
+        </FilterRow>
+      </div>
+      <FilterChips chips={chips} onReset={onReset} />
     </div>
   );
 }

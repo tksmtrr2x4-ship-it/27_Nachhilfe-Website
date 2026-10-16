@@ -168,7 +168,7 @@ export function finde(daten, roh) {
       gruppe: "Stunde",
       titel: `${b.studentName || "—"} · ${b.subject || b.offerSnapshot?.title || ""}`,
       zeile: [formatDate(lessonDateOf(b)), b.requestedTime ? `${b.requestedTime} Uhr` : ""].filter(Boolean).join(" · "),
-      href: `/admin/unterricht?stunde=${encodeURIComponent(b._id)}`,
+      href: `/admin/stunden?stunde=${encodeURIComponent(b._id)}`,
     }));
 
   const rechnungen = (daten.invoices || [])

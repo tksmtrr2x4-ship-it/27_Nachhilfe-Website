@@ -1,52 +1,78 @@
-/* Farben und Maße des Cockpits – die einzige Stelle, an der sie stehen.
-   Bewusst als CSS-Variablen und nicht als Tailwind-@theme: das @theme in
-   app/globals.css gilt für die ganze Website, diese Werte nur hinter dem
+/* Farben, Flächen und Maße der Verwaltung – die einzige Stelle, an der sie
+   stehen. Bewusst als CSS-Variablen und nicht als Tailwind-@theme: das @theme
+   in app/globals.css gilt für die ganze Website, diese Werte nur hinter dem
    Admin-Login. Die Bausteine in components/admin/ui greifen sie über
    Tailwind-Klassen wie bg-[var(--ck-surface)] ab.
 
-   Vorlage: lernsprung-cockpit.html (abgestimmt am 30.09.2026).
+   Seit Oktober 2026 im Stil von Apple (iCloud.com, Liquid Glass in der
+   überarbeiteten Fassung von 2026): ein ruhiger Farbverlauf als Hintergrund,
+   darauf milchige Glasflächen. Bewusst eher getönt als klar – Apple hat die
+   Transparenz 2026 zugunsten der Lesbarkeit zurückgenommen. Akzentfarbe ist
+   das System-Blau.
 
    Hell oder dunkel folgt der Einstellung des Geräts (prefers-color-scheme).
-   Die dunklen Werte stehen im Grundblock, die hellen überschreiben sie im
+   Die hellen Werte stehen im Grundblock, die dunklen überschreiben sie im
    Medienblock darunter – beide Blöcke müssen dieselben Namen führen. */
 
 .cockpit {
-  --ck-bg: #000;
-  --ck-surface: #0f0f10;
-  --ck-surface2: #17171a;
-  --ck-surface3: #1f1f23; /* Hover auf inneren Kacheln */
-  --ck-line: #232327;
-  --ck-text: #f5f5f7;
-  --ck-muted: #8a8a92;
-  --ck-faint: #5a5a62;
-  --ck-accent: #ff7a1a;
-  --ck-accent-soft: rgba(255, 122, 26, 0.14);
-  --ck-pos: #2fd07a;
-  --ck-pos-soft: rgba(47, 208, 122, 0.13);
-  --ck-neg: #ff5a5a;
-  --ck-neg-soft: rgba(255, 90, 90, 0.13);
-  --ck-warn: #ffc043;
-  --ck-warn-soft: rgba(255, 192, 67, 0.13);
+  /* Flächen */
+  --ck-surface: rgba(255, 255, 255, 0.82); /* Karten (Glas) */
+  --ck-surface-fest: rgba(255, 255, 255, 0.94); /* Karten am Handy (ohne Weichzeichner) */
+  --ck-surface2: rgba(118, 118, 128, 0.1); /* Füllung: Kacheln, Felder, Knöpfe */
+  --ck-surface3: rgba(118, 118, 128, 0.18); /* Füllung bei Hover/Druck */
+  --ck-panel: rgba(250, 250, 252, 0.86); /* Blätter, Seitenleiste, Menüs */
+  --ck-panel-fest: #f9f9fb; /* undurchsichtig, z. B. für <option> */
+  --ck-segment: #fff; /* gewähltes Feld im Umschalter */
+  --ck-bar: rgba(250, 250, 252, 0.72); /* Tab-Leiste, Kopfzeile am Handy */
+  --ck-glas-rand: rgba(255, 255, 255, 0.7);
+  --ck-glas-schatten: 0 10px 34px -16px rgba(0, 40, 100, 0.28);
+  --ck-line: rgba(60, 60, 67, 0.14);
+
+  /* Schrift */
+  --ck-text: #1d1d1f;
+  --ck-text-soft: #3a3a3c;
+  --ck-muted: #6e6e73;
+  --ck-faint: #a1a1a6;
+  --ck-muted-tapete: #23344c; /* Nebentext direkt auf dem Hintergrund */
+  --ck-faint-tapete: #3c5272;
+  --ck-on-text: #fff;
+
+  /* Systemfarben (Apple) */
+  --ck-accent: #007aff;
+  --ck-accent-soft: rgba(0, 122, 255, 0.12);
+  --ck-pos: #248a3d;
+  --ck-pos-soft: rgba(52, 199, 89, 0.16);
+  --ck-neg: #d70015;
+  --ck-neg-soft: rgba(255, 59, 48, 0.12);
+  --ck-warn: #c93400;
+  --ck-warn-soft: rgba(255, 149, 0, 0.16);
+
   --ck-r: 22px;
+  --ck-chart-line: rgba(60, 60, 67, 0.16);
+  --ck-scroll: rgba(60, 60, 67, 0.28);
+  --ck-av1: #d6e4fb; /* Initialen-Kreise */
+  --ck-av2: #e7dcf5;
+  --ck-av3: #d4ecdf;
+  --ck-av4: #f6e1d3;
+  --ck-av5: #d3e8f2;
+  --ck-av6: #f3dcdc;
+  --ck-picker: opacity(0.55);
 
-  --ck-panel: #0b0b0c; /* Drawer, Dialoge, Menüs */
-  --ck-bar: rgba(0, 0, 0, 0.97); /* untere Leiste auf dem Handy */
-  --ck-on-text: #000; /* Schrift auf Flächen in --ck-text-Farbe */
-  --ck-text-soft: #d8d8dc; /* Fließtext in Einträgen */
-  --ck-chart-line: #2a2a2f;
-  --ck-scroll: #2a2a30;
-  --ck-av1: #27324a; /* Initialen-Kreise */
-  --ck-av2: #3a2a44;
-  --ck-av3: #233b33;
-  --ck-av4: #44322a;
-  --ck-av5: #2a3a44;
-  --ck-av6: #3f2f2f;
-  --ck-picker: invert(1) opacity(0.5);
-  color-scheme: dark;
+  /* Hintergrund wie iCloud.com: Blau in weichen Bögen */
+  --ck-tapete:
+    radial-gradient(130% 95% at -15% 115%, rgba(255, 255, 255, 0.34) 0 38%, transparent 38.3%),
+    radial-gradient(120% 90% at -10% 125%, rgba(255, 255, 255, 0.22) 0 52%, transparent 52.3%),
+    radial-gradient(140% 120% at 110% -20%, rgba(130, 220, 255, 0.55) 0 30%, transparent 30.3%),
+    radial-gradient(110% 110% at 120% 120%, rgba(30, 100, 230, 0.45) 0 45%, transparent 45.3%),
+    linear-gradient(140deg, #c9eaff 0%, #8ccbf8 38%, #55a0f1 72%, #3c84ea 100%);
 
-  background: var(--ck-bg);
+  color-scheme: light;
   color: var(--ck-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+  position: relative;
+  isolation: isolate;
   /* Am Handy: nichts darf die Seite seitlich verschiebbar machen (clip statt
      hidden, damit die klebende Kopfzeile weiter funktioniert), und Tippen
      reagiert ohne Doppeltipp-Verzögerung. */
@@ -54,45 +80,167 @@
   touch-action: manipulation;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   .cockpit {
-    --ck-bg: #f2f2f4;
-    --ck-surface: #fff;
-    --ck-surface2: #f2f2f4;
-    --ck-surface3: #e6e6ea;
-    --ck-line: #e2e2e7;
-    --ck-text: #1d1d1f;
-    --ck-muted: #6a6a72;
-    --ck-faint: #a3a3ab;
-    --ck-accent: #e0600c; /* dunkler als im Dunkelmodus: als Schrift auf Weiß lesbar */
-    --ck-accent-soft: rgba(224, 96, 12, 0.12);
-    --ck-pos: #138a4b;
-    --ck-pos-soft: rgba(19, 138, 75, 0.12);
-    --ck-neg: #d23535;
-    --ck-neg-soft: rgba(210, 53, 53, 0.1);
-    --ck-warn: #a86a00;
-    --ck-warn-soft: rgba(204, 136, 0, 0.16);
+    --ck-surface: rgba(30, 32, 38, 0.68);
+    --ck-surface-fest: rgba(30, 32, 38, 0.95);
+    --ck-surface2: rgba(118, 118, 128, 0.24);
+    --ck-surface3: rgba(118, 118, 128, 0.34);
+    --ck-panel: rgba(28, 30, 36, 0.86);
+    --ck-panel-fest: #1c1e24;
+    --ck-segment: #636366;
+    --ck-bar: rgba(28, 30, 36, 0.72);
+    --ck-glas-rand: rgba(255, 255, 255, 0.1);
+    --ck-glas-schatten: 0 12px 38px -18px rgba(0, 0, 0, 0.7);
+    --ck-line: rgba(84, 84, 88, 0.6);
 
-    --ck-panel: #fff;
-    --ck-bar: rgba(250, 250, 252, 0.97);
-    --ck-on-text: #fff;
-    --ck-text-soft: #3a3a40;
-    --ck-chart-line: #dcdce1;
-    --ck-scroll: #c9c9d0;
-    --ck-av1: #dbe4f7;
-    --ck-av2: #eadcf2;
-    --ck-av3: #d6eadf;
-    --ck-av4: #f4e2d6;
-    --ck-av5: #d8e8f0;
-    --ck-av6: #f1dede;
-    --ck-picker: opacity(0.55);
-    color-scheme: light;
-  }
+    --ck-text: #f5f5f7;
+    --ck-text-soft: #d1d1d6;
+    --ck-muted: #98989d;
+    --ck-faint: #636366;
+    --ck-muted-tapete: #aab4c3;
+    --ck-faint-tapete: #7f8ba0;
+    --ck-on-text: #1c1c1e;
 
-  /* Der Rechnungsentwurf ist weiß auf weiß – ein feiner Rand hält ihn sichtbar. */
-  .cockpit .paper {
-    box-shadow: 0 0 0 1px #dcdcd6;
+    --ck-accent: #0a84ff;
+    --ck-accent-soft: rgba(10, 132, 255, 0.22);
+    --ck-pos: #30d158;
+    --ck-pos-soft: rgba(48, 209, 88, 0.18);
+    --ck-neg: #ff453a;
+    --ck-neg-soft: rgba(255, 69, 58, 0.18);
+    --ck-warn: #ff9f0a;
+    --ck-warn-soft: rgba(255, 159, 10, 0.18);
+
+    --ck-chart-line: rgba(255, 255, 255, 0.12);
+    --ck-scroll: rgba(255, 255, 255, 0.22);
+    --ck-av1: #24324d;
+    --ck-av2: #382a48;
+    --ck-av3: #213b31;
+    --ck-av4: #46322a;
+    --ck-av5: #253a47;
+    --ck-av6: #422d2f;
+    --ck-picker: invert(1) opacity(0.55);
+
+    --ck-tapete:
+      radial-gradient(130% 95% at -15% 115%, rgba(120, 170, 255, 0.12) 0 38%, transparent 38.3%),
+      radial-gradient(120% 90% at -10% 125%, rgba(120, 170, 255, 0.08) 0 52%, transparent 52.3%),
+      radial-gradient(140% 120% at 110% -20%, rgba(40, 120, 200, 0.4) 0 30%, transparent 30.3%),
+      radial-gradient(110% 110% at 120% 120%, rgba(30, 70, 190, 0.45) 0 45%, transparent 45.3%),
+      linear-gradient(140deg, #0d2340 0%, #0b1b36 45%, #081430 100%);
+
+    color-scheme: dark;
   }
+}
+
+/* Der Hintergrund steht fest, der Inhalt gleitet darüber. Als eigene Ebene
+   statt background-attachment: fixed – das kann Safari auf iPad/iPhone nicht. */
+.cockpit::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ck-tapete);
+  pointer-events: none;
+}
+
+/* Glasflächen. Am Handy ohne Weichzeichner (dafür fast deckend): Viele
+   gleichzeitig weichgezeichnete Flächen lassen dort das Scrollen ruckeln. */
+.cockpit .ck-glas {
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-glas-rand);
+  box-shadow: var(--ck-glas-schatten);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+}
+.cockpit .ck-glas-stark {
+  background: var(--ck-panel);
+  border: 1px solid var(--ck-glas-rand);
+  box-shadow: var(--ck-glas-schatten);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  backdrop-filter: blur(34px) saturate(180%);
+}
+@media (max-width: 767px) {
+  .cockpit .ck-glas {
+    background: var(--ck-surface-fest);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Kennzahlen: direkt auf dem Hintergrund als Glas, in einer Karte als
+   ruhige graue Füllung – so wie Kacheln in den Apple-Apps. */
+.cockpit .ck-kennzahl {
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-glas-rand);
+  box-shadow: var(--ck-glas-schatten);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+}
+.cockpit :is(.ck-glas, .ck-glas-stark) .ck-kennzahl {
+  background: var(--ck-surface2);
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (max-width: 767px) {
+  .cockpit .ck-kennzahl {
+    background: var(--ck-surface-fest);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .cockpit :is(.ck-glas, .ck-glas-stark) .ck-kennzahl {
+    background: var(--ck-surface2);
+  }
+}
+
+/* Was direkt auf dem Hintergrund liegt (nicht in einer Glasfläche), braucht
+   einen deckenden Grund – sonst mischt sich der Farbverlauf durch und Felder
+   und Hinweise wirken trüb. Getönte Hinweise behalten ihre Tönung darüber. */
+.cockpit :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), select, textarea):not(:is(.ck-glas, .ck-glas-stark, .paper) *) {
+  background-color: var(--ck-surface-fest);
+  box-shadow: var(--ck-glas-schatten);
+}
+.cockpit [class~="bg-[var(--ck-surface2)]"]:not(:is(.ck-glas, .ck-glas-stark, .ck-kennzahl) *):not(.ck-glas, .ck-glas-stark) {
+  background-color: var(--ck-surface-fest);
+}
+.cockpit [class~="bg-[var(--ck-warn-soft)]"]:not(:is(.ck-glas, .ck-glas-stark) *) {
+  background-color: var(--ck-surface-fest);
+  background-image: linear-gradient(var(--ck-warn-soft), var(--ck-warn-soft));
+}
+.cockpit [class~="bg-[var(--ck-neg-soft)]"]:not(:is(.ck-glas, .ck-glas-stark) *) {
+  background-color: var(--ck-surface-fest);
+  background-image: linear-gradient(var(--ck-neg-soft), var(--ck-neg-soft));
+}
+.cockpit [class~="bg-[var(--ck-pos-soft)]"]:not(:is(.ck-glas, .ck-glas-stark) *) {
+  background-color: var(--ck-surface-fest);
+  background-image: linear-gradient(var(--ck-pos-soft), var(--ck-pos-soft));
+}
+.cockpit [class~="bg-[var(--ck-accent-soft)]"]:not(:is(.ck-glas, .ck-glas-stark) *) {
+  background-color: var(--ck-surface-fest);
+  background-image: linear-gradient(var(--ck-accent-soft), var(--ck-accent-soft));
+}
+
+/* Nebentexte, die nicht in einer Glasfläche stehen, liegen auf dem Blau –
+   dort wäre Grau kaum lesbar. Im Inhaltsbereich gelten deshalb dunklere
+   Werte, in jeder Glasfläche wieder die normalen. */
+.cockpit .ck-inhalt {
+  --ck-muted-glas: var(--ck-muted);
+  --ck-faint-glas: var(--ck-faint);
+}
+.cockpit .ck-inhalt > * {
+  --ck-muted: var(--ck-muted-tapete);
+  --ck-faint: var(--ck-faint-tapete);
+}
+.cockpit .ck-inhalt :is(.ck-glas, .ck-glas-stark, .ck-kennzahl) {
+  --ck-muted: var(--ck-muted-glas);
+  --ck-faint: var(--ck-faint-glas);
+}
+
+/* Große Titel wie in Apple-Apps */
+.cockpit .ck-grosser-titel {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  letter-spacing: -0.022em;
 }
 
 .cockpit input[type="date"]::-webkit-calendar-picker-indicator,
@@ -100,25 +248,25 @@
   filter: var(--ck-picker);
 }
 
-/* Auswahllisten: Safari und Chrome zeichnen <option> sonst schwarz auf
-   schwarz, sobald das <select> eine dunkle Fläche hat. */
+/* Auswahllisten: <option> braucht eine deckende Fläche, sonst zeichnen
+   Safari und Chrome sie unlesbar. */
 .cockpit option {
-  background: var(--ck-surface2);
+  background: var(--ck-panel-fest);
   color: var(--ck-text);
 }
 
-/* Der helle Rechnungsentwurf im Drawer ist absichtlich eine Insel: Er zeigt,
-   wie das Dokument beim Empfänger aussieht. Innerhalb von .paper gelten
-   wieder die hellen Werte. */
+/* Der Rechnungsentwurf ist absichtlich eine Insel: Er zeigt, wie das Dokument
+   beim Empfänger aussieht. Innerhalb von .paper gelten helle Werte. */
 .cockpit .paper {
   --ck-text: #111;
   --ck-muted: #666;
   --ck-line: #e2e2dd;
   background: #fafaf7;
   color: #111;
+  box-shadow: 0 0 0 1px #dcdcd6;
 }
 
-/* Schmale Bildlaufleisten, damit Drawer und Listen nicht hell aufblitzen. */
+/* Schmale Bildlaufleisten */
 .cockpit *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -140,10 +288,17 @@
   }
 }
 
-/* „Mehr"-Blatt am Handy: gleitet von unten herein wie ein App-Blatt. */
+/* Blätter (Bearbeitungsfenster, „Mehr“): am Handy von unten, ab md mittig
+   mit leichtem Heranzoomen – wie Sheets in iOS und macOS. */
 @keyframes ck-blatt-rein {
   from {
     transform: translateY(100%);
+  }
+}
+@keyframes ck-fenster-rein {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
   }
 }
 @keyframes ck-blende-rein {
@@ -152,7 +307,12 @@
   }
 }
 .cockpit .ck-blatt {
-  animation: ck-blatt-rein 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: ck-blatt-rein 0.32s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+@media (min-width: 768px) {
+  .cockpit .ck-blatt {
+    animation: ck-fenster-rein 0.24s cubic-bezier(0.2, 0.85, 0.25, 1);
+  }
 }
 .cockpit .ck-blende {
   animation: ck-blende-rein 0.2s ease-out;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { lessonDateOf } from "@/lib/bookings/order";
 import { BEREICHE, monatsName } from "@/lib/umsatz/berechnung";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
-import StundenDrawer from "@/components/admin/cockpit/StundenDrawer";
+import { useStundeGeaendert, useStundeOeffnen } from "@/components/admin/shell/stunde";
 import Ikone from "@/components/admin/ui/Symbole";
 import {
   AreaChart,
@@ -37,7 +37,8 @@ import {
 const WOCHENTAGE = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const MONATSKUERZEL = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
-export default function CockpitSeite({ stundeId, reiter, onStunde }) {
+export default function CockpitSeite() {
+  const onStunde = useStundeOeffnen();
   const { adminFetch, notify } = useAdmin();
   const router = useRouter();
   const heute = todayIso();
@@ -53,6 +54,8 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
       notify(errorText(err));
     }
   }, [adminFetch, bereich, notify]);
+  // Änderungen im Bearbeitungsfenster (AdminShell) → neu laden.
+  useStundeGeaendert(laden);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -80,7 +83,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
     <div className="space-y-5">
       {/* ---------- Hero ---------- */}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-[22px]">
+        <section className="ck-glas rounded-[var(--ck-r)] p-[22px]">
           <Link href="/admin/finanzen?ansicht=umsatz" className="block">
             <span className="text-[13px] font-medium text-[var(--ck-muted)]">
               Einnahmen {daten ? monatsName(daten.monat) : "…"}
@@ -105,20 +108,22 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
 
           <AreaChart points={u?.kurve?.punkte || [0]} labels={u?.kurve?.labels || []} />
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {BEREICHE.map(([key, text]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setBereich(key)}
-                aria-pressed={bereich === key}
-                className={`rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${
-                  bereich === key ? "bg-[var(--ck-text)] text-[var(--ck-on-text)]" : "text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
-                }`}
-              >
-                {text}
-              </button>
-            ))}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-full bg-[var(--ck-surface2)] p-0.5">
+              {BEREICHE.map(([key, text]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setBereich(key)}
+                  aria-pressed={bereich === key}
+                  className={`rounded-full px-3 py-1 text-[13px] font-semibold transition ${
+                    bereich === key ? "bg-[var(--ck-segment)] text-[var(--ck-text)] shadow-[0_1px_4px_rgba(0,0,0,0.12)]" : "text-[var(--ck-muted)] hover:text-[var(--ck-text)]"
+                  }`}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
             <span className="ml-auto self-center text-xs text-[var(--ck-muted)]">
               aus Journal und Umsatzrechner ·{" "}
               <Link href="/admin/finanzen?ansicht=umsatz" className="underline underline-offset-2 hover:text-[var(--ck-accent)]">
@@ -128,7 +133,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
           </div>
         </section>
 
-        <section className="rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-[22px]">
+        <section className="ck-glas rounded-[var(--ck-r)] p-[22px]">
           <CardHead title="Schnellaktionen" />
           <div className="grid grid-cols-2 gap-3">
             <Schnellaktion symbol="telefon" titel="Telefonanfrage" hinweis="Aufnahmebogen + Papierakte" href="/admin/schueler?neu=1" />
@@ -152,7 +157,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
       <CardGrid>
         <Card span={7}>
           <CardHead title="Kommende Stunden">
-            <Link href="/admin/kalender" className="text-[13px] font-medium text-[var(--ck-muted)] hover:text-[var(--ck-accent)]">
+            <Link href="/admin/stunden?ansicht=monat" className="text-[13px] font-medium text-[var(--ck-muted)] hover:text-[var(--ck-accent)]">
               Kalender →
             </Link>
           </CardHead>
@@ -345,8 +350,6 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
           )}
         </Card>
       </CardGrid>
-
-      <StundenDrawer stundeId={stundeId} reiter={reiter} onClose={() => onStunde(null)} onChanged={laden} />
     </div>
   );
 }
@@ -485,7 +488,7 @@ function Todos({ todos, onChanged }) {
             onClick={() => abhaken(t)}
             aria-pressed={t.erledigt}
             aria-label={t.erledigt ? `„${t.text}“ wieder öffnen` : `„${t.text}“ erledigen`}
-            className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[7px] border-[1.5px] text-xs text-black transition ${
+            className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[7px] border-[1.5px] text-xs text-white transition ${
               t.erledigt ? "border-[var(--ck-accent)] bg-[var(--ck-accent)]" : "border-[var(--ck-faint)]"
             }`}
           >

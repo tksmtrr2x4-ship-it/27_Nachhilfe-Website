@@ -47,7 +47,7 @@ export default function QuittungenView() {
         hint="Jede Quittung wird einmal erzeugt, unveränderbar gespeichert und ist hier jederzeit wieder abrufbar."
       />
 
-      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
+      <div className="flex flex-wrap items-end gap-3 ck-glas rounded-[var(--ck-r)] p-4">
         <SelectFilter
           label="Jahr"
           value={year}

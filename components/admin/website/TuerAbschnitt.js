@@ -99,7 +99,7 @@ export default function TuerAbschnitt() {
 
   if (!stand.tuerAktiv) {
     return (
-      <div className="rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4 text-sm text-[var(--ck-muted)]">
+      <div className="ck-glas rounded-[var(--ck-r)] p-4 text-sm text-[var(--ck-muted)]">
         <h3 className="text-sm font-semibold text-[var(--ck-text)]">Tür</h3>
         <p className="mt-1">
           Die versteckte Tür ist nicht eingerichtet: Es fehlt <code>ADMIN_GATE_SECRET</code> auf dem
@@ -112,7 +112,7 @@ export default function TuerAbschnitt() {
   const offene = stand.einladungen.filter((e) => !e.benutztAm && new Date(e.verfaelltAm).getTime() > jetzt);
 
   return (
-    <div className="space-y-4 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
+    <div className="space-y-4 ck-glas rounded-[var(--ck-r)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-[var(--ck-text)]">Tür</h3>

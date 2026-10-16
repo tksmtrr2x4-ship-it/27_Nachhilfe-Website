@@ -7,12 +7,12 @@ import { useAdmin } from "@/components/admin/shell/AdminContext";
 import InvoicesPanel from "@/components/admin/InvoicesPanel";
 import BookkeepingView from "@/components/admin/management/BookkeepingView";
 import QuittungenView from "@/components/admin/finanzen/QuittungenView";
-import LoeschprotokollView from "@/components/admin/finanzen/LoeschprotokollView";
+import DokumenteView from "@/components/admin/dokumente/DokumenteView";
 import UmsatzView from "@/components/admin/umsatz/UmsatzView";
 import { SubNav } from "@/components/admin/ui";
 
 // Bereich "Finanzen": Rechnungen, Umsatzrechner, Rechnungsempfänger:innen,
-// Journal (EÜR), Quittungen und das Löschprotokoll.
+// Journal (EÜR), Quittungen und Belege (vorher eigener Bereich „Dokumente“).
 function FinanzenPage() {
   const { adminFetch, pin, notify } = useAdmin();
   const params = useSearchParams();
@@ -60,7 +60,7 @@ function FinanzenPage() {
 
       {view === "quittungen" ? <QuittungenView /> : null}
 
-      {view === "geloeschtes" ? <LoeschprotokollView /> : null}
+      {view === "belege" ? <DokumenteView ansicht="belege" /> : null}
     </div>
   );
 }

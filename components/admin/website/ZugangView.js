@@ -138,7 +138,7 @@ export default function ZugangView() {
 
       <form
         onSubmit={(e) => addPasskey(e, "geraet")}
-        className="flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4"
+        className="flex flex-wrap items-end gap-3 ck-glas rounded-[var(--ck-r)] p-4"
       >
         <label className="block min-w-48 flex-1">
           <span className={labelClass}>Bezeichnung</span>

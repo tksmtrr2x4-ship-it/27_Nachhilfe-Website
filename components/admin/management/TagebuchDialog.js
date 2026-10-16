@@ -67,7 +67,7 @@ function Scale({ name, form, set }) {
             onClick={() => set(name, form[name] === n ? null : n)}
             className={`h-8 w-8 rounded-full border text-sm font-semibold transition ${
               form[name] === n
-                ? "border-[var(--ck-accent)] bg-[var(--ck-accent)] text-black"
+                ? "border-[var(--ck-accent)] bg-[var(--ck-accent)] text-white"
                 : "border-[var(--ck-line)] text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
             }`}
           >

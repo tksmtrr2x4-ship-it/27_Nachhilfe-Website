@@ -202,7 +202,7 @@ export default function StudentsView({ adminFetch, pin, setNotice, onCreateInvoi
             </li>
           ))}
         </ul>
-        <div className="hidden overflow-x-auto rounded-2xl border border-[var(--ck-line)] md:block">
+        <div className="ck-glas hidden overflow-x-auto rounded-[var(--ck-r)] md:block">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
               <tr>

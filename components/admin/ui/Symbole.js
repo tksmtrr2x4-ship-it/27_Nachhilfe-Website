@@ -94,6 +94,25 @@ const PFADE = {
   pfeil: <path d="M9.5 6l6 6-6 6" />,
   zurueck: <path d="M14.5 6l-6 6 6 6" />,
   haken: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  uhr: (
+    <>
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+      <path d="m4.5 7.5 7.5 5.5 7.5-5.5" />
+    </>
+  ),
+  liste: <path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" />,
+  monat: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+      <path d="M3.5 10h17M8 3v4M16 3v4M9 10v10.5M15 10v10.5M3.5 15.2h17" />
+    </>
+  ),
 
   // Schnellaktionen und Unterreiter
   telefon: (
@@ -192,8 +211,14 @@ const PFADE = {
   ),
 };
 
+// Bereiche, die ein vorhandenes Symbol mitbenutzen.
+PFADE.stunden = PFADE.kalender;
+
 // Unterreiter (lib/admin/nav.js SUB_VIEWS, Drawer-Reiter) → Symbol.
 export const SYMBOL_FUER_ANSICHT = {
+  liste: "liste",
+  monat: "monat",
+  allgemein: "website",
   rechnungen: "rechnung",
   umsatz: "umsatz",
   kunden: "kunden",

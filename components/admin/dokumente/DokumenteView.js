@@ -198,7 +198,7 @@ export default function DokumenteView({ ansicht }) {
         </Card>
       ) : null}
 
-      <p className="rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4 text-[13px] leading-relaxed text-[var(--ck-muted)]">
+      <p className="ck-glas rounded-[var(--ck-r)] p-4 text-[13px] leading-relaxed text-[var(--ck-muted)]">
         Rechnungen und Quittungen sind unveränderlich und bleiben nach § 147 AO zehn Jahre erhalten. Was hier steht,
         wird nur angezeigt und heruntergeladen – geändert wird nichts.
       </p>

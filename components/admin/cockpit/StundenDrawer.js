@@ -26,6 +26,8 @@ import {
   KeyValues,
   Modal,
   Section,
+  AktionsGruppe,
+  Aktion,
   Timeline,
   errorText,
   formatDate,
@@ -119,6 +121,73 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
       await adminFetch(`/api/admin/lessons/${l._id}/ausfall`, { method: "DELETE", body: JSON.stringify({}) });
       notify("Ausfallvergütung zurückgenommen.");
       await aktualisieren();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  const online = l?.locationType === "online" || Boolean(l?.meetingToken);
+  const sitzung = l?.offerSnapshot?.type === "session";
+
+  async function patchen(body, meldung) {
+    try {
+      await adminFetch(`/api/admin/bookings/${l._id}`, { method: "PATCH", body: JSON.stringify(body) });
+      if (meldung) notify(meldung);
+      await aktualisieren();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  const bestaetigen = () => patchen({ status: "confirmed" }, l?.kennenlernen ? "Bestätigt – die Familie bekommt eine kurze Mail." : "Bestätigt, die Familie wurde per Mail informiert.");
+  const markieren = (heldStatus, meldung) => patchen({ heldStatus }, meldung);
+
+  async function externAufheben() {
+    const ok = await confirm({
+      title: "Markierung aufheben?",
+      message: "Die Stunde gilt danach wieder als offen und lässt sich abrechnen.",
+      confirmLabel: "Aufheben",
+    });
+    if (!ok) return;
+    try {
+      await adminFetch("/api/admin/lessons/settle", { method: "DELETE", body: JSON.stringify({ studentId: l.studentId, bookingId: l._id }) });
+      notify("Markierung aufgehoben.");
+      await aktualisieren();
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  async function mailErneut() {
+    try {
+      await adminFetch(`/api/admin/bookings/${l._id}`, { method: "POST" });
+      notify("Bestätigung erneut gesendet (Blindkopie an dich).");
+    } catch (err) {
+      notify(errorText(err));
+    }
+  }
+
+  async function raumOeffnen() {
+    // Fenster sofort öffnen (sonst blockt Safari es nach dem Warten).
+    const fenster = window.open("", "_blank");
+    try {
+      const r = await raumHolen(adminFetch, l._id);
+      const ziel = `${window.location.origin}${r.link}#host=${r.ticket}`;
+      if (fenster) fenster.location.href = ziel;
+      else window.open(ziel, "_self");
+      if (!l.meetingToken) await aktualisieren();
+    } catch (err) {
+      fenster?.close();
+      notify(errorText(err));
+    }
+  }
+
+  async function gastLinkKopieren() {
+    try {
+      const r = await raumHolen(adminFetch, l._id);
+      await navigator.clipboard.writeText(`${window.location.origin}${r.link}`);
+      notify("Link für den Gast kopiert.");
+      if (!l.meetingToken) await aktualisieren();
     } catch (err) {
       notify(errorText(err));
     }
@@ -242,101 +311,69 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                       daten.customer ? ["Rechnung an", daten.customer.name] : null,
                     ]}
                   />
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {l.meetingToken || l.locationType === "online" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            // Fenster sofort öffnen (sonst blockt Safari es nach dem Warten).
-                            const fenster = window.open("", "_blank");
-                            try {
-                              const r = await raumHolen(adminFetch, l._id);
-                              const ziel = `${window.location.origin}${r.link}#host=${r.ticket}`;
-                              if (fenster) fenster.location.href = ziel;
-                              else window.open(ziel, "_self");
-                              if (!l.meetingToken) onChanged?.();
-                            } catch (err) {
-                              fenster?.close();
-                              notify(errorText(err));
-                            }
-                          }}
-                          className="rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
-                        >
-                          Unterrichtsraum öffnen
-                        </button>
-                        <Button
-                          onClick={async () => {
-                            try {
-                              const r = await raumHolen(adminFetch, l._id);
-                              await navigator.clipboard.writeText(`${window.location.origin}${r.link}`);
-                              notify("Link für den Gast kopiert.");
-                              if (!l.meetingToken) onChanged?.();
-                            } catch (err) {
-                              notify(errorText(err));
-                            }
-                          }}
-                        >
-                          Gast-Link kopieren
-                        </Button>
-                        {/* Übergangsweise, bis der neue Raum sich in echten Stunden
-                            bewährt hat und Jitsi vom Server geht. */}
-                        {l.meetingToken ? (
-                          <a
-                            href={`https://meet.lernsprung-vs.de/${encodeURIComponent(l.meetingToken)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="self-center px-2 text-xs text-[var(--ck-muted)] underline underline-offset-2"
-                          >
-                            Ausweich: Jitsi
-                          </a>
-                        ) : null}
-                      </>
-                    ) : null}
-                    <Button
-                      onClick={() => setVerschieben(true)}
-                      disabled={l.source !== "admin" || isLessonLocked(l)}
-                      title={
-                        l.source !== "admin"
-                          ? "Online gebuchte Termine lassen sich hier nicht umlegen – bitte kurz mit der Familie sprechen."
-                          : isLessonLocked(l)
-                            ? "Die Stunde ist abgerechnet."
-                            : undefined
-                      }
-                    >
-                      Verschieben
-                    </Button>
-                    <Button variant="danger" onClick={absagen} disabled={l.status === "cancelled"}>
-                      Absagen
-                    </Button>
-                    {l.status === "confirmed" && l.offerSnapshot?.type === "session" && !hatAusfallVerguetung(l) && !isLessonLocked(l) ? (
-                      <>
-                        <Button onClick={() => setAusfallOffen("no_show")} title="Ohne Absage nicht erschienen – Ausfallvergütung nach § 6 AGB">
-                          Nicht erschienen
-                        </Button>
-                        <Button onClick={() => setAusfallOffen("late_cancel")} title="Zu spät abgesagt – Ausfallvergütung nach § 6 AGB">
-                          Zu spät abgesagt
-                        </Button>
-                      </>
-                    ) : null}
-                    {hatAusfallVerguetung(l) && !isLessonLocked(l) ? <Button onClick={ausfallZurueck}>Ausfallvergütung zurücknehmen</Button> : null}
-                    <Button
-                      variant="danger"
-                      onClick={loeschen}
-                      title="Entfernt den Eintrag endgültig aus der Datenbank. Zum Absagen oben „Absagen“ nehmen."
-                    >
-                      Löschen
-                    </Button>
-                    {l.parentEmail ? (
-                      <a
-                        href={`mailto:${l.parentEmail}`}
-                        className="rounded-full bg-[var(--ck-surface2)] px-4.5 py-2.5 text-sm font-semibold transition hover:bg-[var(--ck-surface3)]"
-                      >
-                        Kontaktieren
-                      </a>
-                    ) : null}
-                  </div>
                 </Section>
+
+                {/* Hauptaktion je nach Lage – wie der große Knopf oben in
+                    Apple-Blättern. Alles Weitere als gruppierte Liste. */}
+                {l.status === "pending" ? (
+                  <div className="mb-3.5 grid grid-cols-2 gap-2">
+                    <Button variant="primary" onClick={bestaetigen}>
+                      Anfrage bestätigen
+                    </Button>
+                    <Button variant="danger" onClick={absagen}>
+                      Ablehnen
+                    </Button>
+                  </div>
+                ) : online && l.status !== "cancelled" ? (
+                  <div className="mb-3.5 grid grid-cols-2 gap-2">
+                    <Button variant="primary" onClick={raumOeffnen}>
+                      Unterrichtsraum öffnen
+                    </Button>
+                    <Button onClick={gastLinkKopieren}>Gast-Link kopieren</Button>
+                  </div>
+                ) : null}
+
+                <AktionsGruppe>
+                  <Aktion
+                    symbol="kalender"
+                    text="Verschieben"
+                    hinweis={l.source !== "admin" ? "Online gebucht – bitte kurz mit der Familie sprechen" : isLessonLocked(l) ? "Bereits abgerechnet" : ""}
+                    disabled={l.source !== "admin" || isLessonLocked(l)}
+                    onClick={() => setVerschieben(true)}
+                  />
+                  {sitzung && l.status === "confirmed" && !isLessonLocked(l) && l.heldStatus !== "held" ? (
+                    <Aktion symbol="haken" text="Als gehalten markieren" onClick={() => markieren("held", "Als gehalten markiert.")} />
+                  ) : null}
+                  {sitzung && l.status === "confirmed" && !hatAusfallVerguetung(l) && !isLessonLocked(l) ? (
+                    <>
+                      <Aktion symbol="uhr" text="Nicht erschienen" hinweis="Ausfallvergütung nach § 6 AGB" onClick={() => setAusfallOffen("no_show")} />
+                      <Aktion symbol="uhr" text="Zu spät abgesagt" hinweis="Ausfallvergütung nach § 6 AGB" onClick={() => setAusfallOffen("late_cancel")} />
+                      {l.heldStatus !== "missed" ? (
+                        <Aktion symbol="schliessen" text="Ausgefallen ohne Berechnung" onClick={() => markieren("missed", "Als ausgefallen markiert (ohne Berechnung).")} />
+                      ) : null}
+                    </>
+                  ) : null}
+                  {hatAusfallVerguetung(l) && !isLessonLocked(l) ? <Aktion symbol="zurueck" text="Ausfallvergütung zurücknehmen" onClick={ausfallZurueck} /> : null}
+                  {l.settledExternally ? (
+                    <Aktion symbol="zurueck" text="„Vor Einführung abgerechnet“ aufheben" hinweis="Die Stunde gilt danach wieder als offen" onClick={externAufheben} />
+                  ) : null}
+                  {l.heldStatus && !hatAusfallVerguetung(l) && !isLessonLocked(l) ? (
+                    <Aktion symbol="zurueck" text="Markierung zurücknehmen" onClick={() => markieren(null, "Markierung zurückgenommen.")} />
+                  ) : null}
+                </AktionsGruppe>
+
+                <AktionsGruppe>
+                  {l.status === "confirmed" ? <Aktion symbol="mail" text="Bestätigung erneut senden" onClick={mailErneut} /> : null}
+                  {l.parentEmail ? <Aktion symbol="mail" text="Familie schreiben" hinweis={l.parentEmail} href={`mailto:${l.parentEmail}`} /> : null}
+                  {online && l.meetingToken ? (
+                    <Aktion symbol="website" text="Ausweichraum (Jitsi)" href={`https://meet.lernsprung-vs.de/${encodeURIComponent(l.meetingToken)}`} extern />
+                  ) : null}
+                </AktionsGruppe>
+
+                <AktionsGruppe>
+                  {l.status !== "cancelled" && l.status !== "pending" ? <Aktion symbol="schliessen" text="Termin absagen" gefahr onClick={absagen} /> : null}
+                  <Aktion symbol="papierkorb" text="Endgültig löschen" gefahr onClick={loeschen} />
+                </AktionsGruppe>
 
                 {l.ausfall ? (
                   <Section title="Ausfallprotokoll">

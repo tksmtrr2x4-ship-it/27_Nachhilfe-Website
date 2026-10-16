@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 // Spalte standen. Hier liegen Aktionen außerhalb des Spaltenrasters (zwei
 // direkt, der Rest hinter „…“), und unter sm wird jede Zeile zu einer Karte –
 // dadurch scrollt nichts mehr seitlich.
+// Unter lg (iPad hochkant, iPhone) eine gruppierte Liste wie in iOS.
 //
 // columns: [{ key, header, cell(row), align: "left"|"right", width, priority, hideBelowXl }]
 //   priority "primary"   → Überschrift der Karte
@@ -38,7 +39,7 @@ export function DataTable({
       {caption ? <p className="mb-2 text-xs text-[var(--ck-muted)]">{caption}</p> : null}
 
       {/* Tabelle ab lg – darunter Karten, damit nichts seitlich scrollt */}
-      <div className="hidden overflow-hidden rounded-2xl border border-[var(--ck-line)] lg:block">
+      <div className="ck-glas hidden overflow-hidden rounded-[18px] lg:block">
         <table className="w-full table-fixed text-left text-sm">
           <colgroup>
             {columns.map((col) => (
@@ -46,7 +47,7 @@ export function DataTable({
             ))}
             {actions ? <col style={{ width: "6.5rem" }} /> : null}
           </colgroup>
-          <thead className="bg-[var(--ck-surface2)] text-xs uppercase tracking-wide text-[var(--ck-muted)]">
+          <thead className="border-b border-[var(--ck-line)] text-[12px] text-[var(--ck-muted)]">
             <tr>
               {columns.map((col) => (
                 <th
@@ -63,7 +64,7 @@ export function DataTable({
           {groups.map((group) => (
             <tbody key={group.key} className="divide-y divide-[var(--ck-line)]">
               {group.label ? (
-                <tr className="bg-[var(--ck-surface)]">
+                <tr>
                   <th
                     colSpan={columns.length + (actions ? 1 : 0)}
                     scope="colgroup"
@@ -77,7 +78,10 @@ export function DataTable({
               {group.rows.map((row) => (
                 <tr
                   key={getRowKey(row)}
-                  className={`align-top ${rowTone?.(row) === "red" ? "bg-[var(--ck-neg-soft)]" : "bg-[var(--ck-surface)]"} ${onRowClick ? "hover:bg-[var(--ck-surface2)]" : ""}`}
+                  className={`align-top ${rowTone?.(row) === "red" ? "bg-[var(--ck-neg-soft)]" : ""} ${onRowClick ? "cursor-pointer transition hover:bg-[var(--ck-surface2)]" : ""}`}
+                  // Wie in Apple-Listen: die ganze Zeile öffnet. Der Knopf in der
+                  // ersten Spalte bleibt für die Tastatur.
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((col, i) => (
                     <td
@@ -85,7 +89,14 @@ export function DataTable({
                       className={`px-4 py-3 ${col.align === "right" ? "text-right tabular-nums" : ""} ${col.hideBelowXl ? "hidden xl:table-cell" : ""}`}
                     >
                       {onRowClick && i === 0 ? (
-                        <button type="button" onClick={() => onRowClick(row)} className="text-left font-semibold text-[var(--ck-text)] hover:text-[var(--ck-accent)]">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRowClick(row);
+                          }}
+                          className="text-left font-semibold text-[var(--ck-text)] hover:text-[var(--ck-accent)]"
+                        >
                           {col.cell(row)}
                         </button>
                       ) : (
@@ -105,38 +116,40 @@ export function DataTable({
         </table>
       </div>
 
-      {/* Karten unter lg */}
-      <ul className="space-y-3 lg:hidden">
+      {/* Unter lg eine gruppierte Liste wie in iOS: je Gruppe eine Glasfläche,
+          Zeilen mit Trennlinie, Felder zweispaltig (Beschriftung über dem Wert) –
+          kurz genug, dass am Handy mehrere Einträge auf den Bildschirm passen. */}
+      <div className="space-y-5 lg:hidden">
         {groups.map((group) => (
-          <li key={group.key}>
+          <section key={group.key}>
             {group.label ? (
-              <p className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-[var(--ck-muted)]">
-                {group.label}
-                {group.summary ? <span className="ml-2 font-normal normal-case tracking-normal text-[var(--ck-faint)]">{group.summary}</span> : null}
+              <p className="mb-2 px-1">
+                <span className="ck-glas inline-flex max-w-full items-baseline gap-2 rounded-full px-3 py-1 text-xs">
+                  <span className="whitespace-nowrap font-semibold uppercase tracking-wide text-[var(--ck-text)]">{group.label}</span>
+                  {group.summary ? <span className="truncate text-[var(--ck-muted)]">{group.summary}</span> : null}
+                </span>
               </p>
             ) : null}
-            <ul className="space-y-3">
+            <ul className="ck-glas overflow-hidden rounded-[var(--ck-r)] [&>li+li]:border-t [&>li+li]:border-[var(--ck-line)]">
               {group.rows.map((row) => (
-                <li key={getRowKey(row)} className={`rounded-2xl border p-4 ${rowTone?.(row) === "red" ? "border-[var(--ck-neg)]/35 bg-[var(--ck-neg-soft)]" : "border-[var(--ck-line)] bg-[var(--ck-surface)]"}`}>
+                <li
+                  key={getRowKey(row)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`relative px-4 py-3.5 ${rowTone?.(row) === "red" ? "bg-[var(--ck-neg-soft)]" : ""} ${onRowClick ? "cursor-pointer pr-9 transition active:bg-[var(--ck-surface2)]" : ""}`}
+                >
                   {columns
                     .filter((col) => col.priority === "primary")
                     .map((col) => (
-                      <div key={col.key} className="text-sm font-semibold text-[var(--ck-text)]">
-                        {onRowClick ? (
-                          <button type="button" onClick={() => onRowClick(row)} className="text-left hover:text-[var(--ck-accent)]">
-                            {col.cell(row)}
-                          </button>
-                        ) : (
-                          col.cell(row)
-                        )}
+                      <div key={col.key} className="text-[15px] font-semibold text-[var(--ck-text)]">
+                        {col.cell(row)}
                       </div>
                     ))}
-                  <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                  <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
                     {columns
                       .filter((col) => !col.priority || col.priority === "secondary")
                       .map((col) => (
-                        <div key={col.key} className="col-span-2 grid grid-cols-[7.5rem_1fr] gap-x-3">
-                          <dt className="text-xs font-semibold text-[var(--ck-muted)]">{col.header}</dt>
+                        <div key={col.key} className="min-w-0">
+                          <dt className="text-[11px] font-medium text-[var(--ck-muted)]">{col.header}</dt>
                           <dd className="min-w-0 text-[var(--ck-text)]">{col.cell(row)}</dd>
                         </div>
                       ))}
@@ -153,16 +166,21 @@ export function DataTable({
                     </p>
                   ) : null}
                   {actions ? (
-                    <div className="mt-3 border-t border-[var(--ck-line)] pt-3">
+                    <div className="mt-3 border-t border-[var(--ck-line)] pt-3" onClick={(e) => e.stopPropagation()}>
                       <RowActions actions={actions(row)} />
                     </div>
+                  ) : null}
+                  {onRowClick ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ck-faint)]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
                   ) : null}
                 </li>
               ))}
             </ul>
-          </li>
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -186,7 +204,8 @@ export function RowActions({ actions, align = "start" }) {
   const inline = visible.slice(0, 2);
   const rest = visible.slice(2);
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 ${align === "end" ? "sm:justify-end" : ""}`}>
+    // Aktionen lösen nicht zugleich den Klick auf die Zeile aus.
+    <div className={`flex flex-wrap items-center gap-1.5 ${align === "end" ? "sm:justify-end" : ""}`} onClick={(e) => e.stopPropagation()}>
       {inline.map((action) => (
         <ActionLink key={action.label} action={action} />
       ))}

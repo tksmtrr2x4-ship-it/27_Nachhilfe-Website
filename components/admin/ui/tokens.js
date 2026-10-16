@@ -51,16 +51,17 @@ export const tone = {
 export const TONES = Object.keys(tone);
 
 export const input =
-  "mt-1 w-full rounded-[14px] border border-[var(--ck-line)] bg-[var(--ck-surface2)] px-3.5 py-2.5 text-sm text-[var(--ck-text)] placeholder:text-[var(--ck-faint)] focus:border-[var(--ck-accent)] focus:outline-none";
-export const label = "text-xs font-semibold text-[var(--ck-muted)]";
-export const card = "rounded-[var(--ck-r)] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-[22px]";
+  "mt-1 w-full rounded-[12px] border border-transparent bg-[var(--ck-surface2)] px-3.5 py-2.5 text-[15px] text-[var(--ck-text)] placeholder:text-[var(--ck-faint)] focus:border-[var(--ck-accent)] focus:bg-[var(--ck-surface)] focus:outline-none";
+export const label = "block text-xs font-semibold text-[var(--ck-muted)]";
+// Karte als Glasfläche (app/admin/cockpit.css, .ck-glas).
+export const card = "ck-glas rounded-[var(--ck-r)] p-[22px]";
 // Innere Kachel innerhalb einer Karte (Kennzahlen, Schnellaktionen).
 export const tile = "rounded-[18px] bg-[var(--ck-surface2)] p-4";
 
 export const btnPrimary =
-  "whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-50";
+  "whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50";
 export const btnSecondary =
-  "whitespace-nowrap rounded-full bg-[var(--ck-surface2)] px-4.5 py-2.5 text-sm font-semibold text-[var(--ck-text)] transition hover:bg-[var(--ck-surface3)] disabled:opacity-50";
+  "whitespace-nowrap rounded-full bg-[var(--ck-surface2)] px-4.5 py-2.5 text-sm font-semibold text-[var(--ck-accent)] transition hover:bg-[var(--ck-surface3)] active:scale-[0.98] disabled:opacity-50";
 export const btnDanger =
   "whitespace-nowrap rounded-full bg-[var(--ck-neg-soft)] px-4.5 py-2.5 text-sm font-semibold text-[var(--ck-neg)] transition hover:brightness-125 disabled:opacity-50";
 export const btnGhost =
@@ -68,7 +69,7 @@ export const btnGhost =
 // Kontrastknopf in Textfarbe (hell auf dunklem, dunkel auf hellem Grund) (Vorlage: „Erzeugen" in der Dokumentenliste).
 export const btnBright =
   "whitespace-nowrap rounded-full bg-[var(--ck-text)] px-4 py-2 text-sm font-semibold text-[var(--ck-on-text)] transition hover:brightness-90 disabled:opacity-50";
-export const link = "text-sm text-[var(--ck-muted)] transition hover:text-[var(--ck-accent)]";
+export const link = "text-sm text-[var(--ck-accent)] transition hover:opacity-75";
 
 export const BUTTON_VARIANTS = {
   primary: btnPrimary,

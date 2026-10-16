@@ -35,7 +35,7 @@ const input = "mt-1 w-full rounded-lg border border-[var(--ck-line)] px-3 py-2 t
 const label = "text-xs font-semibold text-[var(--ck-muted)]";
 // whitespace-nowrap: auf dem Handy sollen Pill-Buttons als Ganzes in die
 // nächste Zeile rutschen, nicht mitten in der Beschriftung umbrechen.
-const btnPrimary = "whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 text-sm font-semibold text-black hover:brightness-110 disabled:opacity-50";
+const btnPrimary = "whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50";
 const btnSecondary = "whitespace-nowrap rounded-full border border-[var(--ck-line)] px-4 py-2 text-sm font-semibold text-[var(--ck-text)] hover:bg-[var(--ck-surface2)] disabled:opacity-50";
 const link = "text-sm text-[var(--ck-muted)] hover:text-[var(--ck-accent)]";
 
@@ -327,7 +327,7 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-[var(--ck-accent)] text-black" : "bg-[var(--ck-surface2)] text-[var(--ck-text)] hover:bg-[var(--ck-surface3)]"}`}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${filter === key ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface2)] text-[var(--ck-text)] hover:bg-[var(--ck-surface3)]"}`}
                 >
                   {text}
                   {key === "overdue" && invoices.some((i) => i.overdue) ? ` (${invoices.filter((i) => i.overdue).length})` : ""}
@@ -1314,7 +1314,7 @@ function NochAbzurechnen({ gruppen }) {
   const gesamt = gruppen.reduce((s, g) => s + g.summeCent, 0);
   const anzahl = gruppen.reduce((s, g) => s + g.stunden.length, 0);
   return (
-    <section className="rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4" aria-label="Noch nicht abgerechnet">
+    <section className="ck-glas rounded-[var(--ck-r)] p-4" aria-label="Noch nicht abgerechnet">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-[15px] font-semibold">Noch nicht abgerechnet</h3>
         <span className="text-[13px] text-[var(--ck-muted)]">

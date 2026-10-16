@@ -256,7 +256,7 @@ export default function AdminGate({ children, logo = null }) {
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:opacity-60"
+              className="w-full rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
             >
               {busy ? "Prüft …" : needsPasskey ? "Mit Passkey anmelden" : "Anmelden"}
             </button>

@@ -363,7 +363,7 @@ export function OfferForm({ initial, onCancel, onSave }) {
       <div className="mt-6 flex gap-3">
         <button
           type="submit"
-          className="rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-black hover:brightness-110"
+          className="rounded-full bg-[var(--ck-accent)] px-6 py-3 text-sm font-semibold text-white hover:brightness-110"
         >
           Speichern
         </button>

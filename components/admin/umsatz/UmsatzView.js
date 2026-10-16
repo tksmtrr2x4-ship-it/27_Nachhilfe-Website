@@ -402,7 +402,7 @@ export default function UmsatzView() {
         </Card>
       </div>
 
-      <p className="rounded-[18px] border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4 text-[13px] leading-relaxed text-[var(--ck-muted)]">
+      <p className="ck-glas rounded-[var(--ck-r)] p-4 text-[13px] leading-relaxed text-[var(--ck-muted)]">
         <b className="text-[var(--ck-text)]">So hängen Journal und Rechner zusammen.</b> Jede Einnahme im Journal erscheint hier
         von selbst, mit dem Datum der Zahlung – eine bezahlte Rechnung, eine Barzahlung, ein Storno (negativ). Stunden und
         Rechnungen allein ändern nichts, erst das Geld. Eigene Einträge ergänzen das um Offenes und Geplantes. Das Journal

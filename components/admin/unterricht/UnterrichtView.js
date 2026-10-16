@@ -6,19 +6,16 @@ import { locationLabel } from "@/lib/format";
 import { lessonDateOf, lessonDateSource, monthKeyOf, monthLabel } from "@/lib/bookings/order";
 import { BILLING_STATES, KINDS, LESSON_STATES, PERIODS, activeFilterChips, filterBookings, periodRange } from "@/lib/bookings/filters";
 import { billingState, lessonState } from "@/lib/lessons/state";
-import { hatAusfallVerguetung, isBillableSession, isLessonLocked } from "@/lib/lessons/rules";
+import { isBillableSession } from "@/lib/lessons/rules";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import {
   Badge,
   Button,
   DataTable,
-  FilterChips,
-  FilterRow,
+  FilterPanel,
   Modal,
-  SearchInput,
   SelectFilter,
   Stat,
-  Toolbar,
   clockHours,
   errorText,
   formatDate,
@@ -27,29 +24,24 @@ import {
   label as labelClass,
   plural,
   todayIso,
-  useDialogs,
 } from "@/components/admin/ui";
 import LessonForm from "@/components/admin/management/LessonForm";
-import TagebuchDialog from "@/components/admin/management/TagebuchDialog";
-import AusfallDialog from "@/components/admin/cockpit/AusfallDialog";
-import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
+import { useStundeGeaendert, useStundeOeffnen } from "@/components/admin/shell/stunde";
 
 // Eine Liste für alles, was Unterricht ist: Online-Anfragen, bestätigte
 // Termine, selbst eingetragene Stunden und Pakete. Sortiert nach dem Tag des
 // Unterrichts (lib/bookings/order.js), gruppiert nach Monat.
-export default function UnterrichtView({ filters, onFilters }) {
+// kopf: Umschalter Liste/Monat der Seite – steht in einer Zeile mit „Stunde eintragen“.
+export default function UnterrichtView({ filters, onFilters, kopf = null }) {
   const { adminFetch, notify } = useAdmin();
-  const { confirm } = useDialogs();
-  const loescheBuchung = useBuchungLoeschen();
+  const oeffnen = useStundeOeffnen();
   const router = useRouter();
   const today = todayIso();
 
   const [bookings, setBookings] = useState([]);
   const [students, setStudents] = useState([]);
   const [loaded, setLoaded] = useState(false);
-  const [lessonDialog, setLessonDialog] = useState(null); // "new" | Stunde
-  const [notesDialog, setNotesDialog] = useState(null);
-  const [ausfallDialog, setAusfallDialog] = useState(null); // { lesson, art }
+  const [lessonDialog, setLessonDialog] = useState(null); // "new"
   const [custom, setCustom] = useState({ from: "", to: "" });
 
   const period = filters.period || "current";
@@ -74,6 +66,7 @@ export default function UnterrichtView({ filters, onFilters }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+  useStundeGeaendert(load);
 
   const shown = useMemo(
     () => filterBookings(bookings, { ...filters, ...range }, today),
@@ -104,58 +97,6 @@ export default function UnterrichtView({ filters, onFilters }) {
 
   function setFilter(patch) {
     onFilters({ ...filters, ...patch });
-  }
-
-  async function patchBooking(id, body, message) {
-    try {
-      await adminFetch(`/api/admin/bookings/${id}`, { method: "PATCH", body: JSON.stringify(body) });
-      if (message) notify(message);
-      load();
-    } catch (err) {
-      notify(errorText(err));
-    }
-  }
-
-  async function confirmBooking(booking) {
-    await patchBooking(booking._id, { status: "confirmed" }, "Bestätigt, Kund:in wurde per Mail informiert.");
-  }
-
-  async function cancelBooking(booking) {
-    const ok = await confirm({
-      title: "Termin stornieren?",
-      message: "Die Buchung bleibt sichtbar, gilt aber als storniert und wird nicht abgerechnet.",
-      confirmLabel: "Stornieren",
-      danger: true,
-    });
-    if (!ok) return;
-    await patchBooking(booking._id, { status: "cancelled" }, "Storniert.");
-  }
-
-  async function resendMail(booking) {
-    try {
-      await adminFetch(`/api/admin/bookings/${booking._id}`, { method: "POST" });
-      notify("Bestätigungsmail erneut gesendet (Blindkopie an dich).");
-    } catch (err) {
-      notify(errorText(err));
-    }
-  }
-
-  // Löschen mit Grund und Protokoll – derselbe Ablauf wie im Cockpit-Drawer
-  // und in der Schülerakte (useBuchungLoeschen).
-  async function deleteBooking(booking) {
-    if (await loescheBuchung(booking)) load();
-  }
-
-  async function createInvoice(booking) {
-    try {
-      const data = await adminFetch("/api/admin/invoices", {
-        method: "POST",
-        body: JSON.stringify({ bookingId: booking._id, bookingIds: [booking._id] }),
-      });
-      router.push(`/admin/finanzen?ansicht=rechnungen&rechnung=${data.invoice._id}`);
-    } catch (err) {
-      notify(errorText(err));
-    }
   }
 
   const columns = [
@@ -189,7 +130,11 @@ export default function UnterrichtView({ filters, onFilters }) {
         <span className="block min-w-0">
           {b.studentId ? (
             <button
-              onClick={() => router.push(`/admin/schueler?id=${b.studentId}`)}
+              onClick={(e) => {
+                // Nicht zugleich das Fenster der Stunde öffnen.
+                e.stopPropagation();
+                router.push(`/admin/schueler?id=${b.studentId}`);
+              }}
               className="text-left font-semibold text-[var(--ck-accent)] hover:underline"
             >
               {b.studentName}
@@ -248,67 +193,6 @@ export default function UnterrichtView({ filters, onFilters }) {
     },
   ];
 
-  function actionsFor(b) {
-    const isSession = (b.offerSnapshot?.type || "session") === "session";
-    const locked = isLessonLocked(b);
-    return [
-      { label: "Bestätigen", tone: "emerald", hidden: b.status !== "pending", onClick: () => confirmBooking(b) },
-      {
-        label: "Abgehalten",
-        hidden: !isSession || b.status !== "confirmed" || b.heldStatus === "held" || locked,
-        onClick: () => patchBooking(b._id, { heldStatus: "held" }, "Als abgehalten markiert."),
-      },
-      {
-        label: "Rechnung",
-        hidden: b.status !== "confirmed" || Boolean(b.invoiceId) || (b.heldStatus === "missed" && !hatAusfallVerguetung(b)) || locked,
-        onClick: () => createInvoice(b),
-      },
-      {
-        label: "Tagebuch",
-        hidden: !isSession || b.status === "cancelled",
-        onClick: () => setNotesDialog(b),
-      },
-      {
-        label: "Bearbeiten",
-        hidden: b.source !== "admin" || locked,
-        onClick: () => setLessonDialog(b),
-      },
-      // Versäumt mit Ausfallvergütung (§ 6 AGB) – derselbe Dialog wie im Drawer.
-      {
-        label: "Nicht erschienen",
-        hidden: !isSession || b.status !== "confirmed" || hatAusfallVerguetung(b) || locked,
-        onClick: () => setAusfallDialog({ lesson: b, art: "no_show" }),
-      },
-      {
-        label: "Zu spät abgesagt",
-        hidden: !isSession || b.status !== "confirmed" || hatAusfallVerguetung(b) || locked,
-        onClick: () => setAusfallDialog({ lesson: b, art: "late_cancel" }),
-      },
-      {
-        label: "Ausgefallen ohne Berechnung",
-        hidden: !isSession || b.status !== "confirmed" || b.heldStatus === "missed" || locked,
-        onClick: () => patchBooking(b._id, { heldStatus: "missed" }, "Als ausgefallen markiert (ohne Berechnung)."),
-      },
-      {
-        label: "Markierung zurücknehmen",
-        hidden: !b.heldStatus || locked,
-        onClick: () => patchBooking(b._id, { heldStatus: null }, "Markierung zurückgenommen."),
-      },
-      { label: "Mail erneut senden", hidden: b.status !== "confirmed", onClick: () => resendMail(b) },
-      {
-        label: "Kontaktieren",
-        hidden: !b.parentEmail,
-        onClick: () => {
-          window.location.href = `mailto:${b.parentEmail}?subject=${encodeURIComponent(`${b.offerSnapshot?.title || "Nachhilfe"} – ${formatDate(lessonDateOf(b))}`)}`;
-        },
-      },
-      { label: "Stornieren", tone: "red", hidden: b.status === "cancelled", onClick: () => cancelBooking(b) },
-      // Nicht mehr ausgeblendet, wenn abgerechnet: Der Weg führt dann über
-      // eine zusätzliche Bestätigung, nicht über eine Sackgasse.
-      { label: "Löschen", tone: "red", onClick: () => deleteBooking(b) },
-    ];
-  }
-
   const chips = activeFilterChips(filters, { studentName: students.find((s) => s._id === filters.studentId)?.name }).map((chip) => ({
     label: chip.label,
     onClear: () => setFilter({ [chip.key]: chip.key === "query" ? "" : "all" }),
@@ -316,7 +200,8 @@ export default function UnterrichtView({ filters, onFilters }) {
 
   return (
     <div className="space-y-5">
-      <Toolbar hint="Anfragen, Termine und eingetragene Stunden – sortiert nach Unterrichtstermin.">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {kopf}
         <Button
           variant="primary"
           onClick={() => setLessonDialog("new")}
@@ -325,7 +210,7 @@ export default function UnterrichtView({ filters, onFilters }) {
         >
           Stunde eintragen
         </Button>
-      </Toolbar>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat title="Abgehalten" value={held.length} hint={clockHours(heldMinutes)} />
@@ -339,48 +224,47 @@ export default function UnterrichtView({ filters, onFilters }) {
         <Stat title="Offene Anfragen" value={pending.length} tone={pending.length ? "amber" : "slate"} />
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-[var(--ck-line)] bg-[var(--ck-surface)] p-4">
-        <FilterRow>
-          <SelectFilter label="Zeitraum" value={period} onChange={(v) => setFilter({ period: v })} options={Object.entries(PERIODS)} />
-          {period === "custom" ? (
-            <>
-              <label className="block">
-                <span className={labelClass}>Von</span>
-                <input type="date" className={input} value={custom.from} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Bis</span>
-                <input type="date" className={input} value={custom.to} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
-              </label>
-            </>
-          ) : null}
-          <SelectFilter
-            label="Schüler:in"
-            value={filters.studentId || ""}
-            onChange={(v) => setFilter({ studentId: v })}
-            options={[["", "Alle"], ...students.map((s) => [s._id, s.name])]}
-          />
-          <SelectFilter label="Art" value={filters.kind || "all"} onChange={(v) => setFilter({ kind: v })} options={Object.entries(KINDS)} />
-          <SelectFilter label="Status" value={filters.state || "all"} onChange={(v) => setFilter({ state: v })} options={Object.entries(LESSON_STATES)} />
-          <SelectFilter
-            label="Abrechnung"
-            value={filters.billing || "all"}
-            onChange={(v) => setFilter({ billing: v })}
-            options={Object.entries(BILLING_STATES)}
-          />
-          <SearchInput value={filters.query || ""} onChange={(v) => setFilter({ query: v })} placeholder="Name, Fach, Angebot …" />
-        </FilterRow>
-        <FilterChips
-          chips={chips}
-          onReset={chips.length ? () => onFilters({ period }) : undefined}
+      <FilterPanel
+        suche={{ value: filters.query || "", onChange: (v) => setFilter({ query: v }), placeholder: "Name, Fach, Angebot …" }}
+        chips={chips}
+        onReset={chips.length ? () => onFilters({ period }) : undefined}
+      >
+        <SelectFilter label="Zeitraum" value={period} onChange={(v) => setFilter({ period: v })} options={Object.entries(PERIODS)} />
+        {period === "custom" ? (
+          <>
+            <label className="block">
+              <span className={labelClass}>Von</span>
+              <input type="date" className={input} value={custom.from} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
+            </label>
+            <label className="block">
+              <span className={labelClass}>Bis</span>
+              <input type="date" className={input} value={custom.to} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
+            </label>
+          </>
+        ) : null}
+        <SelectFilter
+          label="Schüler:in"
+          value={filters.studentId || ""}
+          onChange={(v) => setFilter({ studentId: v })}
+          options={[["", "Alle"], ...students.map((s) => [s._id, s.name])]}
         />
-      </div>
+        <SelectFilter label="Art" value={filters.kind || "all"} onChange={(v) => setFilter({ kind: v })} options={Object.entries(KINDS)} />
+        <SelectFilter label="Status" value={filters.state || "all"} onChange={(v) => setFilter({ state: v })} options={Object.entries(LESSON_STATES)} />
+        <SelectFilter
+          label="Abrechnung"
+          value={filters.billing || "all"}
+          onChange={(v) => setFilter({ billing: v })}
+          options={Object.entries(BILLING_STATES)}
+        />
+      </FilterPanel>
 
       <DataTable
         rows={shown}
         getRowKey={(b) => b._id}
         columns={columns}
-        actions={actionsFor}
+        // Ein Klick auf die Zeile öffnet das Bearbeitungsfenster (AdminShell) –
+        // dort sind alle Aktionen, an jeder Stelle dieselben.
+        onRowClick={(b) => oeffnen(b._id)}
         groupBy={(b) => {
           const key = monthKeyOf(b);
           const sums = monthSummary.get(key);
@@ -394,13 +278,12 @@ export default function UnterrichtView({ filters, onFilters }) {
               : null,
           };
         }}
-        rowTone={(b) => (b.status === "pending" ? "red" : null)}
         empty={loaded ? "Keine Einträge in diesem Zeitraum. Filter anpassen oder den Zeitraum auf „Alles“ stellen." : "Lädt …"}
       />
 
       {lessonDialog ? (
         <Modal
-          title={lessonDialog === "new" ? "Stunde eintragen" : "Stunde bearbeiten"}
+          title="Stunde eintragen"
           onClose={() => setLessonDialog(null)}
           wide
         >
@@ -408,7 +291,7 @@ export default function UnterrichtView({ filters, onFilters }) {
             adminFetch={adminFetch}
             setNotice={notify}
             students={students}
-            lesson={lessonDialog === "new" ? null : lessonDialog}
+            lesson={null}
             onSaved={() => {
               setLessonDialog(null);
               load();
@@ -418,33 +301,6 @@ export default function UnterrichtView({ filters, onFilters }) {
         </Modal>
       ) : null}
 
-      {ausfallDialog ? (
-        <AusfallDialog
-          lesson={ausfallDialog.lesson}
-          vorgabeArt={ausfallDialog.art}
-          studentClass={students.find((s) => s._id === ausfallDialog.lesson.studentId)?.studentClass}
-          adminFetch={adminFetch}
-          notify={notify}
-          onClose={() => setAusfallDialog(null)}
-          onSaved={async () => {
-            setAusfallDialog(null);
-            await load();
-          }}
-        />
-      ) : null}
-
-      {notesDialog ? (
-        <TagebuchDialog
-          lesson={notesDialog}
-          adminFetch={adminFetch}
-          setNotice={notify}
-          onClose={() => setNotesDialog(null)}
-          onSaved={() => {
-            setNotesDialog(null);
-            load();
-          }}
-        />
-      ) : null}
     </div>
   );
 }

@@ -92,7 +92,7 @@ export default function InstallApp({ art = "banner" }) {
       </span>
       {promptEvent && (
         <button
-          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 font-semibold text-black hover:brightness-110"
+          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4 py-2 font-semibold text-white hover:brightness-110"
           onClick={installieren}
         >
           Als App installieren

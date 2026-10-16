@@ -6,7 +6,7 @@ import { lessonState } from "@/lib/lessons/state";
 import { monatVerschieben, monatVon, monatsName } from "@/lib/umsatz/berechnung";
 import { stundenNachTag, tageDesRasters } from "@/lib/admin/kalender";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
-import StundenDrawer from "@/components/admin/cockpit/StundenDrawer";
+import { useStundeGeaendert, useStundeOeffnen } from "@/components/admin/shell/stunde";
 import { Badge, Button, Card, CardHead, MonatsWahl, Stat, errorText, formatPrice, todayIso } from "@/components/admin/ui";
 
 // Derselbe Bestand wie unter „Unterricht", nur als Monatsraster: Beim
@@ -19,7 +19,8 @@ function tagUeberschrift(iso) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
 }
 
-export default function KalenderView({ stundeId, reiter, onStunde }) {
+export default function KalenderView() {
+  const onStunde = useStundeOeffnen();
   const { adminFetch, notify } = useAdmin();
   const heute = todayIso();
   const [monat, setMonatRoh] = useState(monatVon(heute));
@@ -42,6 +43,8 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
       setGeladen(true);
     }
   }, [adminFetch, notify]);
+  // Änderungen im Bearbeitungsfenster (AdminShell) → neu laden.
+  useStundeGeaendert(laden);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -118,7 +121,7 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
                     gewaehlt
                       ? "bg-[var(--ck-text)] font-bold text-[var(--ck-on-text)]"
                       : istHeute
-                        ? "bg-[var(--ck-accent)] font-bold text-black"
+                        ? "bg-[var(--ck-accent)] font-bold text-white"
                         : "font-medium"
                   }`}
                 >
@@ -239,8 +242,6 @@ export default function KalenderView({ stundeId, reiter, onStunde }) {
       </Card>
 
       <AboKarte />
-
-      <StundenDrawer stundeId={stundeId} reiter={reiter} onClose={() => onStunde(null)} onChanged={laden} />
     </div>
   );
 }
@@ -282,7 +283,7 @@ function AboKarte() {
       <div className="mt-4 flex flex-wrap gap-2">
         <a
           href={abo.webcal}
-          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+          className="whitespace-nowrap rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
         >
           Auf diesem Gerät abonnieren
         </a>

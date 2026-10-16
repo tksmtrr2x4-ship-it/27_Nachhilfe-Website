@@ -96,7 +96,7 @@ export default function DatenschutzPage() {
             Aus der Schülerakte heraus können Sie ein kostenloses Kennenlern-Meeting per Video
             vereinbaren. Dafür erhebe ich nur Ihren Wunschtermin und freiwillig eine Anmerkung;
             Name, Kind und Klasse kommen aus der Akte. Das Meeting findet über meinen eigenen
-            Jitsi-Server statt (Abschnitt zum Online-Unterricht); der Termin steht danach wie eine
+            Unterrichtsraum statt (Abschnitt 5); der Termin steht danach wie eine
             Unterrichtsstunde in Ihrer Akte und wird mit ihr gelöscht. Rechtsgrundlage ist Art. 6
             Abs. 1 lit. b DSGVO.
           </p>
@@ -125,16 +125,23 @@ export default function DatenschutzPage() {
         <section>
           <h2 className="font-semibold text-slate-900 dark:text-white">5. Online-Unterricht</h2>
           <p className="mt-2">
-            Für online stattfindenden Unterricht nutze ich eine selbst betriebene Instanz der
-            Videokonferenz-Software Jitsi Meet unter einer eigenen Adresse
-            (meet.lernsprung-vs.de), die auf demselben Server wie diese Website läuft (siehe
-            Abschnitt 6). Dabei werden Bild- und Tonübertragung sowie technische
-            Verbindungsdaten (u.a. IP-Adresse während der Sitzung) verarbeitet, ausschließlich
-            zur Durchführung der gebuchten Unterrichtsstunde. Rechtsgrundlage ist Art. 6 Abs. 1
-            lit. b DSGVO (Erfüllung des Nachhilfevertrags). Da die Software auf meiner eigenen
-            Infrastruktur läuft, ist hierfür <strong>kein zusätzlicher externer
-            Videokonferenz-Anbieter</strong> eingebunden und es findet{" "}
-            <strong>keine Übermittlung in ein Drittland</strong> statt.
+            Für online stattfindenden Unterricht nutze ich einen eigenen Unterrichtsraum auf dieser
+            Website (Adresse <code>/meeting/…</code> aus der Bestätigungsmail). Bild und Ton gehen
+            dabei <strong>direkt und verschlüsselt zwischen den beiden beteiligten Geräten</strong>{" "}
+            (WebRTC, DTLS-SRTP). Mein Server vermittelt nur den Verbindungsaufbau; gelingt die
+            direkte Verbindung wegen einer Firewall nicht, leitet er die verschlüsselten Daten
+            weiter, ohne sie entschlüsseln zu können. Für den direkten Weg erfahren die beiden
+            Geräte gegenseitig ihre IP-Adressen. Auch der Dienst, der beim Verbindungsaufbau den
+            Weg findet (STUN/TURN), läuft auf meinem eigenen Server; es ist{" "}
+            <strong>kein externer Anbieter</strong> eingebunden und es findet{" "}
+            <strong>keine Übermittlung in ein Drittland</strong> statt. Nichts wird aufgezeichnet. Rechtsgrundlage ist
+            Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nachhilfevertrags).
+          </p>
+          <p className="mt-2">
+            Die gemeinsame Tafel im Unterrichtsraum (Notizen, eingefügte Arbeitsblätter, Fotos und
+            Screenshots) wird <strong>nicht auf meinem Server gespeichert</strong>. Sie geht direkt
+            zwischen den Geräten und bleibt bis zu 30 Tage im Speicher Ihres Browsers, damit beim
+            Neuladen nichts verloren geht; über „Als PDF“ können Sie sie selbst sichern.
           </p>
         </section>
 
@@ -167,8 +174,8 @@ export default function DatenschutzPage() {
             Für Besucher:innen der öffentlichen Seite werden{" "}
             <strong>keine Cookies</strong> gesetzt und
             keine Daten in localStorage/sessionStorage des Browsers abgelegt. Solange Sie sich
-            nicht anmelden, ändert sich daran nichts. Zwei Speicherzugriffe betreffen
-            ausschließlich angemeldete Personen:
+            nicht anmelden, ändert sich daran nichts. Diese Speicherzugriffe betreffen
+            ausschließlich angemeldete Personen bzw. Teilnehmende einer Stunde:
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
@@ -180,10 +187,14 @@ export default function DatenschutzPage() {
               Im passwortgeschützten Verwaltungsbereich merkt sich mein eigener Browser ein
               Sitzungskennwort sowie ein Merkmal des Geräts, damit ich angemeldet bleibe.
             </li>
+            <li>
+              Im Unterrichtsraum (Abschnitt 5) bleibt die Tafel im Speicher des Browsers
+              (IndexedDB, höchstens 30 Tage), damit Notizen ein Neuladen überstehen.
+            </li>
           </ul>
           <p className="mt-2">
-            Beide Zugriffe sind nach § 25 Abs. 2 Nr. 2 TDDDG unbedingt erforderlich, um die
-            ausdrücklich gewünschte Funktion (angemeldet bleiben) bereitzustellen, und daher von
+            Diese Zugriffe sind nach § 25 Abs. 2 Nr. 2 TDDDG unbedingt erforderlich, um die
+            ausdrücklich gewünschte Funktion (angemeldet bleiben, Tafel behalten) bereitzustellen, und daher von
             der Einwilligungspflicht ausgenommen. Eine Analyse des Nutzungsverhaltens findet nicht
             statt. Deshalb gibt es auf dieser Seite bewusst kein Cookie-Consent-Banner.
           </p>

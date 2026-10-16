@@ -43,7 +43,7 @@ export async function PATCH(request, { params }) {
     // Bei Zusage für eine Online-Einzelstunde einmalig einen Meeting-Token
     // erzeugen (nur falls noch keiner existiert, z.B. bei erneutem
     // Bestätigen nach einem Statuswechsel). Dient sowohl als URL-Slug für
-    // /meeting/<token> als auch als Jitsi-Raumname – siehe lib/db.js.
+    // /meeting/<token> als auch als Raumname – siehe lib/raum/.
     if (
       existing.offerSnapshot?.type === "session" &&
       existing.locationType === "online" &&

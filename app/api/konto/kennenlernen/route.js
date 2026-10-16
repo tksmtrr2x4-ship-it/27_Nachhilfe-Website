@@ -10,7 +10,7 @@ import { todayIsoBerlin } from "@/lib/adminError";
 
 // Kostenloses Kennenlern-Meeting per Video – nur aus einer angelegten
 // Schülerakte heraus. Die Familie wählt einen Wunschtermin, der Server legt
-// sofort den Jitsi-Raum an (Meeting-Token = Raumname, wie bei den
+// sofort den Unterrichtsraum an (Meeting-Token = Raumname, wie bei den
 // Online-Stunden, app/meeting/[token]).
 //
 // Technisch eine Online-Stunde zu 0 € mit kennenlernen: true. So steht sie in

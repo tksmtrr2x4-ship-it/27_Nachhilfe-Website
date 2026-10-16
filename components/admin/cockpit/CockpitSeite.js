@@ -132,7 +132,7 @@ export default function CockpitSeite({ stundeId, reiter, onStunde }) {
           <CardHead title="Schnellaktionen" />
           <div className="grid grid-cols-2 gap-3">
             <Schnellaktion symbol="telefon" titel="Telefonanfrage" hinweis="Aufnahmebogen + Papierakte" href="/admin/schueler?neu=1" />
-            <Schnellaktion symbol="stundePlanen" titel="Stunde planen" hinweis="Termin + Jitsi-Raum" href="/admin/unterricht?neu=1" />
+            <Schnellaktion symbol="stundePlanen" titel="Stunde planen" hinweis="Termin + Unterrichtsraum" href="/admin/unterricht?neu=1" />
             <Schnellaktion symbol="rechnung" titel="Rechnung" hinweis="E-Rechnung mit GiroCode" href="/admin/finanzen?ansicht=rechnungen" />
             <Schnellaktion symbol="journal" titel="Buchung" hinweis="Soll / Haben erfassen" href="/admin/finanzen?ansicht=journal" />
           </div>

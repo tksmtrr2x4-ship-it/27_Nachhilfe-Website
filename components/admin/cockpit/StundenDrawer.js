@@ -47,7 +47,12 @@ const REITER = [
   ["akte", "Akte"],
 ];
 
-const JITSI = "https://meet.lernsprung-vs.de";
+// Unterrichtsraum (components/raum/): als Host mit Ticket öffnen, für den
+// Gast den Link kopieren. Hat die Stunde noch keinen Raum, legt der Server
+// ihn dabei an (app/api/admin/raum).
+async function raumHolen(adminFetch, bookingId) {
+  return adminFetch("/api/admin/raum", { method: "POST", body: JSON.stringify({ bookingId }) });
+}
 
 export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose, onChanged }) {
   const { adminFetch, pin, notify } = useAdmin();
@@ -238,15 +243,55 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     ]}
                   />
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {l.meetingToken ? (
-                      <a
-                        href={`${JITSI}/${encodeURIComponent(l.meetingToken)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
-                      >
-                        Jitsi-Raum öffnen
-                      </a>
+                    {l.meetingToken || l.locationType === "online" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            // Fenster sofort öffnen (sonst blockt Safari es nach dem Warten).
+                            const fenster = window.open("", "_blank");
+                            try {
+                              const r = await raumHolen(adminFetch, l._id);
+                              const ziel = `${window.location.origin}${r.link}#host=${r.ticket}`;
+                              if (fenster) fenster.location.href = ziel;
+                              else window.open(ziel, "_self");
+                              if (!l.meetingToken) onChanged?.();
+                            } catch (err) {
+                              fenster?.close();
+                              notify(errorText(err));
+                            }
+                          }}
+                          className="rounded-full bg-[var(--ck-accent)] px-4.5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+                        >
+                          Unterrichtsraum öffnen
+                        </button>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const r = await raumHolen(adminFetch, l._id);
+                              await navigator.clipboard.writeText(`${window.location.origin}${r.link}`);
+                              notify("Link für den Gast kopiert.");
+                              if (!l.meetingToken) onChanged?.();
+                            } catch (err) {
+                              notify(errorText(err));
+                            }
+                          }}
+                        >
+                          Gast-Link kopieren
+                        </Button>
+                        {/* Übergangsweise, bis der neue Raum sich in echten Stunden
+                            bewährt hat und Jitsi vom Server geht. */}
+                        {l.meetingToken ? (
+                          <a
+                            href={`https://meet.lernsprung-vs.de/${encodeURIComponent(l.meetingToken)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="self-center px-2 text-xs text-[var(--ck-muted)] underline underline-offset-2"
+                          >
+                            Ausweich: Jitsi
+                          </a>
+                        ) : null}
+                      </>
                     ) : null}
                     <Button
                       onClick={() => setVerschieben(true)}

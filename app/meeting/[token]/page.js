@@ -2,22 +2,22 @@ import { notFound } from "next/navigation";
 import { getBookingByMeetingToken } from "@/lib/db";
 import { bekannteRechnungsdaten } from "@/lib/invoicing/bekannteAdresse";
 import { formatDate, formatPrice } from "@/lib/format";
-import MeetingEmbed from "@/components/MeetingEmbed";
 import MeetingPayGate from "@/components/MeetingPayGate";
+import Raum from "@/components/raum/Raum";
+import HostWeiche from "@/components/raum/HostWeiche";
+import { brauchtZahlungsschritt } from "@/lib/raum/zugang";
 
 // Öffentliche, aber nicht erratbare Seite (kein Login) für den
-// Online-Unterricht: der lange Zufallstoken in der URL ist zugleich der
-// Datenbank-Schlüssel und der Jitsi-Raumname (siehe lib/db.js,
-// app/api/admin/bookings/[id]/route.js). Nicht in Sitemap/robots.txt
-// gelistet, siehe app/robots.js.
+// Online-Unterricht: Der lange Zufallstoken in der URL ist zugleich der
+// Datenbank-Schlüssel und der Raumname. Seit Oktober 2026 der eigene
+// Lernsprung-Unterrichtsraum (components/raum/, lib/raum/) statt Jitsi.
+// Nicht in Sitemap/robots.txt gelistet, siehe app/robots.js.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Ihr Online-Termin",
+  title: "Unterrichtsraum",
   robots: { index: false, follow: false },
 };
-
-const JITSI_DOMAIN = "meet.lernsprung-vs.de";
 
 export default async function MeetingPage({ params }) {
   const { token } = await params;
@@ -36,79 +36,42 @@ export default async function MeetingPage({ params }) {
     );
   }
 
-  const priceCents = booking.offerSnapshot?.priceCents || 0;
-  // Zahlung per Rechnung gewählt UND die Zahlungsverpflichtung im
-  // Bestätigungsdialog quittiert (zweiter Schritt der Rechnungs-Route) –
-  // erst dann gilt das Gate als passiert. Die Rechnung selbst stellt die
-  // Lehrkraft nach der Stunde im Admin-Bereich aus.
-  const invoiceUnlocked = booking.paymentMethod === "invoice" && Boolean(booking.invoiceCommitmentAt);
-  // Kostenpflichtige Online-Einzelstunden: Video erst nach Angabe der
-  // Rechnungsadresse und Bestätigung der Zahlungspflicht freigeben.
-  // 0,00-€-Angebote (z.B. Kennenlern-Meeting) sind davon ausgenommen.
-  const needsPayment =
-    booking.offerSnapshot?.type === "session" &&
-    booking.locationType === "online" &&
-    priceCents > 0 &&
-    booking.status !== "paid" &&
-    !invoiceUnlocked;
+  const raum = {
+    titel: `${booking.subject || "Nachhilfe"} mit ${booking.studentName}`,
+    termin: booking.requestedDate ? `${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : "",
+    gastName: String(booking.studentName || "Gast").split(" ")[0],
+  };
 
-  const heading = `Ihr Online-Termin${
-    booking.requestedDate ? ` – ${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : ""
-  }`;
-
-  if (needsPayment) {
+  // Kostenpflichtige Online-Einzelstunde: für den Gast erst Rechnungsadresse
+  // und Zahlungszusage. Jill als Host geht direkt in den Raum (HostWeiche).
+  if (brauchtZahlungsschritt(booking)) {
+    const priceCents = booking.offerSnapshot?.priceCents || 0;
+    const heading = `Ihr Online-Termin${raum.termin ? ` – ${raum.termin}` : ""}`;
     // Anschrift und Einwilligung nicht erneut abfragen, wenn beides aus der
     // Schülerakte oder einer früheren Stunde schon vorliegt.
     const bekannt = await bekannteRechnungsdaten(booking);
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{heading}</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {booking.subject} mit {booking.studentName}.
-        </p>
-        <div className="mt-5">
-          <MeetingPayGate
-            token={booking.meetingToken}
-            priceLabel={formatPrice(priceCents)}
-            defaultName={booking.parentName}
-            email={booking.parentEmail}
-            bekannteAdresse={bekannt.adresse}
-            adresseAus={bekannt.quelle}
-            einwilligungVorhanden={bekannt.einwilligungVorhanden}
-          />
+      <HostWeiche token={booking.meetingToken} raum={raum}>
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+          <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{heading}</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {booking.subject} mit {booking.studentName}.
+          </p>
+          <div className="mt-5">
+            <MeetingPayGate
+              token={booking.meetingToken}
+              priceLabel={formatPrice(priceCents)}
+              defaultName={booking.parentName}
+              email={booking.parentEmail}
+              bekannteAdresse={bekannt.adresse}
+              adresseAus={bekannt.quelle}
+              einwilligungVorhanden={bekannt.einwilligungVorhanden}
+            />
+          </div>
         </div>
-      </div>
+      </HostWeiche>
     );
   }
 
-  // Ohne eigenen "subject" zeigt Jitsi den rohen Zufallstoken als Raumtitel
-  // an (unleserlich). JSON.stringify liefert das nötige gequotete Literal
-  // für die Config-Syntax im URL-Hash, encodeURIComponent macht es URL-sicher.
-  const subject = JSON.stringify(`Nachhilfe: ${booking.subject} mit ${booking.studentName}`);
-  const jitsiUrl = `https://${JITSI_DOMAIN}/${encodeURIComponent(booking.meetingToken)}#config.prejoinConfig.enabled=true&config.subject=${encodeURIComponent(subject)}`;
-
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{heading}</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        {booking.subject} mit {booking.studentName}. Kamera und Mikrofon werden erst nach
-        Erlaubnis im Browser aktiviert.
-      </p>
-
-      <div className="mt-5">
-        <MeetingEmbed src={jitsiUrl} />
-      </div>
-
-      {invoiceUnlocked ? (
-        <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
-          Zahlung per Rechnung: Sie erhalten nach der Stunde eine Rechnung über {formatPrice(priceCents)} als
-          PDF per E-Mail an {booking.parentEmail}, zahlbar innerhalb von 14 Tagen.
-        </p>
-      ) : null}
-
-      <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-        Dieser Link ist persönlich für Ihren Termin und sollte nicht weitergegeben werden.
-      </p>
-    </div>
-  );
+  return <Raum token={booking.meetingToken} {...raum} />;
 }

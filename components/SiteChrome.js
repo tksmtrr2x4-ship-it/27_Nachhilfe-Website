@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 // eine eigene Anwendung (auch als installierte App) und soll nicht die
 // öffentliche Navigation mitschleppen. Dasselbe gilt für die Seite, auf der
 // eine Anmeldung per Mail-Link bestätigt wird.
-const OHNE_RAHMEN = ["/admin", "/anmeldung-bestaetigen"];
+// Der Unterrichtsraum (/meeting) ist eine eigene Vollbild-App.
+const OHNE_RAHMEN = ["/admin", "/anmeldung-bestaetigen", "/meeting"];
 
 export default function SiteChrome({ children }) {
   const pathname = usePathname();

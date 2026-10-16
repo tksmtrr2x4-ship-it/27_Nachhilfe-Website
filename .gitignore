@@ -62,3 +62,6 @@ next-env.d.ts
 
 # lokale Ablage beim Entwickeln (Rechnungen, Belege, Quittungen)
 data/
+
+# pdf.js-Worker, kopiert von scripts/pdf-worker-kopieren.mjs
+/public/raum/pdf.worker.min.mjs

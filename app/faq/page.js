@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/db";
-import { LATE_CANCEL_PERCENT, MEETING_HOST, NO_SHOW_PERCENT, PAYMENT_TERM_DAYS, PREP_PERCENT, WAIT_MINUTES, cancelRuleShort } from "@/lib/legal/terms";
+import { LATE_CANCEL_PERCENT, NO_SHOW_PERCENT, PAYMENT_TERM_DAYS, PREP_PERCENT, WAIT_MINUTES, cancelRuleShort } from "@/lib/legal/terms";
 import { SUBJECTS } from "@/lib/subjects";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Wie funktioniert der Online-Unterricht?",
-    a: `Ich unterrichte per Video-Call mit digitalem Whiteboard auf meiner eigenen Plattform (${MEETING_HOST}), auf dem wir gemeinsam rechnen und skizzieren. Nötig ist nur ein Laptop oder Tablet mit Kamera, Mikrofon und stabiler Internetverbindung; den Link erhalten Sie vorab per E-Mail. Fällt die Verbindung auf meiner Seite aus, hole ich die Zeit nach oder berechne sie nicht. Aufnahmen sind ohne Zustimmung aller Beteiligten nicht erlaubt.`,
+    a: `Ich unterrichte per Video in meinem eigenen Unterrichtsraum auf dieser Website – mit einer gemeinsamen Tafel, auf der wir rechnen und skizzieren, auch direkt auf Arbeitsblättern. Am Ende gibt es die Tafel als PDF, etwa für Goodnotes. Nötig ist nur ein Laptop oder Tablet mit Kamera, Mikrofon und stabiler Internetverbindung; den Link erhalten Sie vorab per E-Mail. Fällt die Verbindung auf meiner Seite aus, hole ich die Zeit nach oder berechne sie nicht. Aufnahmen sind ohne Zustimmung aller Beteiligten nicht erlaubt.`,
   },
   {
     q: "Was passiert, wenn ich einen Termin absagen muss?",

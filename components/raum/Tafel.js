@@ -84,7 +84,32 @@ function Knopf({ aktiv, onClick, titel, children, disabled }) {
 // Ihre Seiten tragen die ID der Unterlage. Der Gast darf solche Seiten nur
 // mitnehmen (PDF-Export, Speicher im Browser), wenn Jill die Unterlage
 // freigegeben hat – mitnehmenErlaubt(unterlageId) sagt das.
-export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden, onGastDarf, mitnehmenErlaubt }) {
+// Kleinere Fassung eines Seitenbilds für die Leitung (max. 1200 px breit).
+async function verkleinern(url, breite = 1200, qualitaet = 0.74) {
+  try {
+    const img = await new Promise((ok, fehler) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = fehler;
+      i.src = url;
+    });
+    if (img.naturalWidth <= breite && url.length < 250_000) return url;
+    const f = Math.min(1, breite / img.naturalWidth);
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * f);
+    c.height = Math.round(img.naturalHeight * f);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    const klein = c.toDataURL("image/jpeg", qualitaet);
+    return klein.length < url.length ? klein : url;
+  } catch {
+    return url;
+  }
+}
+
+export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden, onBildPlatz, onGastDarf, mitnehmenErlaubt }) {
   const host = rolle === "host";
   const erlaubtRef = useRef(mitnehmenErlaubt);
   useEffect(() => {
@@ -122,6 +147,14 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   const rueckgaengig = useRef([]);
   const wiederholen = useRef([]);
   const bildTeile = useRef(new Map());
+  const wartendeBilder = useRef(new Map());
+  const bildNachtragen = (x) => {
+    const w = wartendeBilder.current.get(x.id);
+    if (w && x.hg && !x.hg.url) {
+      x.hg = w;
+      wartendeBilder.current.delete(x.id);
+    }
+  };
   const frame = useRef(0);
   const dateiFeld = useRef(null);
 
@@ -197,7 +230,7 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
     const el = huelle.current;
     if (!host || !el) return;
     const y = (el.scrollTop + el.clientHeight / 2 - RAND) / massRef.current.faktor;
-    onSenden?.({ t: "blick", seiteId: seite().id, y: Math.round(Math.max(0, y)) });
+    onSenden?.({ t: "blick", seiteId: seite().id, y: Math.round(Math.max(0, y)) }, "schnell");
   }, [host, onSenden]);
 
   // Höchstens alle 60 ms senden, die letzte Stelle immer.
@@ -278,27 +311,59 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   });
 
   // ---------- Senden ----------
-  const senden = useCallback((n) => onSenden?.(n), [onSenden]);
+  const senden = useCallback((n, weg) => onSenden?.(n, weg), [onSenden]);
 
+  // Seitenbilder gehen gebremst über einen eigenen Kanal (useVerbindung,
+  // „bilder“) und kleiner als auf Jills Bildschirm – sonst nehmen große PDFs
+  // dem Video die Leitung. Höchstens etwa 160 KB/s (auch bei schwachem Upload
+  // bleibt Platz für Ton und Bild).
+  const netzBilder = useRef(new Map()); // seiteId → kleinere Fassung
+  const gastHat = useRef(new Set()); // Seiten, deren Bild der Gast schon hat
+  const habeWarten = useRef(null);
+  const sendeLauf = useRef(0);
   const bildSenden = useCallback(
-    async (s) => {
+    async (s, lauf) => {
       if (!s.hg?.url) return;
-      const teile = stuecke(s.hg.url);
-      for (let i = 0; i < teile.length; i++) {
-        senden({ t: "hg", seiteId: s.id, i, n: teile.length, w: s.hg.w, h: s.hg.h, d: teile[i] });
-        // kleine Pause alle paar Stücke, damit der Kanal nicht überläuft
-        if (i % 16 === 15) await new Promise((r) => setTimeout(r, 30));
+      let url = netzBilder.current.get(s.id);
+      if (!url) {
+        url = await verkleinern(s.hg.url);
+        netzBilder.current.set(s.id, url);
       }
+      const teile = stuecke(url, 16000);
+      for (let i = 0; i < teile.length; i++) {
+        if (lauf !== undefined && lauf !== sendeLauf.current) return;
+        if (onBildPlatz && !(await onBildPlatz())) return;
+        const start = Date.now();
+        senden({ t: "hg", seiteId: s.id, i, n: teile.length, w: s.hg.w, h: s.hg.h, d: teile[i] }, "bild");
+        const pause = 100 - (Date.now() - start);
+        if (pause > 0) await new Promise((r) => setTimeout(r, pause));
+      }
+      gastHat.current.add(s.id);
     },
-    [senden]
+    [senden, onBildPlatz]
   );
 
   const ohneBild = (s) => ({ ...s, hg: s.hg ? { w: s.hg.w, h: s.hg.h, folgt: true } : null });
 
+  // Nach dem (Wieder-)Verbinden: Stand senden, kurz hören, welche Bilder der
+  // Gast schon hat (Speicher im Browser), dann die übrigen – die aktuelle
+  // Seite zuerst, dann die Nachbarn.
   const standSenden = useCallback(async () => {
+    const lauf = ++sendeLauf.current;
+    gastHat.current = new Set();
     senden({ t: "stand", seiten: seitenRef.current.map(ohneBild), aktuelle: aktuelleRef.current, gastDarf });
     blickSenden();
-    for (const s of seitenRef.current) await bildSenden(s);
+    await new Promise((ok) => {
+      habeWarten.current = ok;
+      setTimeout(ok, 600);
+    });
+    habeWarten.current = null;
+    const a = aktuelleRef.current;
+    const reihe = seitenRef.current.map((x, i) => [x, i]).sort((p, q) => Math.abs(p[1] - a) - Math.abs(q[1] - a));
+    for (const [x] of reihe) {
+      if (lauf !== sendeLauf.current) return;
+      if (!gastHat.current.has(x.id)) await bildSenden(x, lauf);
+    }
   }, [senden, bildSenden, gastDarf, blickSenden]);
 
   // ---------- Seiten ----------
@@ -566,6 +631,12 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         onGastDarf?.(Boolean(n.gastDarf));
         rueckgaengig.current = [];
         wiederholen.current = [];
+        for (const x of seitenRef.current) bildNachtragen(x);
+        senden({ t: "habe", ids: seitenRef.current.filter((x) => x.hg?.url).map((x) => x.id) });
+      } else if (n.t === "habe" && host) {
+        for (const id of n.ids || []) gastHat.current.add(id);
+        habeWarten.current?.();
+        return;
       } else if (n.t === "hg") {
         const k = `${n.seiteId}`;
         const teile = bildTeile.current.get(k) || [];
@@ -574,10 +645,17 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         if (teile.filter((x) => x !== undefined).length === n.n) {
           bildTeile.current.delete(k);
           const s = finde(n.seiteId);
+          // Bilder kommen über einen eigenen Kanal und können vor ihrer
+          // Seite eintreffen – dann aufheben, bis die Seite da ist.
           if (s) s.hg = { url: teile.join(""), w: n.w, h: n.h };
+          else wartendeBilder.current.set(n.seiteId, { url: teile.join(""), w: n.w, h: n.h });
         }
       } else if (n.t === "seite-neu" && !host) {
-        if (!finde(n.seite.id)) seiten.splice(n.index, 0, { ...n.seite, hg: n.seite.hg ? { ...n.seite.hg, url: null } : null });
+        if (!finde(n.seite.id)) {
+          const neu = { ...n.seite, hg: n.seite.hg ? { ...n.seite.hg, url: null } : null };
+          bildNachtragen(neu);
+          seiten.splice(n.index, 0, neu);
+        }
       } else if (n.t === "blick" && !host) {
         blick.current = { seiteId: n.seiteId, y: Number(n.y) || 0 };
         blickAnwenden();

@@ -9,9 +9,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // laufen danach Gerät-zu-Gerät, verschlüsselt (DTLS-SRTP). Klappt der direkte
 // Weg nicht (strenge Firewalls), springt der TURN-Server ein.
 //
-// Aushandlung nach dem „Perfect Negotiation“-Muster: Der Gast ist der höfliche
-// Teil und gibt bei gleichzeitigen Angeboten nach. Der Tafel-Kanal ist fest
-// vereinbart (negotiated, id 0) – so gibt es kein Wettrennen, wer ihn anlegt.
+// Aushandlung: Nur der Host bietet an, der Gast antwortet. Der Host legt
+// immer je einen Kanal für Ton und Bild an (ohne eigene Kamera nur zum
+// Empfangen); der Gast hängt seine Kamera und sein Mikrofon nach dem Angebot
+// in genau diese Kanäle ein (replaceTrack). So bieten nie beide gleichzeitig
+// an – das hat Safari (iPad/iPhone) beim Gast ohne Bild gelassen. Die
+// Datenkanäle sind fest vereinbart (negotiated) – kein Wettrennen, wer sie
+// anlegt.
 //
 // status: "verbinde" | "warten" | "verbunden" | "unterbrochen" | "ersetzt" | "geschlossen" | "fehler"
 //
@@ -39,6 +43,22 @@ function parseSse(puffer, beiEreignis) {
   return rest;
 }
 
+// Lieber flüssig als scharf: bei knapper Leitung sinkt die Auflösung, nicht
+// die Bildrate. Ton und Bild haben Vorrang vor den Datenkanälen (Tafel).
+function videoQualitaet(sender) {
+  try {
+    const p = sender.getParameters();
+    if (!p.encodings?.length) return; // vor der Aushandlung: später erneut
+    p.degradationPreference = "maintain-framerate";
+    p.encodings[0].maxBitrate = 1_200_000;
+    p.encodings[0].priority = "high";
+    p.encodings[0].networkPriority = "high";
+    sender.setParameters(p).catch(() => null);
+  } catch {
+    // nicht unterstützt
+  }
+}
+
 export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOffen, onEreignis }) {
   const [status, setStatus] = useState("verbinde");
   const [rolle, setRolle] = useState(ticket ? "host" : "gast");
@@ -46,7 +66,7 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
   const [fehler, setFehler] = useState("");
   const [qualitaet, setQualitaet] = useState("");
 
-  const zustand = useRef({ id: null, peerId: null, pc: null, kanal: null, makingOffer: false, ignoreOffer: false, ice: null });
+  const zustand = useRef({ id: null, peerId: null, pc: null, kanal: null, schnell: null, bilder: null, makingOffer: false, ignoreOffer: false, ice: null });
   const rueckrufe = useRef({ onDaten, onKanalOffen, onEreignis });
   rueckrufe.current = { onDaten, onKanalOffen, onEreignis };
   const kopf = ticket ? { "x-raum-ticket": ticket } : {};
@@ -66,17 +86,40 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
 
   const schliessePc = useCallback(() => {
     const z = zustand.current;
-    try {
-      z.kanal?.close();
-    } catch {}
+    for (const k of [z.kanal, z.schnell, z.bilder]) {
+      try {
+        k?.close();
+      } catch {}
+    }
     try {
       z.pc?.close();
     } catch {}
     z.pc = null;
     z.kanal = null;
+    z.schnell = null;
+    z.bilder = null;
     z.peerId = null;
     setFern(null);
   }, []);
+
+  // Gast: eigene Kamera und Mikrofon in die Kanäle aus dem Angebot hängen.
+  const spurenEinhaengen = useCallback(
+    (pc) => {
+      for (const track of lokal?.getTracks() || []) {
+        const tr = pc.getTransceivers().find((t) => t.receiver.track?.kind === track.kind && !t.stopped);
+        if (!tr) continue;
+        if (tr.sender.track !== track) tr.sender.replaceTrack(track).catch(() => null);
+        try {
+          tr.sender.setStreams?.(lokal);
+        } catch {
+          // ältere Browser: ohne Stream-Zuordnung (der Host nimmt dann die Spur)
+        }
+        tr.direction = "sendrecv";
+        if (track.kind === "video") videoQualitaet(tr.sender);
+      }
+    },
+    [lokal]
+  );
 
   const erzeugePc = useCallback(
     (peerId, eigeneRolle) => {
@@ -89,31 +132,40 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
       z.makingOffer = false;
       z.ignoreOffer = false;
 
-      for (const track of lokal?.getTracks() || []) {
-        const sender = pc.addTrack(track, lokal);
-        if (track.kind === "video") {
-          // Lieber flüssig als scharf: bei knapper Leitung sinkt die Auflösung,
-          // nicht die Bildrate.
-          const p = sender.getParameters();
-          p.degradationPreference = "maintain-framerate";
-          if (!p.encodings?.length) p.encodings = [{}];
-          p.encodings[0].maxBitrate = 1_200_000;
-          sender.setParameters(p).catch(() => null);
+      // Host: feste Kanäle für Ton und Bild. Gast: erst nach dem Angebot
+      // (spurenEinhaengen in beiSignal).
+      if (!hoeflich) {
+        for (const art of ["audio", "video"]) {
+          const track = lokal?.getTracks().find((t) => t.kind === art);
+          const tr = track
+            ? pc.addTransceiver(track, { direction: "sendrecv", streams: [lokal] })
+            : pc.addTransceiver(art, { direction: "recvonly" });
+          if (art === "video") videoQualitaet(tr.sender);
         }
       }
 
-      const kanal = pc.createDataChannel("tafel", { negotiated: true, id: 0, ordered: true });
-      kanal.binaryType = "arraybuffer";
-      kanal.bufferedAmountLowThreshold = 256 * 1024;
-      kanal.onopen = () => rueckrufe.current.onKanalOffen?.(kanal);
-      kanal.onmessage = (e) => {
+      // Drei Datenkanäle, damit nichts hinter etwas anderem wartet:
+      //   tafel   – Striche, Seiten, Freigaben (zuverlässig, der Reihe nach)
+      //   schnell – wohin Jill scrollt (darf verloren gehen, kommt sofort)
+      //   bilder  – Seitenbilder, gebremst gesendet (siehe bildPlatz)
+      const empfang = (e) => {
         try {
           rueckrufe.current.onDaten?.(JSON.parse(e.data));
         } catch {
           // ignorieren
         }
       };
+      const kanal = pc.createDataChannel("tafel", { negotiated: true, id: 0, ordered: true });
+      kanal.onopen = () => rueckrufe.current.onKanalOffen?.(kanal);
+      kanal.onmessage = empfang;
+      const schnell = pc.createDataChannel("schnell", { negotiated: true, id: 1, ordered: false, maxRetransmits: 0 });
+      schnell.onmessage = empfang;
+      const bilder = pc.createDataChannel("bilder", { negotiated: true, id: 2, ordered: true, priority: "very-low" });
+      bilder.bufferedAmountLowThreshold = 48 * 1024;
+      bilder.onmessage = empfang;
       z.kanal = kanal;
+      z.schnell = schnell;
+      z.bilder = bilder;
 
       const stream = new MediaStream();
       pc.ontrack = (e) => {
@@ -122,6 +174,8 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
       };
       pc.onicecandidate = ({ candidate }) => signal("kandidat", candidate ? candidate.toJSON() : null);
       pc.onnegotiationneeded = async () => {
+        // Der Gast bietet nie selbst an (siehe oben).
+        if (hoeflich) return;
         try {
           z.makingOffer = true;
           await pc.setLocalDescription();
@@ -139,7 +193,9 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
         else if (s === "failed") {
           setStatus("unterbrochen");
           // Netz gewechselt o. Ä.: Wege neu suchen, ohne den Raum zu verlassen.
-          pc.restartIce();
+          // Neu anbieten darf nur der Host – der Gast bittet darum.
+          if (hoeflich) signal("neustart", null);
+          else pc.restartIce();
         }
       };
       pc._hoeflich = hoeflich;
@@ -155,14 +211,17 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
       const pc = z.pc;
       try {
         if (typ === "beschreibung" && daten) {
-          const kollision = daten.type === "offer" && (z.makingOffer || pc.signalingState !== "stable");
-          z.ignoreOffer = !pc._hoeflich && kollision;
-          if (z.ignoreOffer) return;
+          // Angebote nimmt nur der Gast an, Antworten nur der Host.
+          z.ignoreOffer = daten.type === "offer" && !pc._hoeflich;
+          if (z.ignoreOffer || (daten.type === "answer" && pc._hoeflich)) return;
           await pc.setRemoteDescription(daten);
           if (daten.type === "offer") {
+            spurenEinhaengen(pc);
             await pc.setLocalDescription();
             await signal("beschreibung", pc.localDescription?.toJSON());
           }
+        } else if (typ === "neustart" && !pc._hoeflich) {
+          pc.restartIce();
         } else if (typ === "kandidat") {
           try {
             await pc.addIceCandidate(daten || null);
@@ -174,7 +233,7 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
         // ein verpasster Schritt heilt sich über die nächste Aushandlung
       }
     },
-    [erzeugePc, signal]
+    [erzeugePc, signal, spurenEinhaengen]
   );
 
   useEffect(() => {
@@ -288,14 +347,42 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
     return () => clearInterval(t);
   }, [status]);
 
-  const senden = useCallback((nachricht) => {
-    const k = zustand.current.kanal;
+  // weg: "bild" | "schnell" | (Standard) Tafel. Fällt ein Nebenkanal aus,
+  // geht es über den Tafel-Kanal.
+  const senden = useCallback((nachricht, weg) => {
+    const z = zustand.current;
+    const nebenan = weg === "bild" ? z.bilder : weg === "schnell" ? z.schnell : null;
+    const k = nebenan?.readyState === "open" ? nebenan : z.kanal;
     if (k?.readyState !== "open") return false;
-    k.send(JSON.stringify(nachricht));
-    return true;
+    try {
+      k.send(JSON.stringify(nachricht));
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Wartet, bis im Bilder-Kanal wenig ansteht – Seitenbilder sollen Ton und
+  // Video nicht die Leitung wegnehmen. false, wenn der Kanal weg ist.
+  const bildPlatz = useCallback(async () => {
+    const k = zustand.current.bilder;
+    if (k?.readyState !== "open") return zustand.current.kanal?.readyState === "open";
+    if (k.bufferedAmount <= k.bufferedAmountLowThreshold) return true;
+    await new Promise((ok) => {
+      const fertig = () => {
+        k.removeEventListener("bufferedamountlow", fertig);
+        k.removeEventListener("close", fertig);
+        clearTimeout(t);
+        ok();
+      };
+      const t = setTimeout(fertig, 5000);
+      k.addEventListener("bufferedamountlow", fertig);
+      k.addEventListener("close", fertig);
+    });
+    return k.readyState === "open";
   }, []);
 
   const kanal = useCallback(() => zustand.current.kanal, []);
 
-  return { status, rolle, fern, fehler, qualitaet, senden, kanal };
+  return { status, rolle, fern, fehler, qualitaet, senden, bildPlatz, kanal };
 }

@@ -61,7 +61,11 @@ function FernTon({ ref, stream, onBlockiert }) {
 function VideoKachel({ stream, gespiegelt, beschriftung, platzhalter, klein }) {
   const ref = useRef(null);
   useEffect(() => {
-    if (ref.current && ref.current.srcObject !== stream) ref.current.srcObject = stream || null;
+    const el = ref.current;
+    if (!el || el.srcObject === stream) return;
+    el.srcObject = stream || null;
+    // Safari startet ein neu zugewiesenes Video nicht immer von selbst.
+    if (stream) el.play().catch(() => null);
   }, [stream]);
   const hatBild = Boolean(stream?.getVideoTracks().some((t) => t.enabled && t.readyState === "live"));
   return (
@@ -191,7 +195,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     },
     [unterlagenHolen, ticket]
   );
-  const { status, rolle, fern, fehler, qualitaet, senden } = useVerbindung({
+  const { status, rolle, fern, fehler, qualitaet, senden, bildPlatz } = useVerbindung({
     token,
     ticket,
     lokal,
@@ -462,6 +466,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
               speicherSchluessel={`${token}:${rolle}`}
               titel={titel}
               onSenden={senden}
+              onBildPlatz={bildPlatz}
               onGastDarf={setGastDarf}
               mitnehmenErlaubt={mitnehmenErlaubt}
             />

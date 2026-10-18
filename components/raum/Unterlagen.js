@@ -8,18 +8,9 @@ import { ANNEHMEN, groesse } from "@/components/raum/unterlagenApi";
 // freigeben, entfernen. Gast: freigegebene Unterlagen herunterladen.
 
 function Endung({ endung }) {
-  const farbe = /pptx?|pps|odp|key/.test(endung)
-    ? "bg-[#d9572b]"
-    : /docx?|odt|rtf|pages|txt/.test(endung)
-      ? "bg-[#2b6cd9]"
-      : /xlsx?|ods|csv/.test(endung)
-        ? "bg-[#1f8a4c]"
-        : endung === "pdf"
-          ? "bg-[#c8312f]"
-          : "bg-[#6b7785]";
   return (
-    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[11px] font-bold uppercase tracking-wide text-white ${farbe}`}>
-      {endung.slice(0, 4) || "?"}
+    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[11px] font-bold uppercase tracking-wide text-white ${endung === "pdf" ? "bg-[#c8312f]" : "bg-[#2b6cd9]"}`}>
+      {endung === "pdf" ? "PDF" : "BILD"}
     </span>
   );
 }
@@ -120,7 +111,7 @@ export default function Unterlagen({ rolle, token, unterlagen, laden, fehler, ho
 
           {unterlagen.length === 0 && !laden && !hochladen ? (
             <div className="mx-2 rounded-2xl border border-dashed border-black/15 px-5 py-8 text-center text-[14px] text-[#18324a]/60">
-              {host ? "Noch keine Unterlagen. PowerPoint, PDF, Word oder Bilder hinzufügen – oder einfach hierher ziehen." : "Noch keine Unterlagen freigegeben."}
+              {host ? "Noch keine Unterlagen. PDFs oder Bilder hinzufügen – oder einfach hierher ziehen. Präsentationen vorher als PDF speichern." : "Noch keine Unterlagen freigegeben."}
             </div>
           ) : null}
 
@@ -151,17 +142,13 @@ export default function Unterlagen({ rolle, token, unterlagen, laden, fehler, ho
                 </div>
                 {host ? (
                   <div className="mt-2 flex flex-wrap items-center gap-2 pl-14">
-                    {u.anzeige ? (
-                      <button
-                        type="button"
-                        onClick={() => onZeigen(u)}
-                        className="rounded-full bg-[#18324a] px-3.5 py-1.5 text-[13px] font-semibold text-white transition active:scale-95"
-                      >
-                        Auf der Tafel zeigen
-                      </button>
-                    ) : (
-                      <span className="text-[12.5px] text-[#18324a]/55">{u.hinweis || "Nur zum Herunterladen."}</span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onZeigen(u)}
+                      className="rounded-full bg-[#18324a] px-3.5 py-1.5 text-[13px] font-semibold text-white transition active:scale-95"
+                    >
+                      Auf der Tafel zeigen
+                    </button>
                     <button
                       type="button"
                       onClick={() => onSpeichern(u)}

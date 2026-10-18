@@ -1,7 +1,7 @@
 # Unterlagen im Unterrichtsraum
 
-Jill legt vor oder während einer Online-Stunde Dateien bereit (PowerPoint, PDF,
-Word, Excel, Bilder …), zeigt sie auf der Tafel und gibt einzelne für die
+Jill legt vor oder während einer Online-Stunde Dateien bereit (PDFs und Bilder;
+Präsentationen vorher als PDF speichern), zeigt sie auf der Tafel und gibt einzelne für die
 Schülerin zum Herunterladen frei. Mit **„Stunde beenden“** im Raum wird alles
 vom Server gelöscht.
 
@@ -31,9 +31,8 @@ vom Server gelöscht.
   der Proxy dort große Anfragen kürzt.
 - Grenzen: 50 MB je Datei, 200 MB und 20 Dateien je Stunde. nginx braucht
   dafür eine eigene `location` (siehe unten).
-- Anzeige: PDF und Bilder direkt; PowerPoint/Word/Excel wandelt LibreOffice
-  (`soffice --headless --convert-to pdf`) beim Hochladen in ein PDF. Fehlt
-  LibreOffice, lässt sich die Datei nur herunterladen.
+- Nur PDF, JPG, PNG, WebP, GIF (Entscheidung 18.10.2026: alles als PDF,
+  daher kein LibreOffice auf dem Server).
 - Die Schülerin bekommt nie die Datei für die Anzeige, nur die gerenderten
   Tafelseiten über den Datenkanal. Nicht freigegebene Unterlagen-Seiten fehlen
   in ihrem Tafel-PDF und werden in ihrem Browser nicht gespeichert.
@@ -45,7 +44,6 @@ vom Server gelöscht.
 ## Server (einmalig, als root)
 
 ```bash
-apt install -y --no-install-recommends libreoffice-impress libreoffice-writer libreoffice-calc fonts-dejavu fonts-liberation
 install -d -o deploy -g deploy -m 700 /var/lib/lernsprung-raum
 echo 'RAUM_DATEIEN_PATH=/var/lib/lernsprung-raum' >> /etc/lernsprung/.env.production
 ```

@@ -7,7 +7,6 @@ import path from "node:path";
 // Eigener Ablageordner je Testlauf – vor dem Import gesetzt.
 const ROOT = await fs.mkdtemp(path.join(os.tmpdir(), "raum-unterlagen-test-"));
 process.env.RAUM_DATEIEN_PATH = ROOT;
-process.env.SOFFICE_PATH = "/gibt/es/nicht";
 const u = await import("../lib/raum/unterlagen.js");
 
 function strom(text) {
@@ -38,10 +37,7 @@ test("Löschfrist: Tag nach dem Termin, ohne Termin 14 Tage", () => {
 test("Hochladen, Freigeben, Gast sieht nur Freigegebenes", async () => {
   const id = "buchung-abc123";
   const pdf = await u.hochladen(id, { name: "Arbeitsblatt.pdf", strom: strom("%PDF-1.4 test") });
-  assert.equal(pdf.anzeige, "pdf");
-  const pptx = await u.hochladen(id, { name: "Folien.pptx", strom: strom("pk") });
-  assert.equal(pptx.anzeige, null, "ohne LibreOffice keine Anzeige");
-  assert.match(pptx.hinweis, /LibreOffice/);
+  await u.hochladen(id, { name: "Foto.JPG", strom: strom("jpg") });
 
   assert.equal((await u.liste(id, "host")).length, 2);
   assert.equal((await u.liste(id, "gast")).length, 0);
@@ -50,10 +46,9 @@ test("Hochladen, Freigeben, Gast sieht nur Freigegebenes", async () => {
   await u.aendern(id, pdf.id, { freigegeben: true });
   const gast = await u.liste(id, "gast");
   assert.deepEqual(gast.map((d) => d.name), ["Arbeitsblatt.pdf"]);
-  assert.equal("hinweis" in gast[0], false, "Gast bekommt keine Interna");
+  assert.equal("hochgeladenAm" in gast[0], false, "Gast bekommt keine Interna");
   const { pfad } = await u.lesen(id, pdf.id, { rolle: "gast" });
   assert.equal(await fs.readFile(pfad, "utf8"), "%PDF-1.4 test");
-  await assert.rejects(u.lesen(id, pdf.id, { rolle: "gast", variante: "anzeige" }), /nicht gefunden/);
 
   assert.equal(await u.heruntergeladen(id, pdf.id), true);
   assert.equal(await u.heruntergeladen(id, pdf.id), false, "nur das erste Mal");
@@ -62,7 +57,8 @@ test("Hochladen, Freigeben, Gast sieht nur Freigegebenes", async () => {
 
 test("Unerlaubte Typen, leere und zu viele Dateien", async () => {
   const id = "buchung-typen1";
-  await assert.rejects(u.hochladen(id, { name: "virus.exe", strom: strom("x") }), /Dateityp/);
+  await assert.rejects(u.hochladen(id, { name: "virus.exe", strom: strom("x") }), /Nur PDFs/);
+  await assert.rejects(u.hochladen(id, { name: "Folien.pptx", strom: strom("x") }), /als PDF/);
   await assert.rejects(u.hochladen(id, { name: "leer.pdf", strom: strom("") }), /leer/);
   for (let i = 0; i < u.MAX_DATEIEN; i++) await u.hochladen(id, { name: `b${i}.png`, strom: strom("x") });
   await assert.rejects(u.hochladen(id, { name: "eins-zu-viel.png", strom: strom("x") }), /Höchstens/);

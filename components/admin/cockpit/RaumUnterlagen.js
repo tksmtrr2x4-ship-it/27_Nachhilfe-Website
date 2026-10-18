@@ -134,7 +134,7 @@ export default function RaumUnterlagen({ booking, raumHolen, confirm, onRaumAnge
   return (
     <Section title="Unterlagen für den Raum">
       <p className="mb-3 text-[13px] text-[var(--ck-muted)]">
-        PowerPoint, PDF, Word oder Bilder vorab hochladen. Im Raum zeigst du sie auf der Tafel; mit dem Schalter darf die Schülerin sie
+        PDFs oder Bilder vorab hochladen (Präsentationen vorher als PDF speichern). Im Raum zeigst du sie auf der Tafel; mit dem Schalter darf die Schülerin sie
         herunterladen. Beim Schließen des Raums wird alles vom Server gelöscht.
       </p>
 
@@ -149,7 +149,6 @@ export default function RaumUnterlagen({ booking, raumHolen, confirm, onRaumAnge
                 <span className="block truncate text-[15px]">{u.name}</span>
                 <span className="block truncate text-[12.5px] text-[var(--ck-muted)]">
                   {groesse(u.bytes)}
-                  {u.anzeige ? "" : ` · ${u.hinweis || "nur zum Herunterladen"}`}
                   {u.freigegeben ? (u.heruntergeladenAm ? " · heruntergeladen ✓" : " · freigegeben") : ""}
                 </span>
               </button>
@@ -175,7 +174,7 @@ export default function RaumUnterlagen({ booking, raumHolen, confirm, onRaumAnge
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--ck-surface2)]">
             <div className="h-full rounded-full bg-[var(--ck-accent)] transition-[width]" style={{ width: `${Math.round(hochladen.anteil * 100)}%` }} />
           </div>
-          <p className="mt-1 text-[12px] text-[var(--ck-muted)]">{hochladen.anteil >= 1 ? "Wird vorbereitet (PowerPoint/Word werden umgewandelt) …" : "Wird hochgeladen …"}</p>
+          <p className="mt-1 text-[12px] text-[var(--ck-muted)]">{hochladen.anteil >= 1 ? "Wird gespeichert …" : "Wird hochgeladen …"}</p>
         </div>
       ) : null}
       {fehler ? <p className="mb-3 text-[13px] text-[var(--ck-neg)]">{fehler}</p> : null}

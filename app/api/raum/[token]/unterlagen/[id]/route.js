@@ -4,9 +4,8 @@ import { teilnehmerFuer } from "@/lib/raum/zugang";
 import { anAlle } from "@/lib/raum/hub";
 import { heruntergeladen, lesen } from "@/lib/raum/unterlagen";
 
-// Eine Unterlage ausliefern. Host: Original oder Anzeige-PDF (?art=anzeige,
-// für die Tafel). Gast: nur freigegebene Originale – das erste Herunterladen
-// wird vermerkt und Jill angezeigt.
+// Eine Unterlage ausliefern. Host: jede (auch für die Tafel). Gast: nur
+// freigegebene – das erste Herunterladen wird vermerkt und Jill angezeigt.
 export const dynamic = "force-dynamic";
 
 function dateiname(name) {
@@ -18,9 +17,8 @@ export async function GET(request, { params }) {
   const { token, id } = await params;
   const t = await teilnehmerFuer(token, request.headers.get("x-raum-ticket"));
   if (t.fehler) return Response.json({ error: t.fehler }, { status: t.status });
-  const variante = new URL(request.url).searchParams.get("art") === "anzeige" ? "anzeige" : "original";
   try {
-    const { pfad, typ, name } = await lesen(t.booking._id, String(id), { rolle: t.rolle, variante });
+    const { pfad, typ, name } = await lesen(t.booking._id, String(id), { rolle: t.rolle });
     const groesse = (await fs.promises.stat(pfad)).size;
     if (t.rolle !== "host" && (await heruntergeladen(t.booking._id, String(id)))) {
       anAlle(token, "unterlagen", {}, { rolle: "host" });

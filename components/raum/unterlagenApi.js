@@ -4,8 +4,7 @@
 // Genutzt im Raum und in der Verwaltung (dort mit einem Host-Ticket aus
 // /api/admin/raum).
 
-export const ANNEHMEN =
-  ".pdf,.png,.jpg,.jpeg,.webp,.gif,.heic,.ppt,.pptx,.pps,.ppsx,.odp,.key,.doc,.docx,.odt,.rtf,.pages,.xls,.xlsx,.ods,.txt,.csv,.mp3,.m4a,.mp4,.zip";
+export const ANNEHMEN = ".pdf,.png,.jpg,.jpeg,.webp,.gif,application/pdf,image/png,image/jpeg,image/webp,image/gif";
 
 function kopf(ticket) {
   return ticket ? { "x-raum-ticket": ticket } : {};
@@ -62,11 +61,10 @@ export async function unterlageLoeschen(token, ticket, id) {
 
 // Für die Tafel: das PDF bzw. Bild als File.
 export async function unterlageFuerTafel(token, ticket, unterlage) {
-  const res = await fetch(`/api/raum/${token}/unterlagen/${unterlage.id}?art=anzeige`, { headers: kopf(ticket), cache: "no-store" });
+  const res = await fetch(`/api/raum/${token}/unterlagen/${unterlage.id}`, { headers: kopf(ticket), cache: "no-store" });
   if (!res.ok) await antwort(res);
   const blob = await res.blob();
-  const name = blob.type === "application/pdf" ? unterlage.name.replace(/\.[^.]+$/, "") + ".pdf" : unterlage.name;
-  return new File([blob], name, { type: blob.type });
+  return new File([blob], unterlage.name, { type: blob.type });
 }
 
 // Host lädt das Original herunter (mit Ticket, daher nicht per Link).

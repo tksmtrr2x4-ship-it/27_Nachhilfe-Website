@@ -172,6 +172,54 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
     return () => ro.disconnect();
   }, [ansicht.w, ansicht.h]);
 
+  // ---------- Mitscrollen ----------
+  // Jill scrollt, der Gast folgt: Übertragen wird, welche Stelle der Seite
+  // (in Seiteneinheiten) in der Mitte des Bildschirms steht – so passt es
+  // auch bei unterschiedlich großen Bildschirmen. Der Gast kann kurz selbst
+  // scrollen; beim nächsten Scrollen von Jill folgt er wieder.
+  const RAND = 12; // p-3 der Hülle
+  const blick = useRef(null); // Gast: zuletzt empfangene Stelle { seiteId, y }
+  const blickTimer = useRef(0);
+  const massRef = useRef(mass);
+  useEffect(() => {
+    massRef.current = mass;
+  }, [mass]);
+
+  const blickAnwenden = useCallback(() => {
+    const el = huelle.current;
+    const b = blick.current;
+    if (!el || !b || b.seiteId !== seite().id) return;
+    el.scrollTop = Math.max(0, b.y * massRef.current.faktor + RAND - el.clientHeight / 2);
+    // seite() liest nur Refs
+  }, []);
+
+  const blickSenden = useCallback(() => {
+    const el = huelle.current;
+    if (!host || !el) return;
+    const y = (el.scrollTop + el.clientHeight / 2 - RAND) / massRef.current.faktor;
+    onSenden?.({ t: "blick", seiteId: seite().id, y: Math.round(Math.max(0, y)) });
+  }, [host, onSenden]);
+
+  // Höchstens alle 60 ms senden, die letzte Stelle immer.
+  function beimScrollen() {
+    if (!host || blickTimer.current) return;
+    blickTimer.current = setTimeout(() => {
+      blickTimer.current = 0;
+      blickSenden();
+    }, 60);
+  }
+
+  // Gast: nach Größenänderung oder Seitenwechsel wieder an die Stelle.
+  useLayoutEffect(() => {
+    if (!host) blickAnwenden();
+  }, [host, mass, aktuelle, blickAnwenden]);
+  // Host: nach Seitenwechsel die neue Stelle melden.
+  useEffect(() => {
+    if (!host) return undefined;
+    const t = setTimeout(blickSenden, 120);
+    return () => clearTimeout(t);
+  }, [host, aktuelle, mass, blickSenden]);
+
   // ---------- Zeichnen ----------
   const strichZeichnen = useCallback((ctx, s) => {
     ctx.save();
@@ -249,8 +297,9 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
 
   const standSenden = useCallback(async () => {
     senden({ t: "stand", seiten: seitenRef.current.map(ohneBild), aktuelle: aktuelleRef.current, gastDarf });
+    blickSenden();
     for (const s of seitenRef.current) await bildSenden(s);
-  }, [senden, bildSenden, gastDarf]);
+  }, [senden, bildSenden, gastDarf, blickSenden]);
 
   // ---------- Seiten ----------
   const geheZu = useCallback(
@@ -529,6 +578,10 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         }
       } else if (n.t === "seite-neu" && !host) {
         if (!finde(n.seite.id)) seiten.splice(n.index, 0, { ...n.seite, hg: n.seite.hg ? { ...n.seite.hg, url: null } : null });
+      } else if (n.t === "blick" && !host) {
+        blick.current = { seiteId: n.seiteId, y: Number(n.y) || 0 };
+        blickAnwenden();
+        return;
       } else if (n.t === "gehe" && !host) {
         geheZu(n.index, { weitergeben: false });
       } else if (n.t === "s-start") {
@@ -673,6 +726,7 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
       <div
         ref={huelle}
         className="relative min-h-0 flex-1 overflow-auto bg-[#e6e6e3] p-3 [-webkit-touch-callout:none] [-webkit-user-select:none] select-none"
+        onScroll={beimScrollen}
         onDragOver={(e) => host && e.preventDefault()}
         onDrop={(e) => {
           if (!host) return;

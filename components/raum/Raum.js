@@ -31,12 +31,31 @@ const TICKET = (token) => `raum_host_${token}`;
 
 // Ton läuft über ein eigenes, unsichtbares Element – die Videos sind alle
 // stumm. So spielt nichts doppelt, wenn das Bild zweimal zu sehen ist.
-function FernTon({ stream }) {
-  const ref = useRef(null);
+//
+// Nur die Tonspuren und nur neu zuweisen, wenn sich die Spuren ändern: Safari
+// (iPad/iPhone) startet den Ton nach jedem Neuzuweisen nicht wieder von
+// selbst. Deshalb wird ausdrücklich play() gerufen; verweigert der Browser
+// das, meldet onBlockiert(true) und der Raum zeigt „Ton einschalten“.
+function FernTon({ ref, stream, onBlockiert }) {
+  const spuren = stream?.getAudioTracks() || [];
+  const schluessel = spuren.map((t) => t.id).join(",");
   useEffect(() => {
-    if (ref.current && ref.current.srcObject !== stream) ref.current.srcObject = stream || null;
-  }, [stream]);
-  return <audio ref={ref} autoPlay playsInline className="hidden" />;
+    const el = ref.current;
+    if (!el) return;
+    const ton = stream?.getAudioTracks() || [];
+    if (!ton.length) {
+      el.srcObject = null;
+      return;
+    }
+    el.srcObject = new MediaStream(ton);
+    el.play()
+      .then(() => onBlockiert(false))
+      .catch(() => onBlockiert(true));
+    // nur bei geänderten Spuren (schluessel), nicht bei jedem neuen Stream-Objekt
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schluessel]);
+  // Nicht display:none – manche Browser spielen versteckte Elemente nicht ab.
+  return <audio ref={ref} autoPlay playsInline className="pointer-events-none absolute h-px w-px opacity-0" />;
 }
 
 function VideoKachel({ stream, gespiegelt, beschriftung, platzhalter, klein }) {
@@ -123,6 +142,14 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   const [schliessenFrage, setSchliessenFrage] = useState(false);
   const [schliesst, setSchliesst] = useState(false);
   const [geschlossen, setGeschlossen] = useState(null); // { geloescht }
+  const tonRef = useRef(null);
+  const [tonBlockiert, setTonBlockiert] = useState(false);
+  function tonEinschalten() {
+    tonRef.current
+      ?.play()
+      .then(() => setTonBlockiert(false))
+      .catch(() => setTonBlockiert(true));
+  }
 
   // Host-Ticket aus dem Anker übernehmen und sofort aus der Adresse nehmen.
   useEffect(() => {
@@ -299,6 +326,21 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   useEffect(() => {
     for (const t of lokal?.getVideoTracks() || []) t.enabled = kamera;
   }, [lokal, kamera]);
+  // Ton blockiert: Jedes Antippen irgendwo im Raum schaltet ihn ein.
+  useEffect(() => {
+    if (!tonBlockiert) return undefined;
+    const los = () => tonRef.current?.play().then(() => setTonBlockiert(false)).catch(() => null);
+    window.addEventListener("pointerdown", los, { once: true });
+    return () => window.removeEventListener("pointerdown", los);
+  }, [tonBlockiert]);
+  // Mikrofon unterwegs verloren (anderes Programm, Kopfhörer gezogen …)?
+  useEffect(() => {
+    const spur = lokal?.getAudioTracks()[0];
+    if (!spur) return undefined;
+    const weg = () => setMedienHinweis("Das Mikrofon wurde getrennt – bitte den Raum verlassen und neu betreten.");
+    spur.addEventListener("ended", weg);
+    return () => spur.removeEventListener("ended", weg);
+  }, [lokal]);
   // Beim Schließen des Tabs Kamera freigeben.
   useEffect(() => () => lokal?.getTracks().forEach((t) => t.stop()), [lokal]);
 
@@ -389,7 +431,19 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
       </header>
       {medienHinweis ? <p className="bg-[#f08a2c] px-4 py-1.5 text-[13px] text-[#1a2a38]">{medienHinweis}</p> : null}
 
-      <FernTon stream={fern} />
+      <FernTon ref={tonRef} stream={fern} onBlockiert={setTonBlockiert} />
+      {tonBlockiert && fern ? (
+        <button
+          type="button"
+          onClick={tonEinschalten}
+          className="fixed inset-x-4 top-16 z-50 mx-auto flex max-w-sm items-center justify-center gap-2 rounded-2xl bg-[#f08a2c] px-5 py-4 text-[16px] font-semibold text-[#1a2a38] shadow-2xl"
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4ZM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+          </svg>
+          Ton einschalten
+        </button>
+      ) : null}
       <main className="min-h-0 flex-1 px-2 pb-2 sm:px-3">
         {/* Die Tafel bleibt immer geladen – auch hinter dem großen Video –,
             damit nichts verloren geht, was in der Zeit ankommt. */}

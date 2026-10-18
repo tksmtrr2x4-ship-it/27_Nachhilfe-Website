@@ -44,6 +44,22 @@ export default async function MeetingPage({ params }) {
     );
   }
 
+  // Am Ende der Stunde von Jill geschlossen (Unterlagen gelöscht). Öffnet sie
+  // ihn aus der Verwaltung erneut, ist er wieder offen.
+  if (booking.raumGeschlossenAt) {
+    return (
+      <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-6 text-center text-white">
+        <div className="max-w-md">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6b06c]">Lernsprung · Unterrichtsraum</p>
+          <h1 className="mt-3 text-2xl font-semibold">Diese Stunde ist beendet</h1>
+          <p className="mt-3 text-white/75">
+            Der Raum ist geschlossen, die Unterlagen sind vom Server gelöscht. Vielen Dank fürs Mitmachen – bis zum nächsten Mal!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const raum = {
     titel: `${booking.subject || "Nachhilfe"} mit ${booking.studentName}`,
     termin: booking.requestedDate ? `${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : "",

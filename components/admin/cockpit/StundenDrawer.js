@@ -15,6 +15,7 @@ import { TagebuchFormular, downloadTagebuchblatt } from "@/components/admin/mana
 import LessonForm from "@/components/admin/management/LessonForm";
 import { useBuchungLoeschen } from "@/components/admin/management/useBuchungLoeschen";
 import PapierakteButton from "@/components/admin/PapierakteButton";
+import RaumUnterlagen from "@/components/admin/cockpit/RaumUnterlagen";
 import PaymentDialog from "@/components/admin/management/PaymentDialog";
 import { issueQuittung, openQuittung, quittungAction } from "@/components/admin/finanzen/quittungActions";
 import {
@@ -52,8 +53,8 @@ const REITER = [
 // Unterrichtsraum (components/raum/): als Host mit Ticket öffnen, für den
 // Gast den Link kopieren. Hat die Stunde noch keinen Raum, legt der Server
 // ihn dabei an (app/api/admin/raum).
-async function raumHolen(adminFetch, bookingId) {
-  return adminFetch("/api/admin/raum", { method: "POST", body: JSON.stringify({ bookingId }) });
+async function raumHolen(adminFetch, bookingId, { wiederOeffnen = false } = {}) {
+  return adminFetch("/api/admin/raum", { method: "POST", body: JSON.stringify({ bookingId, wiederOeffnen }) });
 }
 
 export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose, onChanged }) {
@@ -171,7 +172,7 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
     // Fenster sofort öffnen (sonst blockt Safari es nach dem Warten).
     const fenster = window.open("", "_blank");
     try {
-      const r = await raumHolen(adminFetch, l._id);
+      const r = await raumHolen(adminFetch, l._id, { wiederOeffnen: true });
       const ziel = `${window.location.origin}${r.link}#host=${r.ticket}`;
       if (fenster) fenster.location.href = ziel;
       else window.open(ziel, "_self");
@@ -181,6 +182,8 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
       notify(errorText(err));
     }
   }
+
+  const raumHolenFuerUnterlagen = useCallback(() => raumHolen(adminFetch, stundeId), [adminFetch, stundeId]);
 
   async function gastLinkKopieren() {
     try {
@@ -331,6 +334,16 @@ export default function StundenDrawer({ stundeId, reiter = "uebersicht", onClose
                     </Button>
                     <Button onClick={gastLinkKopieren}>Gast-Link kopieren</Button>
                   </div>
+                ) : null}
+
+                {online && l.status !== "cancelled" && l.status !== "pending" ? (
+                  <RaumUnterlagen
+                    key={l._id}
+                    booking={l}
+                    raumHolen={raumHolenFuerUnterlagen}
+                    confirm={confirm}
+                    onRaumAngelegt={() => !l.meetingToken && aktualisieren()}
+                  />
                 ) : null}
 
                 <AktionsGruppe>

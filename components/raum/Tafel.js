@@ -80,8 +80,17 @@ function Knopf({ aktiv, onClick, titel, children, disabled }) {
   );
 }
 
-export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden, onGastDarf }) {
+// Unterlagen (components/raum/Unterlagen.js) zeigt der Host über zeigen():
+// Ihre Seiten tragen die ID der Unterlage. Der Gast darf solche Seiten nur
+// mitnehmen (PDF-Export, Speicher im Browser), wenn Jill die Unterlage
+// freigegeben hat – mitnehmenErlaubt(unterlageId) sagt das.
+export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden, onGastDarf, mitnehmenErlaubt }) {
   const host = rolle === "host";
+  const erlaubtRef = useRef(mitnehmenErlaubt);
+  useEffect(() => {
+    erlaubtRef.current = mitnehmenErlaubt;
+  }, [mitnehmenErlaubt]);
+  const darfMit = useCallback((s) => host || !s.unterlage || Boolean(erlaubtRef.current?.(s.unterlage)), [host]);
   const seitenRef = useRef([leereSeite()]);
   const [aktuelle, setAktuelle] = useState(0);
   const aktuelleRef = useRef(0);
@@ -123,9 +132,12 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   const merken = useCallback(() => {
     clearTimeout(speicherTimer.current);
     speicherTimer.current = setTimeout(() => {
-      tafelSpeichern(speicherSchluessel, { seiten: seitenRef.current, aktuelle: aktuelleRef.current, gastDarf });
+      // Nicht freigegebene Unterlagen bleiben nicht auf dem Gerät des Gasts
+      // (Jill schickt sie beim Wiederverbinden ohnehin neu).
+      const seiten = seitenRef.current.map((s) => (darfMit(s) ? s : { ...s, hg: s.hg ? { ...s.hg, url: null } : null }));
+      tafelSpeichern(speicherSchluessel, { seiten, aktuelle: aktuelleRef.current, gastDarf });
     }, 800);
-  }, [speicherSchluessel, gastDarf]);
+  }, [speicherSchluessel, gastDarf, darfMit]);
 
   useEffect(() => {
     let aktiv = true;
@@ -428,11 +440,17 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   async function exportieren() {
     setArbeit("PDF wird erstellt …");
     try {
-      const bytes = await tafelAlsPdf(seitenRef.current, { titel });
+      const seiten = seitenRef.current.filter(darfMit);
+      if (!seiten.length) {
+        setMeldung("Diese Seiten gehören zu Unterlagen, die Jill noch nicht freigegeben hat.");
+        return;
+      }
+      const bytes = await tafelAlsPdf(seiten, { titel });
       const datum = new Date().toISOString().slice(0, 10);
       const name = `Tafel ${titel || "Lernsprung"} ${datum}.pdf`.replace(/[\\/:*?"<>|]+/g, "-");
       const wie = await pdfWeitergeben(bytes, name);
-      if (wie === "geladen") setMeldung("PDF geladen – auf dem iPad: Teilen → Goodnotes.");
+      if (seiten.length < seitenRef.current.length) setMeldung("PDF ohne die Unterlagen, die Jill nicht freigegeben hat.");
+      else if (wie === "geladen") setMeldung("PDF geladen – auf dem iPad: Teilen → Goodnotes.");
     } catch {
       setMeldung("Das PDF ließ sich nicht erstellen.");
     } finally {
@@ -464,6 +482,27 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   useImperativeHandle(ref, () => ({
     kanalOffen() {
       if (host) standSenden();
+    },
+    // Unterlage auf der Tafel zeigen: Ist sie schon da, zur ersten Seite
+    // springen, sonst ihre Seiten hinter der aktuellen einfügen.
+    async zeigen(datei, unterlageId) {
+      if (!host) return;
+      const schon = seitenRef.current.findIndex((x) => x.unterlage === unterlageId);
+      if (schon >= 0) {
+        geheZu(schon);
+        return;
+      }
+      try {
+        setArbeit(`${datei.name} wird geöffnet …`);
+        const { seiten, gekuerzt } = await dateiZuSeiten(datei, { beiFortschritt: (i, n) => setArbeit(`Seite ${i} von ${n} …`) });
+        for (const x of seiten) x.unterlage = unterlageId;
+        if (gekuerzt) setMeldung("Nur die ersten 40 Seiten werden gezeigt.");
+        await seitenEinfuegen(seiten);
+      } catch (err) {
+        setMeldung(err?.message || "Die Unterlage ließ sich nicht zeigen.");
+      } finally {
+        setArbeit("");
+      }
     },
     empfangen(n) {
       const seiten = seitenRef.current;

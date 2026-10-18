@@ -143,6 +143,13 @@ export default function DatenschutzPage() {
             zwischen den Geräten und bleibt bis zu 30 Tage im Speicher Ihres Browsers, damit beim
             Neuladen nichts verloren geht; über „Als PDF“ können Sie sie selbst sichern.
           </p>
+          <p className="mt-2">
+            Unterlagen, die ich für die Stunde bereitstelle (z. B. Arbeitsblätter oder Präsentationen),
+            liegen <strong>nur bis zum Ende der Stunde</strong> auf meinem Server: Schließe ich den Raum,
+            werden sie sofort gelöscht, spätestens aber einen Tag nach dem Termin automatisch. Sie sind
+            nicht Teil der Datensicherung. Ob eine freigegebene Unterlage heruntergeladen wurde, wird nur
+            für diese Stunde vermerkt und mit ihr gelöscht.
+          </p>
         </section>
 
         <section>

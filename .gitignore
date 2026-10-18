@@ -65,3 +65,6 @@ data/
 
 # pdf.js-Worker, kopiert von scripts/pdf-worker-kopieren.mjs
 /public/raum/pdf.worker.min.mjs
+
+# Unterlagen des Unterrichtsraums in der Entwicklung (lib/raum/unterlagen.js)
+/.raum-unterlagen/

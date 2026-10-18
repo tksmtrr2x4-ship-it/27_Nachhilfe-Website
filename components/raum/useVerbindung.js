@@ -13,7 +13,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // Teil und gibt bei gleichzeitigen Angeboten nach. Der Tafel-Kanal ist fest
 // vereinbart (negotiated, id 0) – so gibt es kein Wettrennen, wer ihn anlegt.
 //
-// status: "verbinde" | "warten" | "verbunden" | "unterbrochen" | "ersetzt" | "fehler"
+// status: "verbinde" | "warten" | "verbunden" | "unterbrochen" | "ersetzt" | "geschlossen" | "fehler"
+//
+// onEreignis(name, daten) bekommt die übrigen Ereignisse des Kanals, z. B.
+// „unterlagen“ (Liste geändert).
 
 function parseSse(puffer, beiEreignis) {
   let rest = puffer;
@@ -36,7 +39,7 @@ function parseSse(puffer, beiEreignis) {
   return rest;
 }
 
-export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOffen }) {
+export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOffen, onEreignis }) {
   const [status, setStatus] = useState("verbinde");
   const [rolle, setRolle] = useState(ticket ? "host" : "gast");
   const [fern, setFern] = useState(null);
@@ -44,8 +47,8 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
   const [qualitaet, setQualitaet] = useState("");
 
   const zustand = useRef({ id: null, peerId: null, pc: null, kanal: null, makingOffer: false, ignoreOffer: false, ice: null });
-  const rueckrufe = useRef({ onDaten, onKanalOffen });
-  rueckrufe.current = { onDaten, onKanalOffen };
+  const rueckrufe = useRef({ onDaten, onKanalOffen, onEreignis });
+  rueckrufe.current = { onDaten, onKanalOffen, onEreignis };
   const kopf = ticket ? { "x-raum-ticket": ticket } : {};
 
   const signal = useCallback(
@@ -186,13 +189,17 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
         const iceDaten = await ice.json();
         if (!ice.ok) {
           setFehler(iceDaten.error || "Der Raum ist gerade nicht erreichbar.");
-          setStatus("fehler");
+          setStatus(ice.status === 410 && /beendet/.test(iceDaten.error || "") ? "geschlossen" : "fehler");
           return;
         }
         zustand.current.ice = iceDaten.iceServers;
         setRolle(iceDaten.rolle);
 
         const res = await fetch(`/api/raum/${token}/kanal`, { headers: kopf, cache: "no-store" });
+        if (res.status === 410) {
+          setStatus("geschlossen");
+          return;
+        }
         if (!res.ok || !res.body) throw new Error("kein Kanal");
         wartezeit = 1000;
         leser = res.body.getReader();
@@ -227,6 +234,13 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
               beendet = true;
               schliessePc();
               setStatus("ersetzt");
+            } else if (ereignis === "geschlossen") {
+              // Jill hat den Raum am Ende der Stunde geschlossen.
+              beendet = true;
+              schliessePc();
+              setStatus("geschlossen");
+            } else if (ereignis === "unterlagen") {
+              rueckrufe.current.onEreignis?.(ereignis, daten);
             }
           });
         }

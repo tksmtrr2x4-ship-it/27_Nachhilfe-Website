@@ -173,8 +173,11 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     setGeprueft(true);
   }, [token]);
 
-  const onDaten = useCallback((n) => tafel.current?.empfangen(n), []);
-  const onKanalOffen = useCallback(() => tafel.current?.kanalOffen(), []);
+  const onDaten = useCallback((n, absender) => tafel.current?.empfangen(n, absender), []);
+  const onKanalOffen = useCallback((peer) => tafel.current?.kanalOffen(peer), []);
+  // Zweites Gerät von Jill (z. B. iPad mit Pencil): nur Tafel, ohne Kamera,
+  // Mikrofon und Ton – sonst hallt es, wenn beide Geräte im selben Zimmer sind.
+  const [nurTafel, setNurTafel] = useState(false);
 
   const unterlagenHolen = useCallback(async () => {
     setUnterlagenLaedt(true);
@@ -195,7 +198,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     },
     [unterlagenHolen, ticket]
   );
-  const { status, rolle, fern, fehler, qualitaet, senden, bildPlatz } = useVerbindung({
+  const { status, rolle, fern, teilnehmer, gastDa, zweitesGeraet, fehler, qualitaet, senden, bildPlatz } = useVerbindung({
     token,
     ticket,
     lokal,
@@ -293,8 +296,16 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     }
   }
 
-  async function beitreten() {
+  async function beitreten(alsTafel = false) {
     setVerlassen(false);
+    setNurTafel(alsTafel);
+    if (alsTafel) {
+      setKamera(false);
+      setMikro(false);
+      setLokal(new MediaStream());
+      setBereit(true);
+      return;
+    }
     let stream = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -349,9 +360,14 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   useEffect(() => () => lokal?.getTracks().forEach((t) => t.stop()), [lokal]);
 
   const gegenueber = host ? gastName : "Jill";
+  const zweitesText = zweitesGeraet ? " · 2. Gerät verbunden" : "";
+  // Zwei Geräte von Jill mit Mikrofon im selben Raum: Es hallt.
+  const zweiMikrofone = host && !nurTafel && mikro && teilnehmer.some((t) => t.rolle === "host" && t.stream?.getAudioTracks().length);
   const statusText =
-    status === "verbunden"
-      ? `Verbunden${qualitaet ? ` · ${qualitaet}` : ""}`
+    host && !gastDa && (status === "verbunden" || status === "warten")
+      ? `Warten auf ${gastName} …${zweitesText}`
+      : status === "verbunden"
+      ? `Verbunden${qualitaet ? ` · ${qualitaet}` : ""}${zweitesText}`
       : status === "warten"
         ? host
           ? `Warten auf ${gastName} …`
@@ -398,12 +414,27 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
           {verlassen ? <p className="mt-6 text-white/80">Sie haben den Raum verlassen.</p> : null}
           <button
             type="button"
-            onClick={beitreten}
+            onClick={() => beitreten(false)}
             disabled={!geprueft}
             className="mt-8 w-full rounded-full bg-[#f08a2c] px-6 py-4 text-[17px] font-semibold text-[#1a2a38] shadow-lg transition hover:bg-[#e07a1f] disabled:opacity-60"
           >
             {verlassen ? "Wieder betreten" : ticket ? "Raum öffnen (als Jill)" : "Raum betreten"}
           </button>
+          {ticket ? (
+            <button
+              type="button"
+              onClick={() => beitreten(true)}
+              disabled={!geprueft}
+              className="mt-3 w-full rounded-full bg-white/10 px-6 py-3.5 text-[16px] font-semibold text-white transition hover:bg-white/15 disabled:opacity-60"
+            >
+              Zweites Gerät: nur Tafel
+            </button>
+          ) : null}
+          {ticket ? (
+            <p className="mt-3 text-[13px] text-white/60">
+              Zum Beispiel Mac mit Kamera und iPad mit Pencil: Auf dem zweiten Gerät „nur Tafel“ wählen – ohne Kamera und Ton, damit nichts hallt.
+            </p>
+          ) : null}
           <p className="mt-4 text-[13px] leading-relaxed text-white/65">
             Der Browser fragt gleich nach Kamera und Mikrofon. Bild und Ton gehen direkt zwischen den beiden Geräten,
             verschlüsselt – nichts wird aufgezeichnet. Die Tafel wird nicht auf dem Server gespeichert; als PDF können Sie sie mitnehmen.
@@ -413,7 +444,9 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     );
   }
 
-  const videos = (
+  const videos = nurTafel ? (
+    <VideoKachel stream={fern} beschriftung={gegenueber} platzhalter={gegenueber.slice(0, 1)} klein />
+  ) : (
     <>
       <VideoKachel stream={fern} beschriftung={gegenueber} platzhalter={gegenueber.slice(0, 1)} klein />
       <VideoKachel stream={lokal} gespiegelt beschriftung="Sie" platzhalter="Sie" klein />
@@ -435,8 +468,15 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
       </header>
       {medienHinweis ? <p className="bg-[#f08a2c] px-4 py-1.5 text-[13px] text-[#1a2a38]">{medienHinweis}</p> : null}
 
-      <FernTon ref={tonRef} stream={fern} onBlockiert={setTonBlockiert} />
-      {tonBlockiert && fern ? (
+      {zweiMikrofone ? (
+        <p className="bg-[#f08a2c] px-4 py-1.5 text-[13px] text-[#1a2a38]">
+          Ihr zweites Gerät hat auch ein Mikrofon an – bitte dort stumm schalten oder „nur Tafel“ wählen, sonst hallt es.
+        </p>
+      ) : null}
+
+      {/* Das Tafel-Gerät spielt keinen Ton ab (sonst hallt es). */}
+      <FernTon ref={tonRef} stream={nurTafel ? null : fern} onBlockiert={setTonBlockiert} />
+      {tonBlockiert && fern && !nurTafel ? (
         <button
           type="button"
           onClick={tonEinschalten}
@@ -458,7 +498,13 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
           </div>
         </div>
         <div className={ansicht === "video" ? "hidden" : "flex h-full min-h-0 flex-col gap-2 lg:flex-row"}>
-          <div className="grid shrink-0 grid-cols-2 gap-2 lg:order-2 lg:w-[300px] lg:grid-cols-1 lg:content-start">{videos}</div>
+          <div
+            className={`grid shrink-0 gap-2 lg:order-2 lg:grid-cols-1 lg:content-start ${
+              nurTafel ? "w-40 grid-cols-1 self-end lg:w-[220px] lg:self-auto" : "grid-cols-2 lg:w-[300px]"
+            }`}
+          >
+            {videos}
+          </div>
           <div className="min-h-0 flex-1 overflow-hidden rounded-2xl text-[#18324a] lg:order-1" style={{ background: "#f7f7f5" }}>
             <Tafel
               ref={tafel}
@@ -478,12 +524,18 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
         className="flex items-center justify-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4"
         style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
       >
-        <Steuerknopf an={mikro} onClick={() => setMikro((v) => !v)} titel={mikro ? "Mikrofon aus" : "Mikrofon an"}>
-          <I n={mikro ? "mikro" : "mikroAus"} />
-        </Steuerknopf>
-        <Steuerknopf an={kamera} onClick={() => setKamera((v) => !v)} titel={kamera ? "Kamera aus" : "Kamera an"}>
-          <I n={kamera ? "kamera" : "kameraAus"} />
-        </Steuerknopf>
+        {nurTafel ? (
+          <span className="rounded-full bg-white/10 px-3 py-2 text-[13px] font-medium text-white/80">Tafel-Gerät</span>
+        ) : (
+          <>
+            <Steuerknopf an={mikro} onClick={() => setMikro((v) => !v)} titel={mikro ? "Mikrofon aus" : "Mikrofon an"}>
+              <I n={mikro ? "mikro" : "mikroAus"} />
+            </Steuerknopf>
+            <Steuerknopf an={kamera} onClick={() => setKamera((v) => !v)} titel={kamera ? "Kamera aus" : "Kamera an"}>
+              <I n={kamera ? "kamera" : "kameraAus"} />
+            </Steuerknopf>
+          </>
+        )}
         <Steuerknopf an onClick={() => setAnsicht((a) => (a === "tafel" ? "video" : "tafel"))} titel={ansicht === "tafel" ? "Großes Video" : "Tafel zeigen"}>
           <I n={ansicht === "tafel" ? "video" : "tafel"} />
         </Steuerknopf>

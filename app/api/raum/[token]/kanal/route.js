@@ -41,7 +41,9 @@ export async function GET(request, { params }) {
           // schon zu
         }
       };
-      id = betreten(token, t.rolle, senden, schliessen);
+      // Kennung des Geräts (Tab): Neu laden löst nur die eigene alte Verbindung ab.
+      const geraet = String(request.headers.get("x-raum-geraet") || "").slice(0, 64);
+      id = betreten(token, t.rolle, senden, schliessen, geraet);
       // Hält die Verbindung durch nginx und Mobilfunk offen.
       ping = setInterval(() => senden("ping", {}), 15000);
       request.signal.addEventListener("abort", aufraeumen);

@@ -211,8 +211,12 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   // auch bei unterschiedlich großen Bildschirmen. Der Gast kann kurz selbst
   // scrollen; beim nächsten Scrollen von Jill folgt er wieder.
   const RAND = 12; // p-3 der Hülle
-  const blick = useRef(null); // Gast: zuletzt empfangene Stelle { seiteId, y }
+  const blick = useRef(null); // zuletzt empfangene Stelle { seiteId, y }
   const blickTimer = useRef(0);
+  // Zwei Host-Geräte folgen einander: Was durch eine empfangene Stelle
+  // gescrollt wird, geht nicht wieder zurück (sonst schaukelt es sich auf).
+  const fremdBis = useRef(0);
+  const lokalerWechsel = useRef(false);
   const massRef = useRef(mass);
   useEffect(() => {
     massRef.current = mass;
@@ -222,6 +226,7 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
     const el = huelle.current;
     const b = blick.current;
     if (!el || !b || b.seiteId !== seite().id) return;
+    fremdBis.current = Date.now() + 250;
     el.scrollTop = Math.max(0, b.y * massRef.current.faktor + RAND - el.clientHeight / 2);
     // seite() liest nur Refs
   }, []);
@@ -235,7 +240,7 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
 
   // Höchstens alle 60 ms senden, die letzte Stelle immer.
   function beimScrollen() {
-    if (!host || blickTimer.current) return;
+    if (!host || blickTimer.current || Date.now() < fremdBis.current) return;
     blickTimer.current = setTimeout(() => {
       blickTimer.current = 0;
       blickSenden();
@@ -246,10 +251,13 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   useLayoutEffect(() => {
     if (!host) blickAnwenden();
   }, [host, mass, aktuelle, blickAnwenden]);
-  // Host: nach Seitenwechsel die neue Stelle melden.
+  // Host: nach eigenem Seitenwechsel die neue Stelle melden.
   useEffect(() => {
-    if (!host) return undefined;
-    const t = setTimeout(blickSenden, 120);
+    if (!host || !lokalerWechsel.current) return undefined;
+    const t = setTimeout(() => {
+      lokalerWechsel.current = false;
+      blickSenden();
+    }, 120);
     return () => clearTimeout(t);
   }, [host, aktuelle, mass, blickSenden]);
 
@@ -318,11 +326,13 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
   // dem Video die Leitung. Höchstens etwa 160 KB/s (auch bei schwachem Upload
   // bleibt Platz für Ton und Bild).
   const netzBilder = useRef(new Map()); // seiteId → kleinere Fassung
-  const gastHat = useRef(new Set()); // Seiten, deren Bild der Gast schon hat
-  const habeWarten = useRef(null);
-  const sendeLauf = useRef(0);
+  // Je Gerät (an): welche Bilder es schon hat, Warten auf seine Antwort, und
+  // ein Zähler, der einen veralteten Sendelauf abbricht.
+  const hatBilder = useRef(new Map()); // geraet → Set(seiteId)
+  const habeWarten = useRef(new Map()); // geraet → Rückruf
+  const sendeLauf = useRef(new Map()); // geraet → Nummer
   const bildSenden = useCallback(
-    async (s, lauf) => {
+    async (s, lauf, an) => {
       if (!s.hg?.url) return;
       let url = netzBilder.current.get(s.id);
       if (!url) {
@@ -331,40 +341,45 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
       }
       const teile = stuecke(url, 16000);
       for (let i = 0; i < teile.length; i++) {
-        if (lauf !== undefined && lauf !== sendeLauf.current) return;
-        if (onBildPlatz && !(await onBildPlatz())) return;
+        if (lauf !== undefined && lauf !== sendeLauf.current.get(an || "*")) return;
+        if (onBildPlatz && !(await onBildPlatz(an))) return;
         const start = Date.now();
-        senden({ t: "hg", seiteId: s.id, i, n: teile.length, w: s.hg.w, h: s.hg.h, d: teile[i] }, "bild");
+        senden({ t: "hg", seiteId: s.id, i, n: teile.length, w: s.hg.w, h: s.hg.h, d: teile[i] }, "bild", an);
         const pause = 100 - (Date.now() - start);
         if (pause > 0) await new Promise((r) => setTimeout(r, pause));
       }
-      gastHat.current.add(s.id);
+      if (an) hatBilder.current.get(an)?.add(s.id);
     },
     [senden, onBildPlatz]
   );
 
   const ohneBild = (s) => ({ ...s, hg: s.hg ? { w: s.hg.w, h: s.hg.h, folgt: true } : null });
 
-  // Nach dem (Wieder-)Verbinden: Stand senden, kurz hören, welche Bilder der
-  // Gast schon hat (Speicher im Browser), dann die übrigen – die aktuelle
-  // Seite zuerst, dann die Nachbarn.
-  const standSenden = useCallback(async () => {
-    const lauf = ++sendeLauf.current;
-    gastHat.current = new Set();
-    senden({ t: "stand", seiten: seitenRef.current.map(ohneBild), aktuelle: aktuelleRef.current, gastDarf });
-    blickSenden();
-    await new Promise((ok) => {
-      habeWarten.current = ok;
-      setTimeout(ok, 600);
-    });
-    habeWarten.current = null;
-    const a = aktuelleRef.current;
-    const reihe = seitenRef.current.map((x, i) => [x, i]).sort((p, q) => Math.abs(p[1] - a) - Math.abs(q[1] - a));
-    for (const [x] of reihe) {
-      if (lauf !== sendeLauf.current) return;
-      if (!gastHat.current.has(x.id)) await bildSenden(x, lauf);
-    }
-  }, [senden, bildSenden, gastDarf, blickSenden]);
+  // An ein neu verbundenes Gerät (an; ohne: an alle): Stand senden, kurz
+  // hören, welche Bilder es schon hat (Speicher im Browser), dann die übrigen
+  // – die aktuelle Seite zuerst, dann die Nachbarn.
+  const standSenden = useCallback(
+    async (an) => {
+      const k = an || "*";
+      const lauf = (sendeLauf.current.get(k) || 0) + 1;
+      sendeLauf.current.set(k, lauf);
+      hatBilder.current.set(k, new Set());
+      senden({ t: "stand", seiten: seitenRef.current.map(ohneBild), aktuelle: aktuelleRef.current, gastDarf }, undefined, an);
+      blickSenden();
+      await new Promise((ok) => {
+        habeWarten.current.set(k, ok);
+        setTimeout(ok, 600);
+      });
+      habeWarten.current.delete(k);
+      const a = aktuelleRef.current;
+      const reihe = seitenRef.current.map((x, i) => [x, i]).sort((p, q) => Math.abs(p[1] - a) - Math.abs(q[1] - a));
+      for (const [x] of reihe) {
+        if (lauf !== sendeLauf.current.get(k)) return;
+        if (!hatBilder.current.get(k)?.has(x.id)) await bildSenden(x, lauf, an);
+      }
+    },
+    [senden, bildSenden, gastDarf, blickSenden]
+  );
 
   // ---------- Seiten ----------
   const geheZu = useCallback(
@@ -373,7 +388,10 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
       aktuelleRef.current = i;
       setAktuelle(i);
       neuZeichnen();
-      if (weitergeben && host) senden({ t: "gehe", index: i });
+      if (weitergeben && host) {
+        lokalerWechsel.current = true;
+        senden({ t: "gehe", index: i });
+      }
       merken();
     },
     [host, senden, merken, neuZeichnen]
@@ -594,8 +612,11 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
 
   // ---------- Empfangen ----------
   useImperativeHandle(ref, () => ({
-    kanalOffen() {
-      if (host) standSenden();
+    // Ein Gerät ist neu verbunden. Den Stand bekommt es von jedem Host-Gerät,
+    // das schon länger da ist (zwei Host-Geräte: das neuere übernimmt den
+    // Stand des älteren).
+    kanalOffen(peer) {
+      if (host && (peer?.rolle === "gast" || !peer?.aelter)) standSenden(peer?.id);
     },
     // Unterlage auf der Tafel zeigen: Ist sie schon da, zur ersten Seite
     // springen, sonst ihre Seiten hinter der aktuellen einfügen.
@@ -618,10 +639,13 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         setArbeit("");
       }
     },
-    empfangen(n) {
+    // absender: { von, rolle } – Seiten, Freigaben und Blick kommen nur von
+    // Host-Geräten (auch vom zweiten Gerät von Jill).
+    empfangen(n, absender) {
       const seiten = seitenRef.current;
       const finde = (id) => seiten.find((s) => s.id === id);
-      if (n.t === "stand" && !host) {
+      const vonHost = absender?.rolle === "host";
+      if (n.t === "stand" && vonHost) {
         const alt = new Map(seiten.map((s) => [s.id, s.hg?.url]));
         seitenRef.current = (n.seiten || []).map((s) => ({ ...s, hg: s.hg ? { ...s.hg, url: alt.get(s.id) || null } : null }));
         if (!seitenRef.current.length) seitenRef.current = [leereSeite()];
@@ -632,10 +656,12 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
         rueckgaengig.current = [];
         wiederholen.current = [];
         for (const x of seitenRef.current) bildNachtragen(x);
-        senden({ t: "habe", ids: seitenRef.current.filter((x) => x.hg?.url).map((x) => x.id) });
+        senden({ t: "habe", ids: seitenRef.current.filter((x) => x.hg?.url).map((x) => x.id) }, undefined, absender?.von);
       } else if (n.t === "habe" && host) {
-        for (const id of n.ids || []) gastHat.current.add(id);
-        habeWarten.current?.();
+        const k = absender?.von || "*";
+        if (!hatBilder.current.has(k)) hatBilder.current.set(k, new Set());
+        for (const id of n.ids || []) hatBilder.current.get(k).add(id);
+        habeWarten.current.get(k)?.();
         return;
       } else if (n.t === "hg") {
         const k = `${n.seiteId}`;
@@ -650,17 +676,17 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
           if (s) s.hg = { url: teile.join(""), w: n.w, h: n.h };
           else wartendeBilder.current.set(n.seiteId, { url: teile.join(""), w: n.w, h: n.h });
         }
-      } else if (n.t === "seite-neu" && !host) {
+      } else if (n.t === "seite-neu" && vonHost) {
         if (!finde(n.seite.id)) {
           const neu = { ...n.seite, hg: n.seite.hg ? { ...n.seite.hg, url: null } : null };
           bildNachtragen(neu);
           seiten.splice(n.index, 0, neu);
         }
-      } else if (n.t === "blick" && !host) {
+      } else if (n.t === "blick" && vonHost) {
         blick.current = { seiteId: n.seiteId, y: Number(n.y) || 0 };
         blickAnwenden();
         return;
-      } else if (n.t === "gehe" && !host) {
+      } else if (n.t === "gehe" && vonHost) {
         geheZu(n.index, { weitergeben: false });
       } else if (n.t === "s-start") {
         laufende.current.set(n.s.id, { ...n.s, punkte: [] });
@@ -680,7 +706,7 @@ export default function Tafel({ ref, rolle, speicherSchluessel, titel, onSenden,
       } else if (n.t === "weg") {
         const s = finde(n.seiteId);
         if (s) s.striche = s.striche.filter((x) => !n.ids.includes(x.id));
-      } else if (n.t === "freigabe" && !host) {
+      } else if (n.t === "freigabe" && vonHost) {
         setGastDarfState(Boolean(n.darf));
         onGastDarf?.(Boolean(n.darf));
       } else {

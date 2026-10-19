@@ -22,6 +22,7 @@ export async function POST(request, { params }) {
   if (!istImRaum(token, String(body.id || ""), t.rolle) || !TYPEN.has(body.typ)) {
     return Response.json({ error: "Nicht im Raum." }, { status: 403 });
   }
-  const zugestellt = weiterleiten(token, body.id, { typ: body.typ, daten: body.daten ?? null });
+  const an = typeof body.an === "string" ? body.an : undefined;
+  const zugestellt = weiterleiten(token, body.id, { typ: body.typ, daten: body.daten ?? null }, an);
   return Response.json({ ok: true, zugestellt });
 }

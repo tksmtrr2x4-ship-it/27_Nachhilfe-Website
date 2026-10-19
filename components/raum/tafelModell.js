@@ -2,10 +2,12 @@
 //
 // Eine Seite ist 1000 Einheiten breit, die Höhe folgt dem Seitenverhältnis
 // (leer: A4 quer). Striche speichern ihre Punkte als flache Liste [x, y, x, y …]
-// in diesen Einheiten – unabhängig von Bildschirm und Zoom.
+// in diesen Einheiten – unabhängig von Bildschirm und Zoom. Leere Seiten
+// sind A4 hochkant (wie ein Blatt im Block).
 
 export const SEITE_B = 1000;
 export const A4_QUER_H = Math.round(SEITE_B / Math.SQRT2); // 707
+export const A4_HOCH_H = Math.round(SEITE_B * Math.SQRT2); // 1414
 
 // Bewusst schlicht: vier Stiftfarben und Gelb für den Marker.
 export const FARBEN = [
@@ -36,7 +38,7 @@ export function neueId() {
 }
 
 export function leereSeite() {
-  return { id: neueId(), w: SEITE_B, h: A4_QUER_H, hg: null, striche: [] };
+  return { id: neueId(), w: SEITE_B, h: A4_HOCH_H, hg: null, striche: [] };
 }
 
 // Seite für ein Bild/PDF-Blatt: Breite 1000, Höhe nach Seitenverhältnis.

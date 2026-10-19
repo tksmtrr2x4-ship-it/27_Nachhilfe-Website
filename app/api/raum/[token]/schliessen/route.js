@@ -1,7 +1,7 @@
 import { teilnehmerFuer } from "@/lib/raum/zugang";
 import { raumBeenden } from "@/lib/raum/hub";
 import { alleLoeschen } from "@/lib/raum/unterlagen";
-import { updateBooking } from "@/lib/db";
+import { geschlossenMarkieren } from "@/lib/raum/raeume";
 
 // Jill schließt den Raum am Ende der Stunde: Alle Unterlagen werden vom
 // Server gelöscht, der Gast verlässt den Raum und kommt danach nicht mehr
@@ -13,7 +13,7 @@ export async function POST(request, { params }) {
   if (t.fehler) return Response.json({ error: t.fehler }, { status: t.status });
   if (t.rolle !== "host") return Response.json({ error: "Nur für Jill." }, { status: 403 });
   const geloescht = await alleLoeschen(t.booking._id);
-  await updateBooking(t.booking._id, { raumGeschlossenAt: new Date().toISOString() });
+  await geschlossenMarkieren(t.booking, new Date().toISOString());
   raumBeenden(token);
   return Response.json({ ok: true, geloescht });
 }

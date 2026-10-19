@@ -94,6 +94,8 @@ const PFADE = {
   pfeil: <path d="M9.5 6l6 6-6 6" />,
   zurueck: <path d="M14.5 6l-6 6 6 6" />,
   haken: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  raum: <path d="M3.5 7.5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2ZM15.5 10.5l5-3v9l-5-3" />,
+  teilen: <path d="M12 4v11M8 7.5 12 4l4 3.5M6 11v7.5a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5V11" />,
   uhr: (
     <>
       <circle cx="12" cy="12" r="8.6" />
@@ -218,6 +220,7 @@ PFADE.stunden = PFADE.kalender;
 export const SYMBOL_FUER_ANSICHT = {
   liste: "liste",
   monat: "monat",
+  raeume: "raum",
   allgemein: "website",
   rechnungen: "rechnung",
   umsatz: "umsatz",

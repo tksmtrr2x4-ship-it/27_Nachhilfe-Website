@@ -64,3 +64,14 @@ location ~ ^/api/raum/[a-f0-9]+/unterlagen$ {
     proxy_read_timeout 180s;
 }
 ```
+
+## Freie Räume (ohne Buchung)
+
+Verwaltung → Stunden → **Räume** → „Neuer Raum“ (Name, optional Gast) → Link
+teilen (iPhone/iPad: Teilen-Menü, Mac: kopieren) und „Öffnen“ als Host.
+Gespeichert in der Sammlung `raeume` (`lib/raum/raeume.js`), nicht in
+`bookings` – sie erscheinen nicht in Stunden, Rechnungen oder Journal. Im Raum
+verhalten sie sich wie eine Stunde (`alsSicht`): Unterlagen (Ordner = Raum-ID
+`raum-…`, Aufräumen 14 Tage nach dem Hochladen), „Stunde beenden“ schließt,
+„Öffnen“ öffnet wieder. Löschen entfernt Raum und Unterlagen; der Link führt
+danach ins Leere.

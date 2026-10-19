@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBookingByMeetingToken } from "@/lib/db";
+import { sichtFuerToken } from "@/lib/raum/raeume";
 import { bekannteRechnungsdaten } from "@/lib/invoicing/bekannteAdresse";
 import { formatDate, formatPrice } from "@/lib/format";
 import MeetingPayGate from "@/components/MeetingPayGate";
@@ -29,7 +29,8 @@ export const viewport = {
 
 export default async function MeetingPage({ params }) {
   const { token } = await params;
-  const booking = await getBookingByMeetingToken(token);
+  // Buchung oder freier Raum (Verwaltung → Stunden → Räume)
+  const booking = await sichtFuerToken(token);
 
   if (!booking) notFound();
 
@@ -61,7 +62,7 @@ export default async function MeetingPage({ params }) {
   }
 
   const raum = {
-    titel: `${booking.subject || "Nachhilfe"} mit ${booking.studentName}`,
+    titel: booking.frei ? booking.subject : `${booking.subject || "Nachhilfe"} mit ${booking.studentName}`,
     termin: booking.requestedDate ? `${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : "",
     gastName: String(booking.studentName || "Gast").split(" ")[0],
   };

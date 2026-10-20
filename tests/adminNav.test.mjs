@@ -27,3 +27,7 @@ test("Bereich und Ansicht", () => {
   assert.equal(subViewFrom("stunden", "monat"), "monat");
   assert.equal(subViewFrom("stunden", "quatsch"), "liste");
 });
+
+test("Alter Reiter „Räume“ führt ins Kommunikations-Tool", () => {
+  assert.equal(altesZiel("/admin/stunden", "?ansicht=raeume"), "/admin/kommunikation");
+});

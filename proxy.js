@@ -50,7 +50,9 @@ export function proxy(request) {
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
-  const isMeeting = request.nextUrl.pathname.startsWith("/meeting/");
+  // Kamera/Mikrofon: im Unterrichtsraum und im Kommunikations-Tool der
+  // Verwaltung (dort öffnet Jill die Räume im selben Fenster).
+  const isMeeting = request.nextUrl.pathname.startsWith("/meeting/") || request.nextUrl.pathname.startsWith("/admin/kommunikation");
 
   const cspHeader = `
     default-src 'self';

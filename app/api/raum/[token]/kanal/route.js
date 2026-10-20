@@ -1,5 +1,5 @@
 import { teilnehmerFuer } from "@/lib/raum/zugang";
-import { betreten, verlassen } from "@/lib/raum/hub";
+import { abmelden, anmelden } from "@/lib/raum/hub";
 
 // Ereigniskanal des Unterrichtsraums (Server-Sent Events): wer kommt und geht,
 // und die Nachrichten für den Verbindungsaufbau. Der Browser liest ihn per
@@ -12,14 +12,14 @@ export async function GET(request, { params }) {
   if (t.fehler) return Response.json({ error: t.fehler }, { status: t.status });
 
   const encoder = new TextEncoder();
-  let id = null;
+  let eintrag = null;
   let ping = null;
   let offen = true;
   const aufraeumen = () => {
     if (!offen) return;
     offen = false;
     clearInterval(ping);
-    if (id) verlassen(token, id);
+    abmelden(token, eintrag);
   };
 
   const stream = new ReadableStream({
@@ -43,7 +43,11 @@ export async function GET(request, { params }) {
       };
       // Kennung des Geräts (Tab): Neu laden löst nur die eigene alte Verbindung ab.
       const geraet = String(request.headers.get("x-raum-geraet") || "").slice(0, 64);
-      id = betreten(token, t.rolle, senden, schliessen, geraet);
+      // Gäste warten ggf. im Vorraum (lib/raum/hub.js, Einlass).
+      eintrag = anmelden(token, t.rolle, senden, schliessen, geraet, {
+        einlass: t.booking.raumEinlass || "direkt",
+        name: String(t.booking.studentName || "Gast").split(" ")[0],
+      });
       // Hält die Verbindung durch nginx und Mobilfunk offen.
       ping = setInterval(() => senden("ping", {}), 15000);
       request.signal.addEventListener("abort", aufraeumen);

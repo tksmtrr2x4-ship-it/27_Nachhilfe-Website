@@ -65,6 +65,7 @@ export default async function MeetingPage({ params }) {
     titel: booking.frei ? booking.subject : `${booking.subject || "Nachhilfe"} mit ${booking.studentName}`,
     termin: booking.requestedDate ? `${formatDate(booking.requestedDate)}, ${booking.requestedTime} Uhr` : "",
     gastName: String(booking.studentName || "Gast").split(" ")[0],
+    einlass: booking.raumEinlass || "direkt",
   };
 
   // Noch nicht bestätigt (z. B. Kennenlernen): Der Gast wartet auf Jills

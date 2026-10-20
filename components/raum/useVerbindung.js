@@ -21,7 +21,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // diese Kanäle ein (replaceTrack). Nie bieten beide gleichzeitig an – das hat
 // Safari (iPad/iPhone) ohne Bild gelassen. Datenkanäle sind fest vereinbart.
 //
-// status: "verbinde" | "warten" | "verbunden" | "unterbrochen" | "ersetzt" | "geschlossen" | "fehler"
+// status: "verbinde" | "vorraum" | "warten" | "verbunden" | "unterbrochen" | "ersetzt" | "abgelehnt" | "geschlossen" | "fehler"
+// vorraum: Gast wartet – "host-fehlt" (Jill ist noch nicht da) oder "anfrage"
+//          (Jill entscheidet). wartend: für Jill die Anfragen [{ id, name }].
 // teilnehmer: [{ id, rolle, verbunden, stream }] – alle anderen Geräte
 //
 // Rückrufe: onDaten(nachricht, { von, rolle }), onKanalOffen({ id, rolle, aelter }),
@@ -100,6 +102,8 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
   const [teilnehmer, setTeilnehmer] = useState([]);
   const [fehler, setFehler] = useState("");
   const [qualitaet, setQualitaet] = useState("");
+  const [vorraum, setVorraum] = useState(null);
+  const [wartend, setWartend] = useState([]);
 
   // peers: Map id → { id, rolle, aelter, pc, kanal, schnell, bilder, stream, anbieter }
   const zustand = useRef({ id: null, rolle: null, peers: new Map(), ice: null });
@@ -133,7 +137,7 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
       }))
     );
     setStatus((alt) => {
-      if (["ersetzt", "geschlossen", "fehler"].includes(alt)) return alt;
+      if (["ersetzt", "geschlossen", "fehler", "abgelehnt", "vorraum"].includes(alt)) return alt;
       if (!peers.length) return "warten";
       if (peers.some((p) => p.pc?.connectionState === "connected")) return "verbunden";
       if (peers.some((p) => ["disconnected", "failed"].includes(p.pc?.connectionState))) return "unterbrochen";
@@ -310,7 +314,22 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
           if (done) break;
           puffer = parseSse(puffer + dekoder.decode(value, { stream: true }), (ereignis, daten) => {
             const z = zustand.current;
-            if (ereignis === "hallo") {
+            if (ereignis === "vorraum") {
+              setVorraum(daten.grund || "host-fehlt");
+              setStatus("vorraum");
+            } else if (ereignis === "eingelassen") {
+              setVorraum(null);
+              setStatus("verbinde");
+            } else if (ereignis === "abgelehnt") {
+              beendet = true;
+              alleSchliessen();
+              setVorraum(null);
+              setStatus("abgelehnt");
+            } else if (ereignis === "anklopfen") {
+              setWartend(daten.wartend || []);
+            } else if (ereignis === "hallo") {
+              setVorraum(null);
+              setStatus((s) => (s === "vorraum" ? "warten" : s));
               alleSchliessen();
               z.id = daten.id;
               z.rolle = daten.rolle;
@@ -433,5 +452,18 @@ export function useVerbindung({ token, ticket, lokal, aktiv, onDaten, onKanalOff
   const gastDa = teilnehmer.some((t) => t.rolle === "gast");
   const zweitesGeraet = rolle === "host" && teilnehmer.some((t) => t.rolle === "host");
 
-  return { status, rolle, fern, teilnehmer, gastDa, zweitesGeraet, fehler, qualitaet, senden, bildPlatz };
+  // Jill: eine Anfrage annehmen oder ablehnen.
+  const einlassen = useCallback(
+    async (id, zulassen) => {
+      setWartend((w) => w.filter((x) => x.id !== id));
+      await fetch(`/api/raum/${token}/einlass`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(ticket ? { "x-raum-ticket": ticket } : {}) },
+        body: JSON.stringify({ id, zulassen }),
+      }).catch(() => null);
+    },
+    [token, ticket]
+  );
+
+  return { status, rolle, fern, teilnehmer, gastDa, zweitesGeraet, fehler, qualitaet, vorraum, wartend, einlassen, senden, bildPlatz };
 }

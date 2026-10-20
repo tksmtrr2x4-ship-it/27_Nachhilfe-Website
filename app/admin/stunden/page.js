@@ -5,12 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SUB_VIEWS, subViewFrom } from "@/lib/admin/nav";
 import UnterrichtView from "@/components/admin/unterricht/UnterrichtView";
 import KalenderView from "@/components/admin/kalender/KalenderView";
-import RaeumeView from "@/components/admin/raeume/RaeumeView";
 import { SubNav } from "@/components/admin/ui";
 
 // Bereich „Stunden“: dieselben Stunden als Liste (Anfragen, Termine,
-// Abrechnung – mit Filtern) oder als Monat, dazu freie Unterrichtsräume ohne
-// Buchung („Räume“). Früher zwei Bereiche
+// Abrechnung – mit Filtern) oder als Monat. Video-Räume (auch freie ohne
+// Buchung) liegen im Kommunikations-Tool (/admin/kommunikation). Früher zwei Bereiche
 // („Unterricht“, „Kalender“); alte Adressen leiten hierher weiter.
 //
 // Filter der Liste stehen in der Adresse, damit eine gefilterte Liste
@@ -50,8 +49,6 @@ function StundenSeite() {
       onWaehlen={(key) => router.replace(key === "liste" ? "/admin/stunden" : `/admin/stunden?ansicht=${key}`, { scroll: false })}
     />
   );
-
-  if (ansicht === "raeume") return <RaeumeView kopf={umschalter} />;
 
   return ansicht === "monat" ? (
     <div className="space-y-5">

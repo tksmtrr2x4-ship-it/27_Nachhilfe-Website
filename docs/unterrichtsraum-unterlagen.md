@@ -75,3 +75,20 @@ verhalten sie sich wie eine Stunde (`alsSicht`): Unterlagen (Ordner = Raum-ID
 `raum-…`, Aufräumen 14 Tage nach dem Hochladen), „Stunde beenden“ schließt,
 „Öffnen“ öffnet wieder. Löschen entfernt Raum und Unterlagen; der Link führt
 danach ins Leere.
+
+## Kommunikation, Vorraum und Einlass (20.10.2026)
+
+- **Kommunikation** (`/admin/kommunikation`, `components/raum/Kommunikation.js`):
+  App im Stil von FaceTime. Links anstehende Online-Stunden und Kennenlernen
+  (30 Tage) und freie Räume mit Live-Zustand, rechts Kamerabild und Karte mit
+  Beitreten, Nur Tafel, Link teilen, Unterlagen, Einlass. Beitreten öffnet
+  den Raum im selben Fenster. Daten: `app/api/admin/kommunikation`.
+  Kamera-Erlaubnis gilt nur nach echtem Seitenaufruf (Permissions-Policy in
+  `proxy.js`) – Einstieg deshalb per `<a>`, nicht per Next-Link.
+- **Vorraum** (`lib/raum/hub.js`): Ohne Jill kommt kein Gast in den Raum.
+  Einlass je Raum: `direkt` (sobald Jill da ist) oder `anfrage` (Jill lässt
+  einzeln ein, Banner „… möchte beitreten“). Gespeichert als `raumEinlass`
+  (Buchung) bzw. `einlass` (freier Raum); Schnittstelle
+  `app/api/raum/[token]/einlass` (POST entscheiden, PATCH Modus).
+- Unbestätigte Termine (z. B. Kennenlernen) sind für Gäste gesperrt, bis Jill
+  bestätigt; der Link kommt mit der Bestätigung.

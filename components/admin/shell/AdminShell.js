@@ -84,6 +84,22 @@ export default function AdminShell({ children, logo = null }) {
   const rest = AREAS.filter((a) => !HANDY_LEISTE.includes(a.slug));
   const untertitel = area?.slug === "uebersicht" ? heuteText() : area?.hint;
 
+  // Das Kommunikations-Tool ist eine eigene App im Vollbild (wie FaceTime).
+  if (pathname.startsWith("/admin/kommunikation")) {
+    return (
+      <div className="cockpit min-h-[100dvh]">
+        {children}
+        {notice ? (
+          <div className="pointer-events-none fixed inset-x-0 top-3 z-[100] flex justify-center px-4">
+            <div role="status" className="ck-glas-stark pointer-events-auto max-w-md rounded-[18px] px-4 py-3 text-[14px]">
+              {notice}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="cockpit min-h-[100dvh]">
       {/* ── Seitenleiste (Mac/iPad) ─────────────────────────────────── */}
@@ -124,6 +140,18 @@ export default function AdminShell({ children, logo = null }) {
         </nav>
 
         <div className="space-y-0.5 px-2.5 pb-3 xl:px-3">
+          {/* Die Video-App öffnet sich als eigene Ansicht (wie FaceTime). Bewusst
+              <a> statt Link: Erst ein echter Seitenaufruf bringt die
+              Kamera-Erlaubnis dieser Seite mit (Permissions-Policy, proxy.js). */}
+          <a
+            href="/admin/kommunikation"
+            title="Kommunikation – Video-Räume"
+            className="mb-1.5 flex w-full items-center justify-center gap-2.5 rounded-[12px] px-2 py-2.5 text-white transition active:scale-[0.98] xl:justify-start"
+            style={{ background: "#34c759" }}
+          >
+            <Ikone name="raum" className="h-[20px] w-[20px]" strich={2} />
+            <span className="hidden text-[14px] font-semibold xl:inline">Kommunikation</span>
+          </a>
           {unten.map((item) => (
             <LeistenEintrag key={item.slug} item={item} aktiv={item.slug === area?.slug} />
           ))}
@@ -259,6 +287,17 @@ export default function AdminShell({ children, logo = null }) {
                 </Link>
               ))}
             </div>
+
+            <a
+              href="/admin/kommunikation"
+              onClick={() => setMehr(false)}
+              className="mt-3 flex items-center gap-3 rounded-[14px] px-3.5 py-3 text-white"
+              style={{ background: "#34c759" }}
+            >
+              <Ikone name="raum" className="h-[22px] w-[22px]" strich={2} />
+              <span className="flex-1 text-[16px] font-semibold">Kommunikation</span>
+              <Ikone name="pfeil" className="h-4 w-4" strich={2.2} />
+            </a>
 
             <div className="mt-3 overflow-hidden rounded-[14px] bg-[var(--ck-surface2)]">
               <button type="button" onClick={buchungUmschalten} className="flex w-full items-center gap-3 px-3.5 py-3 text-left">

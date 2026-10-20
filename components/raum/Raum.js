@@ -58,7 +58,16 @@ function FernTon({ ref, stream, onBlockiert }) {
   return <audio ref={ref} autoPlay playsInline className="pointer-events-none absolute h-px w-px opacity-0" />;
 }
 
-function VideoKachel({ stream, gespiegelt, beschriftung, platzhalter, klein }) {
+// ---------- Bausteine im Stil von FaceTime ----------
+// Schwarzer Grund, das Gegenüber füllt das Bild, das eigene Bild klein in
+// einer Ecke (verschiebbar), runde Knöpfe auf dunklem Glas, Grün zum
+// Beitreten, Rot zum Auflegen.
+
+const GLAS = "bg-[rgba(38,38,40,0.62)] backdrop-blur-2xl backdrop-saturate-150";
+const GRUEN = "#34c759";
+const ROT = "#ff3b30";
+
+function Video({ stream, gespiegelt, className = "", platzhalter, gross = false }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -69,7 +78,7 @@ function VideoKachel({ stream, gespiegelt, beschriftung, platzhalter, klein }) {
   }, [stream]);
   const hatBild = Boolean(stream?.getVideoTracks().some((t) => t.enabled && t.readyState === "live"));
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-[#1d2a36] ${klein ? "aspect-video" : "h-full w-full"}`}>
+    <div className={`relative overflow-hidden bg-[#1c1c1e] ${className}`}>
       <video
         ref={ref}
         autoPlay
@@ -78,31 +87,80 @@ function VideoKachel({ stream, gespiegelt, beschriftung, platzhalter, klein }) {
         className={`h-full w-full object-cover ${gespiegelt ? "-scale-x-100" : ""} ${hatBild ? "" : "opacity-0"}`}
       />
       {!hatBild ? (
-        <div className="absolute inset-0 grid place-items-center">
-          <span className="grid h-14 w-14 place-items-center rounded-full bg-white/10 text-xl font-semibold text-white">{platzhalter}</span>
+        <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-[#3a3a3c] to-[#1c1c1e]">
+          <span
+            className={`grid place-items-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#636366] font-semibold text-white ${
+              gross ? "h-28 w-28 text-[44px]" : "h-12 w-12 text-[20px]"
+            }`}
+          >
+            {platzhalter}
+          </span>
         </div>
-      ) : null}
-      {beschriftung ? (
-        <span className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2 py-0.5 text-[12px] font-medium text-white">{beschriftung}</span>
       ) : null}
     </div>
   );
 }
 
-function Steuerknopf({ an, onClick, titel, gefahr, children }) {
+// Kleines Bild, das sich mit dem Finger in eine der vier Ecken schieben lässt.
+function Schwebend({ children, start = "unten-rechts", className = "", unten = 96 }) {
+  const [ecke, setEcke] = useState(start);
+  const [zug, setZug] = useState(null); // { dx, dy }
+  const anfang = useRef(null);
+  const pos = {
+    "oben-links": { top: 16, left: 16 },
+    "oben-rechts": { top: 16, right: 16 },
+    "unten-links": { bottom: unten, left: 16 },
+    "unten-rechts": { bottom: unten, right: 16 },
+  }[ecke];
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={titel}
-      aria-label={titel}
-      aria-pressed={an}
-      className={`grid h-11 w-11 place-items-center rounded-full transition active:scale-95 sm:h-12 sm:w-12 ${
-        gefahr ? "bg-[#d23535] text-white hover:bg-[#b82b2b]" : an ? "bg-white/15 text-white hover:bg-white/25" : "bg-white text-[#18324a]"
-      }`}
+    <div
+      className={`absolute z-20 touch-none select-none overflow-hidden rounded-[18px] shadow-[0_8px_30px_rgba(0,0,0,.45)] ring-1 ring-white/10 ${
+        zug ? "" : "transition-all duration-300 ease-out"
+      } ${className}`}
+      style={{ ...pos, transform: zug ? `translate(${zug.dx}px, ${zug.dy}px)` : undefined, marginTop: "env(safe-area-inset-top)" }}
+      onPointerDown={(e) => {
+        anfang.current = { x: e.clientX, y: e.clientY };
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        setZug({ dx: 0, dy: 0 });
+      }}
+      onPointerMove={(e) => anfang.current && setZug({ dx: e.clientX - anfang.current.x, dy: e.clientY - anfang.current.y })}
+      onPointerUp={(e) => {
+        if (!anfang.current) return;
+        anfang.current = null;
+        setZug(null);
+        setEcke(`${e.clientY < window.innerHeight / 2 ? "oben" : "unten"}-${e.clientX < window.innerWidth / 2 ? "links" : "rechts"}`);
+      }}
+      onPointerCancel={() => {
+        anfang.current = null;
+        setZug(null);
+      }}
     >
       {children}
-    </button>
+    </div>
+  );
+}
+
+function RundKnopf({ onClick, titel, aktiv = false, rot = false, gruen = false, children, badge, gross = false }) {
+  const farbe = rot ? "text-white" : gruen ? "text-white" : aktiv ? "bg-white text-[#1c1c1e]" : "bg-white/[0.16] text-white hover:bg-white/25";
+  return (
+    <span className="relative inline-flex flex-col items-center gap-1">
+      <button
+        type="button"
+        onClick={onClick}
+        title={titel}
+        aria-label={titel}
+        aria-pressed={aktiv}
+        className={`grid place-items-center rounded-full transition active:scale-95 ${gross ? "h-16 w-16" : "h-[52px] w-[52px]"} ${farbe}`}
+        style={rot ? { background: ROT } : gruen ? { background: GRUEN } : undefined}
+      >
+        {children}
+      </button>
+      {badge ? (
+        <span className="pointer-events-none absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold text-white" style={{ background: ROT }}>
+          {badge}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
@@ -111,21 +169,52 @@ const ICON = {
   mikroAus: <path d="M4 4l16 16M9 9v2.5a3 3 0 0 0 5.1 2.1M15 10V6.5a3 3 0 0 0-5.8-1.1M5.5 11a6.5 6.5 0 0 0 10.6 5M18.5 11a6.4 6.4 0 0 1-.5 2.5M12 17.5V21" />,
   kamera: <path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2ZM15.5 10.5l5-3v9l-5-3" />,
   kameraAus: <path d="M4 4l16 16M15.5 10.5l5-3v9l-5-3M15.5 12V7.5a2 2 0 0 0-2-2H9M5.5 5.6A2 2 0 0 0 3.5 7.5v9a2 2 0 0 0 2 2h8a2 2 0 0 0 1.9-1.4" />,
-  tafel: <path d="M3.5 5h17v11h-17ZM8 20l4-4 4 4" />,
-  video: <path d="M3.5 6.5h17v11h-17ZM10 9.5l4.5 2.5L10 14.5Z" />,
-  auflegen: <path d="M3 13.5c5-4.5 13-4.5 18 0l-2.2 2.6-3.6-1.4.2-2.4a10 10 0 0 0-6.8 0l.2 2.4-3.6 1.4Z" />,
+  tafel: <path d="M4 5.5h16v10H4ZM9 20h6M12 15.5V20M8 9.5l2.5 2.5L16 8" />,
+  video: <path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2ZM15.5 10.5l5-3v9l-5-3" />,
+  auflegen: <path d="M6 6l12 12M18 6 6 18" />,
   ordner: <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" />,
+  person: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0" />,
+  link: <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" />,
 };
 
-function I({ n }) {
+function I({ n, klein = false }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={klein ? "h-5 w-5" : "h-6 w-6"} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICON[n]}
     </svg>
   );
 }
 
-export default function Raum({ token, titel, termin, gastName = "Gast" }) {
+function initialVon(name) {
+  return String(name || "?").trim().slice(0, 1).toUpperCase() || "?";
+}
+
+// Einlass: Wer den Link hat, kommt direkt herein – oder fragt erst an.
+function EinlassWahl({ modus, onWahl }) {
+  return (
+    <div className="inline-flex rounded-[12px] bg-white/10 p-0.5 text-[13px] font-semibold">
+      {[
+        ["direkt", "Direkt herein"],
+        ["anfrage", "Mit Anfrage"],
+      ].map(([k, t]) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => onWahl(k)}
+          aria-pressed={modus === k}
+          className={`rounded-[10px] px-3 py-1.5 transition ${modus === k ? "bg-white text-[#1c1c1e] shadow" : "text-white/80 hover:text-white"}`}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Props aus dem Kommunikations-Tool (components/raum/Kommunikation.js):
+// ticketVorgabe (Host-Ticket), sofort ("voll" | "tafel": gleich beitreten),
+// onVerlassen (zurück zur Übersicht). einlass: "direkt" | "anfrage".
+export default function Raum({ token, titel, termin, gastName = "Gast", einlass = "direkt", ticketVorgabe = null, sofort = null, onVerlassen = null }) {
   const [ticket, setTicket] = useState(null);
   const [geprueft, setGeprueft] = useState(false);
   const [bereit, setBereit] = useState(false);
@@ -134,8 +223,12 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   const [medienHinweis, setMedienHinweis] = useState("");
   const [mikro, setMikro] = useState(true);
   const [kamera, setKamera] = useState(true);
-  const [ansicht, setAnsicht] = useState("tafel");
+  const [ansicht, setAnsicht] = useState("video");
   const [gastDarf, setGastDarf] = useState(false);
+  const [einlassModus, setEinlassModus] = useState(einlass === "anfrage" ? "anfrage" : "direkt");
+  const [einlassOffen, setEinlassOffen] = useState(false);
+  const [leisteSichtbar, setLeisteSichtbar] = useState(true);
+  const [auflegenMenue, setAuflegenMenue] = useState(false);
   const tafel = useRef(null);
   const [unterlagen, setUnterlagen] = useState([]);
   const [unterlagenOffen, setUnterlagenOffen] = useState(false);
@@ -158,6 +251,17 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   // Host-Ticket aus dem Anker übernehmen und sofort aus der Adresse nehmen.
   useEffect(() => {
     let t = null;
+    if (ticketVorgabe) {
+      try {
+        sessionStorage.setItem(TICKET(token), ticketVorgabe);
+      } catch {
+        // egal
+      }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTicket(ticketVorgabe);
+      setGeprueft(true);
+      return;
+    }
     try {
       const m = window.location.hash.match(/host=([\w.-]+)/);
       if (m) {
@@ -168,10 +272,10 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     } catch {
       // ohne Speicher bleibt man Gast
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setTicket(t);
     setGeprueft(true);
-  }, [token]);
+  }, [token, ticketVorgabe]);
 
   const onDaten = useCallback((n, absender) => tafel.current?.empfangen(n, absender), []);
   const onKanalOffen = useCallback((peer) => tafel.current?.kanalOffen(peer), []);
@@ -198,7 +302,7 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     },
     [unterlagenHolen, ticket]
   );
-  const { status, rolle, fern, teilnehmer, gastDa, zweitesGeraet, fehler, qualitaet, senden, bildPlatz } = useVerbindung({
+  const { status, rolle, fern, teilnehmer, gastDa, zweitesGeraet, fehler, qualitaet, vorraum, wartend, einlassen, senden, bildPlatz } = useVerbindung({
     token,
     ticket,
     lokal,
@@ -333,7 +437,61 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
     setLokal(null);
     setBereit(false);
     setVerlassen(true);
+    setAuflegenMenue(false);
+    onVerlassen?.();
   }
+
+  // Aus dem Kommunikations-Tool: gleich beitreten (der Klick dort zählt).
+  const sofortGestartet = useRef(false);
+  useEffect(() => {
+    if (!sofort || !geprueft || sofortGestartet.current) return;
+    sofortGestartet.current = true;
+    beitreten(sofort === "tafel");
+    // beitreten nur einmal
+     
+  }, [sofort, geprueft]);
+
+  async function einlassAendern(modus) {
+    setEinlassModus(modus);
+    await fetch(`/api/raum/${token}/einlass`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...(ticket ? { "x-raum-ticket": ticket } : {}) },
+      body: JSON.stringify({ modus }),
+    }).catch(() => null);
+  }
+
+  async function linkTeilen() {
+    const url = `${window.location.origin}/meeting/${token}`;
+    try {
+      if (navigator.share && window.matchMedia?.("(pointer: coarse)").matches) await navigator.share({ title: titel, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setHinweis("Link kopiert.");
+      }
+    } catch {
+      // abgebrochen
+    }
+  }
+
+  // Leiste blendet sich beim Video nach einigen Sekunden aus (wie FaceTime) –
+  // Antippen oder Bewegen holt sie zurück.
+  useEffect(() => {
+    if (!bereit) return undefined;
+    let t = null;
+    const zeigen = () => {
+      setLeisteSichtbar(true);
+      clearTimeout(t);
+      t = setTimeout(() => setLeisteSichtbar(false), 4500);
+    };
+    zeigen();
+    window.addEventListener("pointermove", zeigen);
+    window.addEventListener("pointerdown", zeigen);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pointermove", zeigen);
+      window.removeEventListener("pointerdown", zeigen);
+    };
+  }, [bereit]);
 
   useEffect(() => {
     for (const t of lokal?.getAudioTracks() || []) t.enabled = mikro;
@@ -360,215 +518,329 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
   useEffect(() => () => lokal?.getTracks().forEach((t) => t.stop()), [lokal]);
 
   const gegenueber = host ? gastName : "Jill";
-  const zweitesText = zweitesGeraet ? " · 2. Gerät verbunden" : "";
   // Zwei Geräte von Jill mit Mikrofon im selben Raum: Es hallt.
   const zweiMikrofone = host && !nurTafel && mikro && teilnehmer.some((t) => t.rolle === "host" && t.stream?.getAudioTracks().length);
+  const fernDa = host ? gastDa : teilnehmer.some((t) => t.rolle === "host");
   const statusText =
-    host && !gastDa && (status === "verbunden" || status === "warten")
-      ? `Warten auf ${gastName} …${zweitesText}`
-      : status === "verbunden"
-      ? `Verbunden${qualitaet ? ` · ${qualitaet}` : ""}${zweitesText}`
-      : status === "warten"
-        ? host
-          ? `Warten auf ${gastName} …`
-          : "Gleich geht’s los – Jill kommt in den Raum."
-        : status === "unterbrochen"
-          ? "Verbindung kurz weg – wird wiederhergestellt …"
-          : status === "ersetzt"
-            ? "Der Raum ist jetzt auf einem anderen Gerät offen."
-            : status === "geschlossen"
-              ? "Der Raum ist geschlossen."
-            : status === "fehler"
-              ? fehler
+    status === "verbunden" && fernDa
+      ? `Verbunden${qualitaet ? ` · ${qualitaet}` : ""}${zweitesGeraet ? " · 2. Gerät" : ""}`
+      : status === "unterbrochen"
+        ? "Verbindung kurz weg …"
+        : status === "ersetzt"
+          ? "Auf einem anderen Gerät geöffnet"
+          : status === "fehler"
+            ? fehler
+            : host
+              ? `Warten auf ${gastName} …${zweitesGeraet ? " · 2. Gerät verbunden" : ""}`
               : "Verbinde …";
+  const unterlagenZahl = host ? unterlagen.length : unterlagen.filter((u) => !u.heruntergeladen).length;
 
-  // Raum geschlossen: Jill nach „Stunde beenden“, der Gast durch das Ereignis.
-  if (geschlossen || (bereit && status === "geschlossen")) {
-    return (
-      <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-6 text-center text-white" style={{ colorScheme: "only light" }}>
-        <div className="max-w-md">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6b06c]">Lernsprung · Unterrichtsraum</p>
-          <h1 className="mt-3 text-2xl font-semibold">{host || geschlossen ? "Raum geschlossen" : "Diese Stunde ist beendet"}</h1>
-          <p className="mt-3 text-white/75">
-            {host || geschlossen
-              ? geschlossen?.geloescht
-                ? `${geschlossen.geloescht === 1 ? "Eine Unterlage wurde" : `${geschlossen.geloescht} Unterlagen wurden`} vom Server gelöscht. Die Schülerin kommt nicht mehr in den Raum.`
-                : "Es lagen keine Unterlagen auf dem Server. Die Schülerin kommt nicht mehr in den Raum."
-              : "Jill hat den Raum geschlossen, die Unterlagen sind vom Server gelöscht. Vielen Dank fürs Mitmachen – bis zum nächsten Mal!"}
-          </p>
-          {host || geschlossen ? (
-            <p className="mt-6 text-[13px] text-white/55">Über „Unterrichtsraum öffnen“ in der Verwaltung lässt er sich wieder öffnen.</p>
-          ) : null}
-        </div>
+  // ---------- Ende ----------
+  const endeSeite = (titelText, text, extra = null) => (
+    <div className="grid min-h-[100dvh] place-items-center bg-black px-6 text-center text-white" style={{ colorScheme: "only light" }}>
+      <div className="max-w-md">
+        <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#636366] text-[32px] font-semibold">
+          {initialVon(gegenueber)}
+        </span>
+        <h1 className="mt-5 text-[26px] font-semibold tracking-[-0.02em]">{titelText}</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-white/65">{text}</p>
+        {extra}
       </div>
-    );
+    </div>
+  );
+
+  if (geschlossen || (bereit && status === "geschlossen")) {
+    return host || geschlossen
+      ? endeSeite(
+          "Raum geschlossen",
+          geschlossen?.geloescht
+            ? `${geschlossen.geloescht === 1 ? "Eine Unterlage wurde" : `${geschlossen.geloescht} Unterlagen wurden`} vom Server gelöscht. Niemand kommt mehr in den Raum.`
+            : "Niemand kommt mehr in den Raum. Über die Verwaltung lässt er sich wieder öffnen.",
+          onVerlassen ? (
+            <button type="button" onClick={onVerlassen} className="mt-8 rounded-full bg-white/15 px-6 py-3 text-[15px] font-semibold">
+              Zur Übersicht
+            </button>
+          ) : null
+        )
+      : endeSeite("Diese Stunde ist beendet", "Jill hat den Raum geschlossen. Vielen Dank fürs Mitmachen – bis zum nächsten Mal!");
+  }
+  if (bereit && status === "abgelehnt") {
+    return endeSeite("Kein Zutritt", "Jill hat die Anfrage gerade nicht angenommen. Bei Fragen melden Sie sich gern direkt bei ihr.");
   }
 
+  // ---------- Vor dem Beitreten ----------
   if (!bereit) {
     return (
-      <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-5 py-10 text-white" style={{ colorScheme: "only light" }}>
-        <div className="w-full max-w-md text-center">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6b06c]">Lernsprung · Unterrichtsraum</p>
-          <h1 className="mt-3 text-[2rem] font-semibold leading-tight">{titel}</h1>
-          {termin ? <p className="mt-2 text-white/75">{termin}</p> : null}
-          {verlassen ? <p className="mt-6 text-white/80">Sie haben den Raum verlassen.</p> : null}
+      <div
+        className="relative flex min-h-[100dvh] flex-col items-center justify-between overflow-hidden bg-black px-6 text-center text-white"
+        style={{ colorScheme: "only light", paddingTop: "max(48px, env(safe-area-inset-top))", paddingBottom: "max(32px, env(safe-area-inset-bottom))" }}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,#2c4a66_0%,#0b1724_55%,#000_100%)]" />
+        <div className="relative mt-[8vh]">
+          <span className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#636366] text-[44px] font-semibold shadow-2xl">
+            {initialVon(gegenueber)}
+          </span>
+          <h1 className="mt-6 text-[30px] font-semibold leading-tight tracking-[-0.02em]">{titel}</h1>
+          <p className="mt-1.5 text-[16px] text-white/60">{termin || "Lernsprung · Video"}</p>
+          {verlassen ? <p className="mt-6 text-[15px] text-white/75">Sie haben den Raum verlassen.</p> : null}
+        </div>
+        <div className="relative w-full max-w-sm">
           <button
             type="button"
             onClick={() => beitreten(false)}
             disabled={!geprueft}
-            className="mt-8 w-full rounded-full bg-[#f08a2c] px-6 py-4 text-[17px] font-semibold text-[#1a2a38] shadow-lg transition hover:bg-[#e07a1f] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2.5 rounded-full px-6 py-4 text-[18px] font-semibold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-60"
+            style={{ background: GRUEN }}
           >
-            {verlassen ? "Wieder betreten" : ticket ? "Raum öffnen (als Jill)" : "Raum betreten"}
+            <I n="video" />
+            {verlassen ? "Wieder beitreten" : "Beitreten"}
           </button>
           {ticket ? (
             <button
               type="button"
               onClick={() => beitreten(true)}
               disabled={!geprueft}
-              className="mt-3 w-full rounded-full bg-white/10 px-6 py-3.5 text-[16px] font-semibold text-white transition hover:bg-white/15 disabled:opacity-60"
+              className="mt-3 w-full rounded-full bg-white/[0.14] px-6 py-3.5 text-[16px] font-semibold text-white transition hover:bg-white/20 disabled:opacity-60"
             >
               Zweites Gerät: nur Tafel
             </button>
           ) : null}
-          {ticket ? (
-            <p className="mt-3 text-[13px] text-white/60">
-              Zum Beispiel Mac mit Kamera und iPad mit Pencil: Auf dem zweiten Gerät „nur Tafel“ wählen – ohne Kamera und Ton, damit nichts hallt.
-            </p>
-          ) : null}
-          <p className="mt-4 text-[13px] leading-relaxed text-white/65">
-            Der Browser fragt gleich nach Kamera und Mikrofon. Bild und Ton gehen direkt zwischen den beiden Geräten,
-            verschlüsselt – nichts wird aufgezeichnet. Die Tafel wird nicht auf dem Server gespeichert; als PDF können Sie sie mitnehmen.
+          <p className="mt-4 text-[12.5px] leading-relaxed text-white/45">
+            Der Browser fragt nach Kamera und Mikrofon. Bild und Ton gehen direkt und verschlüsselt zwischen den Geräten – nichts wird
+            aufgezeichnet.
           </p>
         </div>
       </div>
     );
   }
 
-  const videos = nurTafel ? (
-    <VideoKachel stream={fern} beschriftung={gegenueber} platzhalter={gegenueber.slice(0, 1)} klein />
-  ) : (
-    <>
-      <VideoKachel stream={fern} beschriftung={gegenueber} platzhalter={gegenueber.slice(0, 1)} klein />
-      <VideoKachel stream={lokal} gespiegelt beschriftung="Sie" platzhalter="Sie" klein />
-    </>
-  );
+  // ---------- Vorraum (Gast wartet) ----------
+  if (!host && status === "vorraum") {
+    return (
+      <div className="relative h-[100dvh] overflow-hidden bg-black text-white" style={{ colorScheme: "only light" }}>
+        <Video stream={lokal} gespiegelt className="absolute inset-0 h-full w-full opacity-70" platzhalter="Sie" gross />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-black/70" />
+        <div className="absolute inset-x-0 top-0 flex justify-center px-4" style={{ paddingTop: "max(20px, env(safe-area-inset-top))" }}>
+          <div className={`${GLAS} w-full max-w-md rounded-[26px] px-5 py-4 text-center shadow-2xl`}>
+            <p className="text-[17px] font-semibold">{vorraum === "anfrage" ? "Anfrage gesendet" : "Warten auf Jill"}</p>
+            <p className="mt-1 text-[14px] leading-snug text-white/70">
+              {vorraum === "anfrage"
+                ? "Jill lässt Sie gleich herein."
+                : "Jill hat den Raum noch nicht geöffnet. Sie kommen automatisch hinein, sobald sie da ist."}
+            </p>
+            <span className="mx-auto mt-3 block h-1 w-24 overflow-hidden rounded-full bg-white/15">
+              <span className="block h-full w-1/3 animate-[ck-vorraum_1.4s_ease-in-out_infinite] rounded-full bg-white/80" />
+            </span>
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 flex justify-center" style={{ paddingBottom: "max(28px, env(safe-area-inset-bottom))" }}>
+          <div className={`${GLAS} flex items-center gap-3 rounded-[30px] px-3 py-2.5`}>
+            <RundKnopf titel={mikro ? "Mikrofon aus" : "Mikrofon an"} aktiv={!mikro} onClick={() => setMikro((v) => !v)}>
+              <I n={mikro ? "mikro" : "mikroAus"} />
+            </RundKnopf>
+            <RundKnopf titel={kamera ? "Kamera aus" : "Kamera an"} aktiv={!kamera} onClick={() => setKamera((v) => !v)}>
+              <I n={kamera ? "kamera" : "kameraAus"} />
+            </RundKnopf>
+            <RundKnopf titel="Abbrechen" rot onClick={gehen}>
+              <I n="auflegen" />
+            </RundKnopf>
+          </div>
+        </div>
+        <style>{`@keyframes ck-vorraum{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}`}</style>
+      </div>
+    );
+  }
+
+  // ---------- Im Raum ----------
+  const tafelAn = ansicht === "tafel";
+  const leisteZeigen = leisteSichtbar || tafelAn || !fernDa || einlassOffen || auflegenMenue;
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#18324a] text-white" style={{ colorScheme: "only light" }}>
-      <header className="flex items-center gap-3 px-4 py-2.5" style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}>
-        <span className="hidden text-[13px] font-semibold uppercase tracking-[0.12em] text-[#f6b06c] sm:inline">Lernsprung</span>
-        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{titel}</span>
-        <span
-          className={`shrink-0 truncate rounded-full px-3 py-1 text-[12px] font-medium ${
-            status === "verbunden" ? "bg-[#138a4b]/30 text-[#bff0d3]" : status === "fehler" || status === "ersetzt" ? "bg-[#d23535]/30 text-[#ffd0d0]" : "bg-white/10 text-white/85"
-          }`}
-        >
-          {statusText}
-        </span>
-      </header>
-      {medienHinweis ? <p className="bg-[#f08a2c] px-4 py-1.5 text-[13px] text-[#1a2a38]">{medienHinweis}</p> : null}
-
-      {zweiMikrofone ? (
-        <p className="bg-[#f08a2c] px-4 py-1.5 text-[13px] text-[#1a2a38]">
-          Ihr zweites Gerät hat auch ein Mikrofon an – bitte dort stumm schalten oder „nur Tafel“ wählen, sonst hallt es.
-        </p>
-      ) : null}
-
+    <div className="relative h-[100dvh] overflow-hidden bg-black text-white" style={{ colorScheme: "only light" }}>
       {/* Das Tafel-Gerät spielt keinen Ton ab (sonst hallt es). */}
       <FernTon ref={tonRef} stream={nurTafel ? null : fern} onBlockiert={setTonBlockiert} />
-      {tonBlockiert && fern && !nurTafel ? (
-        <button
-          type="button"
-          onClick={tonEinschalten}
-          className="fixed inset-x-4 top-16 z-50 mx-auto flex max-w-sm items-center justify-center gap-2 rounded-2xl bg-[#f08a2c] px-5 py-4 text-[16px] font-semibold text-[#1a2a38] shadow-2xl"
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4ZM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
-          </svg>
-          Ton einschalten
-        </button>
-      ) : null}
-      <main className="min-h-0 flex-1 px-2 pb-2 sm:px-3">
-        {/* Die Tafel bleibt immer geladen – auch hinter dem großen Video –,
-            damit nichts verloren geht, was in der Zeit ankommt. */}
-        <div className={ansicht === "video" ? "relative h-full" : "hidden"}>
-          <VideoKachel stream={fern} beschriftung={gegenueber} platzhalter={gegenueber.slice(0, 1)} />
-          <div className="absolute bottom-3 right-3 w-[28%] min-w-36 max-w-72">
-            <VideoKachel stream={lokal} gespiegelt beschriftung="Sie" platzhalter="Sie" klein />
-          </div>
-        </div>
-        <div className={ansicht === "video" ? "hidden" : "flex h-full min-h-0 flex-col gap-2 lg:flex-row"}>
-          <div
-            className={`grid shrink-0 gap-2 lg:order-2 lg:grid-cols-1 lg:content-start ${
-              nurTafel ? "w-40 grid-cols-1 self-end lg:w-[220px] lg:self-auto" : "grid-cols-2 lg:w-[300px]"
-            }`}
-          >
-            {videos}
-          </div>
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl text-[#18324a] lg:order-1" style={{ background: "#f7f7f5" }}>
-            <Tafel
-              ref={tafel}
-              rolle={rolle}
-              speicherSchluessel={`${token}:${rolle}`}
-              titel={titel}
-              onSenden={senden}
-              onBildPlatz={bildPlatz}
-              onGastDarf={setGastDarf}
-              mitnehmenErlaubt={mitnehmenErlaubt}
-            />
-          </div>
-        </div>
-      </main>
 
-      <footer
-        className="flex items-center justify-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4"
-        style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
-      >
-        {nurTafel ? (
-          <span className="rounded-full bg-white/10 px-3 py-2 text-[13px] font-medium text-white/80">Tafel-Gerät</span>
+      {/* Bühne: Gegenüber bildfüllend – oder die Tafel */}
+      <div className={tafelAn ? "hidden" : "absolute inset-0"}>
+        {fernDa ? (
+          <Video stream={fern} className="absolute inset-0 h-full w-full" platzhalter={initialVon(gegenueber)} gross />
         ) : (
-          <>
-            <Steuerknopf an={mikro} onClick={() => setMikro((v) => !v)} titel={mikro ? "Mikrofon aus" : "Mikrofon an"}>
-              <I n={mikro ? "mikro" : "mikroAus"} />
-            </Steuerknopf>
-            <Steuerknopf an={kamera} onClick={() => setKamera((v) => !v)} titel={kamera ? "Kamera aus" : "Kamera an"}>
-              <I n={kamera ? "kamera" : "kameraAus"} />
-            </Steuerknopf>
-          </>
+          // Noch allein: das eigene Bild groß, wie FaceTime beim Anrufen
+          <Video stream={nurTafel ? null : lokal} gespiegelt className="absolute inset-0 h-full w-full" platzhalter={initialVon("Sie")} gross />
         )}
-        <Steuerknopf an onClick={() => setAnsicht((a) => (a === "tafel" ? "video" : "tafel"))} titel={ansicht === "tafel" ? "Großes Video" : "Tafel zeigen"}>
-          <I n={ansicht === "tafel" ? "video" : "tafel"} />
-        </Steuerknopf>
-        <span className="relative">
-          <Steuerknopf an onClick={() => setUnterlagenOffen(true)} titel="Unterlagen">
-            <I n="ordner" />
-          </Steuerknopf>
-          {(host ? unterlagen.length : unterlagen.filter((u) => !u.heruntergeladen).length) ? (
-            <span className="pointer-events-none absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#f08a2c] px-1 text-[11px] font-bold text-[#1a2a38]">
-              {host ? unterlagen.length : unterlagen.filter((u) => !u.heruntergeladen).length}
-            </span>
-          ) : null}
-        </span>
-        <Steuerknopf gefahr onClick={gehen} titel="Raum verlassen">
-          <I n="auflegen" />
-        </Steuerknopf>
-        {host ? (
+      </div>
+      {/* Die Tafel bleibt immer geladen – auch hinter dem Video –, damit
+          nichts verloren geht, was in der Zeit ankommt. */}
+      <div
+        className={tafelAn ? "absolute inset-x-2 top-2 overflow-hidden rounded-[18px] text-[#18324a] sm:inset-x-3 sm:top-3" : "hidden"}
+        style={tafelAn ? { bottom: "calc(max(12px, env(safe-area-inset-bottom)) + 84px)", marginTop: "env(safe-area-inset-top)", background: "#f7f7f5" } : undefined}
+      >
+        <Tafel
+          ref={tafel}
+          rolle={rolle}
+          speicherSchluessel={`${token}:${rolle}`}
+          titel={titel}
+          onSenden={senden}
+          onBildPlatz={bildPlatz}
+          onGastDarf={setGastDarf}
+          mitnehmenErlaubt={mitnehmenErlaubt}
+        />
+      </div>
+
+      {/* Name und Zustand oben links */}
+      {!tafelAn ? (
+        <div
+          className={`absolute left-4 top-4 z-10 transition-opacity duration-300 ${leisteZeigen ? "opacity-100" : "opacity-0"}`}
+          style={{ marginTop: "env(safe-area-inset-top)" }}
+        >
+          <div className={`${GLAS} rounded-[16px] px-3.5 py-2`}>
+            <p className="text-[16px] font-semibold leading-tight">{fernDa ? gegenueber : titel}</p>
+            <p className="text-[12.5px] text-white/65">{statusText}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Noch allein (Jill): Link teilen und Einlass einstellen */}
+      {host && !fernDa && !tafelAn ? (
+        <div className="absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center px-4">
+          <div className={`${GLAS} w-full max-w-sm rounded-[26px] p-5 text-center shadow-2xl`}>
+            <p className="text-[18px] font-semibold">Warten auf {gastName}</p>
+            <p className="mt-1 text-[13.5px] text-white/65">
+              {einlassModus === "anfrage" ? "Wer den Link öffnet, fragt an – Sie lassen einzeln herein." : "Wer den Link hat, kommt herein, solange Sie da sind."}
+            </p>
+            <div className="mt-4">
+              <EinlassWahl modus={einlassModus} onWahl={einlassAendern} />
+            </div>
+            <button type="button" onClick={linkTeilen} className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/[0.16] px-4 py-2 text-[14px] font-semibold hover:bg-white/25">
+              <I n="link" klein /> Link teilen
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Eigenes Bild klein in der Ecke; bei der Tafel auch das Gegenüber */}
+      {fernDa && !tafelAn && !nurTafel ? (
+        <Schwebend className="aspect-[3/4] w-[26vw] max-w-[170px] sm:aspect-video sm:w-[22vw] sm:max-w-[260px]">
+          <Video stream={lokal} gespiegelt className="h-full w-full" platzhalter="Sie" />
+        </Schwebend>
+      ) : null}
+      {tafelAn && fernDa ? (
+        <Schwebend start="oben-rechts" className="aspect-video w-[34vw] max-w-[240px]">
+          <Video stream={fern} className="h-full w-full" platzhalter={initialVon(gegenueber)} />
+        </Schwebend>
+      ) : null}
+
+      {/* Hinweise oben */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center gap-2 px-4" style={{ paddingTop: "max(14px, env(safe-area-inset-top))" }}>
+        {host
+          ? wartend.map((w) => (
+              <div key={w.id} className={`${GLAS} pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-[22px] p-3 shadow-2xl`}>
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#636366] text-[18px] font-semibold">
+                  {initialVon(w.name)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold">{w.name || "Jemand"} möchte beitreten</p>
+                  <p className="text-[12.5px] text-white/60">Über den Link zum Raum</p>
+                </div>
+                <button type="button" onClick={() => einlassen(w.id, false)} className="rounded-full px-3.5 py-2 text-[14px] font-semibold text-white" style={{ background: ROT }}>
+                  Ablehnen
+                </button>
+                <button type="button" onClick={() => einlassen(w.id, true)} className="rounded-full px-3.5 py-2 text-[14px] font-semibold text-white" style={{ background: GRUEN }}>
+                  Einlassen
+                </button>
+              </div>
+            ))
+          : null}
+        {medienHinweis ? <p className={`${GLAS} pointer-events-auto max-w-md rounded-2xl px-4 py-2.5 text-[13.5px]`}>{medienHinweis}</p> : null}
+        {zweiMikrofone ? (
+          <p className={`${GLAS} pointer-events-auto max-w-md rounded-2xl px-4 py-2.5 text-[13.5px]`}>
+            Ihr zweites Gerät hat auch ein Mikrofon an – dort stumm schalten oder „nur Tafel“ wählen, sonst hallt es.
+          </p>
+        ) : null}
+        {hinweis ? <p className="pointer-events-auto max-w-md rounded-2xl bg-white px-4 py-3 text-[14px] font-medium text-[#1c1c1e] shadow-xl">{hinweis}</p> : null}
+        {tonBlockiert && fern && !nurTafel ? (
           <button
             type="button"
-            onClick={() => setSchliessenFrage(true)}
-            className="h-11 rounded-full bg-white px-3.5 text-[14px] font-semibold text-[#18324a] transition active:scale-95 sm:h-12 sm:px-4"
+            onClick={tonEinschalten}
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-white px-5 py-3 text-[15px] font-semibold text-[#1c1c1e] shadow-2xl"
           >
-            <span className="sm:hidden">Beenden</span>
-            <span className="hidden sm:inline">Stunde beenden</span>
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4ZM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+            </svg>
+            Ton einschalten
           </button>
         ) : null}
-        {!host && gastDarf ? <span className="ml-1 hidden text-[13px] text-[#f6b06c] sm:inline">Sie dürfen mitschreiben</span> : null}
-      </footer>
+      </div>
 
-      {hinweis ? (
-        <div className="pointer-events-none fixed inset-x-0 top-14 z-50 flex justify-center px-4">
-          <p className="pointer-events-auto max-w-md rounded-2xl bg-white px-4 py-3 text-[14px] font-medium text-[#18324a] shadow-xl">{hinweis}</p>
+      {/* Knopfleiste unten – dunkles Glas, runde Knöpfe */}
+      <div
+        className={`absolute inset-x-0 bottom-0 z-30 flex justify-center px-3 transition-all duration-300 ${leisteZeigen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}
+        style={{ paddingBottom: "max(14px, env(safe-area-inset-bottom))" }}
+      >
+        <div className={`${GLAS} relative flex items-center gap-2.5 rounded-[32px] px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,.45)] sm:gap-3`}>
+          {nurTafel ? (
+            <span className="px-2 text-[13px] font-medium text-white/75">Tafel-Gerät</span>
+          ) : (
+            <>
+              <RundKnopf titel={mikro ? "Mikrofon aus" : "Mikrofon an"} aktiv={!mikro} onClick={() => setMikro((v) => !v)}>
+                <I n={mikro ? "mikro" : "mikroAus"} />
+              </RundKnopf>
+              <RundKnopf titel={kamera ? "Kamera aus" : "Kamera an"} aktiv={!kamera} onClick={() => setKamera((v) => !v)}>
+                <I n={kamera ? "kamera" : "kameraAus"} />
+              </RundKnopf>
+            </>
+          )}
+          <RundKnopf titel={tafelAn ? "Video zeigen" : "Tafel zeigen"} aktiv={tafelAn} onClick={() => setAnsicht((a) => (a === "tafel" ? "video" : "tafel"))}>
+            <I n="tafel" />
+          </RundKnopf>
+          <RundKnopf titel="Unterlagen" onClick={() => setUnterlagenOffen(true)} badge={unterlagenZahl || null}>
+            <I n="ordner" />
+          </RundKnopf>
+          {host ? (
+            <RundKnopf titel="Einlass" aktiv={einlassOffen} onClick={() => setEinlassOffen((v) => !v)} badge={wartend.length || null}>
+              <I n="person" />
+            </RundKnopf>
+          ) : null}
+          <RundKnopf titel={host ? "Auflegen oder Stunde beenden" : "Auflegen"} rot onClick={() => (host ? setAuflegenMenue((v) => !v) : gehen())}>
+            <I n="auflegen" />
+          </RundKnopf>
+
+          {einlassOffen ? (
+            <div className={`${GLAS} absolute bottom-[calc(100%+10px)] left-1/2 w-[min(340px,calc(100vw-24px))] -translate-x-1/2 rounded-[22px] p-4 shadow-2xl`}>
+              <p className="text-[15px] font-semibold">Einlass</p>
+              <p className="mt-1 text-[13px] text-white/65">Ohne Sie kommt niemand herein. Wenn Sie da sind:</p>
+              <div className="mt-3">
+                <EinlassWahl modus={einlassModus} onWahl={einlassAendern} />
+              </div>
+              <button type="button" onClick={linkTeilen} className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/[0.16] px-3.5 py-2 text-[13.5px] font-semibold hover:bg-white/25">
+                <I n="link" klein /> Link teilen
+              </button>
+            </div>
+          ) : null}
+          {auflegenMenue ? (
+            <div className={`${GLAS} absolute bottom-[calc(100%+10px)] right-0 w-64 overflow-hidden rounded-[22px] shadow-2xl`}>
+              <button type="button" onClick={gehen} className="block w-full px-4 py-3.5 text-left text-[15px] font-semibold hover:bg-white/10">
+                Raum verlassen
+                <span className="block text-[12.5px] font-normal text-white/60">Der Raum bleibt offen für Ihre Rückkehr</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuflegenMenue(false);
+                  setSchliessenFrage(true);
+                }}
+                className="block w-full border-t border-white/10 px-4 py-3.5 text-left text-[15px] font-semibold hover:bg-white/10"
+                style={{ color: ROT }}
+              >
+                Stunde beenden
+                <span className="block text-[12.5px] font-normal text-white/60">Raum schließen, Unterlagen löschen</span>
+              </button>
+            </div>
+          ) : null}
         </div>
+      </div>
+      {!host && gastDarf && tafelAn ? (
+        <p className="pointer-events-none absolute bottom-[96px] left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[12.5px]">Sie dürfen mitschreiben</p>
       ) : null}
 
       {unterlagenOffen ? (
@@ -589,42 +861,39 @@ export default function Raum({ token, titel, termin, gastName = "Gast" }) {
       ) : null}
 
       {schliessenFrage ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-label="Stunde beenden">
-          <div className="w-full max-w-md rounded-[26px] bg-white p-6 text-[#18324a] shadow-2xl">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4" role="dialog" aria-modal="true" aria-label="Stunde beenden">
+          <div className={`${GLAS} w-full max-w-md rounded-[26px] p-6 text-white shadow-2xl`}>
             <h2 className="text-[20px] font-semibold">Stunde beenden und Raum schließen?</h2>
-            <p className="mt-2 text-[14px] leading-relaxed text-[#18324a]/75">
+            <p className="mt-2 text-[14px] leading-relaxed text-white/70">
               {unterlagen.length
                 ? `Alle ${unterlagen.length === 1 ? "Unterlage wird" : `${unterlagen.length} Unterlagen werden`} sofort vom Server gelöscht.`
                 : "Es liegen keine Unterlagen auf dem Server."}{" "}
               {gastName} verlässt den Raum und kommt danach nicht mehr hinein.
             </p>
             {unterlagen.some((u) => u.freigegeben) ? (
-              <ul className="mt-4 space-y-1.5 rounded-2xl bg-[#f2f4f7] px-4 py-3 text-[14px]">
+              <ul className="mt-4 space-y-1.5 rounded-2xl bg-white/[0.08] px-4 py-3 text-[14px]">
                 {unterlagen
                   .filter((u) => u.freigegeben)
                   .map((u) => (
                     <li key={u.id} className="flex items-center gap-2">
-                      <span className={u.heruntergeladenAm ? "text-[#1f8a4c]" : "text-[#c93400]"}>{u.heruntergeladenAm ? "✓" : "!"}</span>
+                      <span style={{ color: u.heruntergeladenAm ? GRUEN : "#ff9f0a" }}>{u.heruntergeladenAm ? "✓" : "!"}</span>
                       <span className="min-w-0 flex-1 truncate">{u.name}</span>
-                      <span className="shrink-0 text-[12.5px] text-[#18324a]/60">{u.heruntergeladenAm ? "heruntergeladen" : "noch nicht geladen"}</span>
+                      <span className="shrink-0 text-[12.5px] text-white/55">{u.heruntergeladenAm ? "heruntergeladen" : "noch nicht geladen"}</span>
                     </li>
                   ))}
               </ul>
             ) : null}
-            <p className="mt-3 text-[13px] text-[#18324a]/60">Möchten Sie die Tafel behalten? Vorher oben rechts „Als PDF“ sichern.</p>
+            <p className="mt-3 text-[13px] text-white/55">Möchten Sie die Tafel behalten? Vorher in der Tafel „Als PDF“ sichern.</p>
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setSchliessenFrage(false)}
-                className="rounded-full bg-black/5 px-4 py-3 text-[15px] font-semibold transition hover:bg-black/10"
-              >
+              <button type="button" onClick={() => setSchliessenFrage(false)} className="rounded-full bg-white/[0.16] px-4 py-3 text-[15px] font-semibold hover:bg-white/25">
                 Abbrechen
               </button>
               <button
                 type="button"
                 onClick={raumSchliessen}
                 disabled={schliesst}
-                className="rounded-full bg-[#d23535] px-4 py-3 text-[15px] font-semibold text-white transition hover:bg-[#b82b2b] disabled:opacity-60"
+                className="rounded-full px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-60"
+                style={{ background: ROT }}
               >
                 {schliesst ? "Wird geschlossen …" : "Raum schließen"}
               </button>

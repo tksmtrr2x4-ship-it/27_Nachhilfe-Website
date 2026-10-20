@@ -43,13 +43,28 @@ test("Zugang: PIN allein nur, solange kein Passkey hinterlegt ist", async () => 
 });
 
 // Lädt lib/auth.js mit vorgetäuschten Abhängigkeiten (ohne Datenbank).
-async function loadAuth({ passkeys, validSessions }) {
+async function loadAuth({ passkeys, validSessions, gesperrt = false }) {
   const fs = await import("node:fs");
   const source = fs.readFileSync(new URL("../lib/auth.js", import.meta.url), "utf8")
     .replace('import { isValidSession } from "@/lib/auth/sessions";', `const isValidSession = async (t) => ${JSON.stringify(validSessions)}.includes(t);`)
-    .replace('import { countPasskeys } from "@/lib/auth/passkeys";', `const countPasskeys = async () => ${passkeys};`);
-  return import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}`);
+    .replace('import { countPasskeys } from "@/lib/auth/passkeys";', `const countPasskeys = async () => ${passkeys};`)
+    .replace(
+      'import { checkPinAttempt, notePinFailure } from "@/lib/auth/rateLimit";',
+      `globalThis.__pinFehler = 0; const checkPinAttempt = async () => ({ allowed: ${!gesperrt} }); const notePinFailure = async () => { globalThis.__pinFehler++; };`
+    );
+  return import(`data:text/javascript;base64,${Buffer.from(source, "utf8").toString("base64")}#${Math.random()}`);
 }
+
+test("S-03: falsche PINs werden gezählt, eine Sperre gilt, alte Sitzungen sind kein PIN-Versuch", async () => {
+  const request = (headers) => ({ headers: new Headers(headers) });
+  process.env.ADMIN_PIN = "geheim-test";
+  const auth = await loadAuth({ passkeys: 0, validSessions: [] });
+  await auth.isAdminAuthorized(request({ "x-admin-pin": "falsch" }));
+  await auth.isAdminAuthorized(request({ "x-admin-pin": "a".repeat(43) }));
+  assert.equal(globalThis.__pinFehler, 1, "nur der echte PIN-Versuch zählt");
+  const zu = await loadAuth({ passkeys: 0, validSessions: [], gesperrt: true });
+  assert.equal(await zu.isAdminAuthorized(request({ "x-admin-pin": "geheim-test" })), false, "während der Sperre hilft auch der richtige PIN nicht");
+});
 
 test("Anmeldemail: Empfänger, Abschalter und verkürzte Anzeige", async () => {
   const { loginMailAddress, loginMailRequired, maskMail, confirmationLink } = await import("@/lib/auth/loginMail");

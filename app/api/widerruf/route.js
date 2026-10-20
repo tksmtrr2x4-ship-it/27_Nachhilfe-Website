@@ -1,4 +1,5 @@
 import { erfasseWiderruf, normalisiere, pruefe } from "@/lib/widerruf/widerruf";
+import { clientIp } from "@/lib/clientIp";
 
 // Öffentlich (Widerrufsfunktion, § 356a BGB), daher klein gehalten: Eingaben
 // begrenzt, Köder-Feld gegen Bots, einfache Begrenzung je Absender.
@@ -7,7 +8,7 @@ const LIMIT = 8;
 const FENSTER_MS = 60 * 60 * 1000;
 
 function begrenzt(request) {
-  const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unbekannt";
+  const ip = clientIp(request);
   const jetzt = Date.now();
   const treffer = (fenster.get(ip) || []).filter((t) => jetzt - t < FENSTER_MS);
   treffer.push(jetzt);

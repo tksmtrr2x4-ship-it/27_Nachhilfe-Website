@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth/sessions";
 import { checkPinAttempt, isPinRequired, notePasskeyFailure, notePinFailure, resetPinFailures } from "@/lib/auth/rateLimit";
 import { REQUEST_MINUTES, createLoginRequest, deleteLoginRequest } from "@/lib/auth/loginRequests";
 import { loginMailAddress, loginMailRequired, maskMail, sendLoginConfirmation } from "@/lib/auth/loginMail";
+import { clientIp } from "@/lib/clientIp";
 
 // Schritt 2: Passkey (und bei neuen Geräten der PIN) prüfen.
 //
@@ -17,11 +18,6 @@ function pinOk(pin) {
   return expected.length > 0 && pin === expected;
 }
 
-// Hinter nginx steht die echte Adresse in x-forwarded-for.
-function clientIp(request) {
-  const forwarded = request.headers.get("x-forwarded-for") || "";
-  return forwarded.split(",")[0].trim() || request.headers.get("x-real-ip") || "";
-}
 
 // Bekanntes Gerät → Sitzung sofort. Neues Gerät → erst die Mail bestätigen.
 async function grant({ request, userAgent, known, mitPasskey }) {

@@ -1,4 +1,5 @@
 import { getCustomer } from "@/lib/invoicing/db";
+import { clientIp } from "@/lib/clientIp";
 import { createKontoSession, darfMailSenden, kontoCookie, kurz } from "@/lib/kunden/konto";
 import { akteZumLogin, zugangKonfiguriert } from "@/lib/kunden/zugang";
 
@@ -10,9 +11,6 @@ import { akteZumLogin, zugangKonfiguriert } from "@/lib/kunden/zugang";
 // oder das Passwort nicht stimmte.
 const FALSCH = "Name oder Passwort stimmen nicht.";
 
-function ipVon(request) {
-  return (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || request.headers.get("x-real-ip") || "unbekannt";
-}
 
 export async function POST(request) {
   if (!zugangKonfiguriert()) {
@@ -24,7 +22,7 @@ export async function POST(request) {
   const passwort = kurz(body.passwort, 60);
   if (!name || !passwort) return Response.json({ error: "Bitte Name und Passwort eintragen." }, { status: 400 });
 
-  if (!(await darfMailSenden(`login:${ipVon(request)}`, { proSchluessel: 10, insgesamt: 300, minuten: 15 }))) {
+  if (!(await darfMailSenden(`login:${clientIp(request)}`, { proSchluessel: 10, insgesamt: 300, minuten: 15 }))) {
     return Response.json({ error: "Zu viele Versuche. Bitte in einer Viertelstunde noch einmal." }, { status: 429 });
   }
 

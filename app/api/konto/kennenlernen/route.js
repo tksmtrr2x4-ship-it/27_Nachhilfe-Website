@@ -9,9 +9,10 @@ import { siteOrigin } from "@/lib/mailBrief";
 import { todayIsoBerlin } from "@/lib/adminError";
 
 // Kostenloses Kennenlern-Meeting per Video – nur aus einer angelegten
-// Schülerakte heraus. Die Familie wählt einen Wunschtermin, der Server legt
-// sofort den Unterrichtsraum an (Meeting-Token = Raumname, wie bei den
-// Online-Stunden, app/meeting/[token]).
+// Schülerakte heraus. Die Familie wählt einen Wunschtermin; der Raum wird
+// angelegt (Meeting-Token = Raumname, wie bei den Online-Stunden,
+// app/meeting/[token]), aber erst nutzbar und erst verschickt, wenn Jill den
+// Termin bestätigt (app/api/admin/bookings/[id], lib/raum/zugang.js).
 //
 // Technisch eine Online-Stunde zu 0 € mit kennenlernen: true. So steht sie in
 // Unterricht, Kalender und Kalender-Abo, wird aber nie abgerechnet
@@ -54,7 +55,15 @@ export async function POST(request) {
     requestedDate: { $gte: todayIsoBerlin() },
   });
   if (offen) {
-    return Response.json({ ok: true, schonDa: true, datum: offen.requestedDate, zeit: offen.requestedTime, link: `/meeting/${offen.meetingToken}` });
+    const bestaetigt = offen.status === "confirmed";
+    return Response.json({
+      ok: true,
+      schonDa: true,
+      datum: offen.requestedDate,
+      zeit: offen.requestedTime,
+      bestaetigt,
+      link: bestaetigt ? `/meeting/${offen.meetingToken}` : null,
+    });
   }
 
   if (!(await darfMailSenden(`kennenlernen:${kunde._id}`, { proSchluessel: 3, insgesamt: 40 }))) {
@@ -95,7 +104,7 @@ export async function POST(request) {
 
   const link = `${siteOrigin()}/meeting/${meetingToken}`;
   await Promise.all([
-    sendeKennenlernMail({ to: kunde.email, name: kunde.name, schuelerName: kind.name, datum, zeit, link }),
+    sendeKennenlernMail({ to: kunde.email, name: kunde.name, schuelerName: kind.name, datum, zeit }),
     benachrichtigeKennenlernen({
       elternName: kunde.name,
       email: kunde.email,
@@ -110,5 +119,5 @@ export async function POST(request) {
     legeTodoAn({ text: `Kennenlernen bestätigen: ${kind.name}`, hinweis: `${datum.split("-").reverse().join(".")} ${zeit} Uhr` }),
   ]).catch(() => null);
 
-  return Response.json({ ok: true, datum, zeit, link: `/meeting/${meetingToken}` });
+  return Response.json({ ok: true, datum, zeit, bestaetigt: false, link: null });
 }

@@ -58,7 +58,8 @@ test("Absageregel und Rechnungssatz kommen aus der Konfiguration", () => {
   assert.equal(cancelRuleShort(), `Kostenfrei absagen bis ${CANCEL_FREE_HOURS} Std. vorher`);
   assert.match(cancelRuleLong(), /zuzüglich Vorbereitungskosten \(§ 6 AGB\)/);
   assert.match(agbSatzFuerRechnung("2.0"), /Es gelten die AGB in der Fassung vom 06\.10\.2026 \(Version 2\.0\)/);
-  assert.match(agbSatzFuerRechnung("1.0"), /Version 1\.0 \(gültig für Verträge bis 05\.10\.2026\)/);
+  // Neue Rechnungen nennen die alte Fassung nicht mehr (20.10.2026).
+  assert.equal(agbSatzFuerRechnung("1.0"), "");
 });
 
 test("Widerrufsbelehrung erwähnt die Online-Widerrufsfunktion und die Eingangsbestätigung", () => {

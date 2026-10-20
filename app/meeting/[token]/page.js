@@ -67,6 +67,24 @@ export default async function MeetingPage({ params }) {
     gastName: String(booking.studentName || "Gast").split(" ")[0],
   };
 
+  // Noch nicht bestätigt (z. B. Kennenlernen): Der Gast wartet auf Jills
+  // Zusage; Jill selbst kommt über die Verwaltung trotzdem hinein.
+  if (booking.status === "pending") {
+    return (
+      <HostWeiche token={booking.meetingToken} raum={raum}>
+        <div className="grid min-h-[100dvh] place-items-center bg-[#18324a] px-6 text-center text-white">
+          <div className="max-w-md">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6b06c]">Lernsprung · Unterrichtsraum</p>
+            <h1 className="mt-3 text-2xl font-semibold">Termin noch nicht bestätigt</h1>
+            <p className="mt-3 text-white/75">
+              Sobald ich den Termin bestätige, bekommen Sie eine Mail – dann ist der Raum für Sie offen.
+            </p>
+          </div>
+        </div>
+      </HostWeiche>
+    );
+  }
+
   // Kostenpflichtige Online-Einzelstunde: für den Gast erst Rechnungsadresse
   // und Zahlungszusage. Jill als Host geht direkt in den Raum (HostWeiche).
   if (brauchtZahlungsschritt(booking)) {

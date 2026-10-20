@@ -933,7 +933,7 @@ function WieWeiter({ kind, kunde, offen }) {
       });
       const antwort = await res.json().catch(() => ({}));
       if (!res.ok) setFehler(antwort.error || "Das hat leider nicht geklappt.");
-      else setRaum({ datum: antwort.datum, zeit: antwort.zeit, link: antwort.link, bestaetigt: false });
+      else setRaum({ datum: antwort.datum, zeit: antwort.zeit, link: antwort.link || null, bestaetigt: Boolean(antwort.bestaetigt) });
     } catch {
       setFehler("Keine Verbindung. Bitte prüfen Sie Ihre Internetverbindung.");
     } finally {
@@ -965,15 +965,16 @@ function WieWeiter({ kind, kunde, offen }) {
           {raum ? (
             <div role="status" className="mt-1.5">
               <p className="text-[15px] leading-relaxed text-text">
-                Ihr Video-Raum ist angelegt: <strong className="text-tinte">{wochentag(raum.datum)} {formatDate(raum.datum)}{raum.zeit ? `, ${raum.zeit} Uhr` : ""}</strong>.{" "}
-                {raum.bestaetigt ? "Der Termin ist bestätigt." : "Ich schaue mir den Termin an und bestätige ihn per Mail."}
+                {raum.bestaetigt ? "Ihr Kennenlern-Meeting ist bestätigt" : "Ihre Anfrage ist angekommen"}:{" "}
+                <strong className="text-tinte">{wochentag(raum.datum)} {formatDate(raum.datum)}{raum.zeit ? `, ${raum.zeit} Uhr` : ""}</strong>.{" "}
+                {raum.bestaetigt ? "" : "Sobald ich den Termin bestätige, kommt der Link zum Video-Raum per Mail und steht dann hier."}
               </p>
               {raum.link ? (
                 <a href={raum.link} className="knopf knopf-orange mt-4 self-start">
                   Zum Video-Raum
                 </a>
               ) : null}
-              <p className="mt-2 text-[12.5px] leading-snug text-leise">Der Link kam auch per Mail. Er funktioniert im Browser, ohne App.</p>
+              {raum.link ? <p className="mt-2 text-[12.5px] leading-snug text-leise">Der Link kam auch per Mail. Er funktioniert im Browser, ohne App.</p> : null}
             </div>
           ) : formular ? (
             <form onSubmit={senden} className="mt-3 space-y-3">

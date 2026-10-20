@@ -71,3 +71,14 @@ test("Ohne Eltern-E-Mail wird nach Namen gruppiert, nichts geht verloren", () =>
 test("Ist alles abgerechnet, bleibt die Liste leer", () => {
   assert.deepEqual(nochAbzurechnen([stunde("a", "2026-09-01", { paymentLedgerEntryId: "j1" })], HEUTE), []);
 });
+
+test("Kennenlernen und 0-€-Termine sind nie offen (kein Betrag von 0,00 €)", () => {
+  assert.equal(istOffen(stunde("k", "2026-09-20", { kennenlernen: true, offerSnapshot: { type: "session", priceCents: 0 } })), false);
+  assert.equal(istOffen(stunde("null", "2026-09-20", { offerSnapshot: { type: "session", priceCents: 0 } })), false);
+  assert.equal(
+    istOffen(stunde("ausfall", "2026-09-20", { offerSnapshot: { type: "session", priceCents: 0 }, heldStatus: "missed", ausfall: { betragCent: 1500 } })),
+    true,
+    "eine Ausfallvergütung bleibt abzurechnen"
+  );
+  assert.deepEqual(nochAbzurechnen([stunde("k", "2026-09-20", { kennenlernen: true, offerSnapshot: { type: "session", priceCents: 0 } })], HEUTE), []);
+});

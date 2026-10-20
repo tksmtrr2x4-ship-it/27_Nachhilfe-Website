@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import { findByCredentialId, notePasskeyUse, countPasskeys, relyingParty, takeChallenge } from "@/lib/auth/passkeys";
 import { DEVICE_COOKIE, isKnownDevice } from "@/lib/auth/devices";
@@ -14,8 +15,10 @@ import { clientIp } from "@/lib/clientIp";
 // lib/auth/loginRequests.js). An einem bekannten Gerät gibt es das
 // Sitzungs-Kennwort sofort.
 function pinOk(pin) {
-  const expected = process.env.ADMIN_PIN || "";
-  return expected.length > 0 && pin === expected;
+  const expected = Buffer.from(process.env.ADMIN_PIN || "");
+  const gegeben = Buffer.from(String(pin ?? ""));
+  // zeitkonstant (Befund S-03)
+  return expected.length > 0 && gegeben.length === expected.length && crypto.timingSafeEqual(gegeben, expected);
 }
 
 

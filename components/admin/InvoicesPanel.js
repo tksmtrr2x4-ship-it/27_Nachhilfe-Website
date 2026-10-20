@@ -204,11 +204,17 @@ export default function InvoicesPanel({ adminFetch, pin, setNotice, openInvoiceI
     setPaying(inv);
   }
 
-  async function confirmPaid({ paidAt, method }) {
+  // bestaetigen: der Familie per Mail bestätigen, dass das Geld da ist
+  // (lib/invoicing/zahlungseingang.js).
+  async function confirmPaid({ paidAt, method, bestaetigen }) {
     const inv = paying;
     try {
-      await adminFetch(`/api/admin/invoices/${inv._id}/paid`, { method: "POST", body: JSON.stringify({ paidAt, method }) });
-      setNotice(`Rechnung ${inv.number} als bezahlt markiert und im Journal verbucht.`);
+      const r = await adminFetch(`/api/admin/invoices/${inv._id}/paid`, { method: "POST", body: JSON.stringify({ paidAt, method, bestaetigen }) });
+      const b = r?.bestaetigung;
+      setNotice(
+        `Rechnung ${inv.number} als bezahlt markiert und im Journal verbucht.` +
+          (b ? (b.ok ? ` Zahlungsbestätigung an ${b.to} gesendet.` : ` Zahlungsbestätigung nicht gesendet: ${b.error}`) : "")
+      );
       setPaying(null);
       refresh();
       if (current?.invoice?._id === inv._id) openEditor(inv._id);
@@ -716,6 +722,7 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
               Ausgestellt am {formatDate(invoice.issueDate)}
               {invoice.dueDate && invoice.type !== "storno" ? ` · fällig ${formatDate(invoice.dueDate)}` : ""}
               {invoice.paidAt ? ` · bezahlt am ${formatDate(invoice.paidAt)}` : ""}
+              {invoice.zahlungsbestaetigtAm ? ` · Zahlung bestätigt am ${formatDate(invoice.zahlungsbestaetigtAm.slice(0, 10))}` : ""}
               {invoice.sentAt ? ` · versendet ${invoice.sentCount}× (zuletzt an ${invoice.sentTo})` : ""}
               {invoice.cancelsNumber ? ` · storniert ${invoice.cancelsNumber}` : ""}
               {invoice.pdf?.sha256 ? ` · SHA-256 ${invoice.pdf.sha256.slice(0, 12)}…` : ""}
@@ -752,6 +759,22 @@ function InvoiceEditor({ data, adminFetch, setNotice, fetchPdfBlobUrl, busy, onI
               {["issued", "sent"].includes(invoice.status) && invoice.type !== "storno" && (
                 <button onClick={onPaid} className={btnSecondary}>
                   Als bezahlt markieren
+                </button>
+              )}
+              {invoice.status === "paid" && invoice.type !== "storno" && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const r = await adminFetch(`/api/admin/invoices/${invoice._id}/zahlungsbestaetigung`, { method: "POST" });
+                      setNotice(`Zahlungsbestätigung an ${r.to} gesendet.`);
+                      onReload();
+                    } catch (err) {
+                      setNotice(err.message);
+                    }
+                  }}
+                  className={btnSecondary}
+                >
+                  {invoice.zahlungsbestaetigtAm ? "Zahlungsbestätigung erneut senden" : "Zahlungsbestätigung senden"}
                 </button>
               )}
               {invoice.status === "paid" && (
@@ -1257,6 +1280,8 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
   const [paidAt, setPaidAt] = useState(today);
   const [method, setMethod] = useState("bank");
+  const mail = invoice.sentTo || invoice.recipient?.email || "";
+  const [bestaetigen, setBestaetigen] = useState(Boolean(mail));
   const [saving, setSaving] = useState(false);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Zahlungseingang erfassen">
@@ -1279,6 +1304,13 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
               ))}
             </div>
           </fieldset>
+          <label className={`flex items-start gap-2.5 rounded-xl bg-[var(--ck-surface2)] px-3 py-2.5 text-sm ${mail ? "" : "opacity-50"}`}>
+            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={bestaetigen} disabled={!mail} onChange={(e) => setBestaetigen(e.target.checked)} />
+            <span>
+              <span className="block font-semibold text-[var(--ck-text)]">Zahlungseingang per Mail bestätigen</span>
+              <span className="block text-xs text-[var(--ck-muted)]">{mail ? `An ${mail} – „Ihre Zahlung ist angekommen“.` : "Keine E-Mail-Adresse hinterlegt."}</span>
+            </span>
+          </label>
           <p className="text-xs text-[var(--ck-muted)]">Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht (Tab „Schüler &amp; Buchhaltung“).</p>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -1287,7 +1319,7 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
             disabled={saving || !paidAt}
             onClick={async () => {
               setSaving(true);
-              await onConfirm({ paidAt, method });
+              await onConfirm({ paidAt, method, bestaetigen: bestaetigen && Boolean(mail) });
               setSaving(false);
             }}
           >

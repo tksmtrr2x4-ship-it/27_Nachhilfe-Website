@@ -18,6 +18,8 @@ const SECURITY_HEADERS = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Kein „x-powered-by: Next.js“ (Befund S-09, Versions-Leak).
+  poweredByHeader: false,
   // Das Logo der Papierakte wird zur Laufzeit per fs gelesen – für Umgebungen
   // mit Datei-Tracing (Vercel, output: "standalone") ausdrücklich mitnehmen.
   outputFileTracingIncludes: {

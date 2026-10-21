@@ -1,0 +1,12 @@
+# Schickt eine Alarm-Mail an die Betreiberin, wenn ein Lernsprung-Dienst
+# endgültig ausfällt oder die tägliche Wache etwas findet.
+# Auf dem Server: /etc/systemd/system/lernsprung-alarm@.service
+[Unit]
+Description=Lernsprung-Alarm für %i
+
+[Service]
+Type=oneshot
+User=lernsprung
+Group=lernsprung
+EnvironmentFile=/etc/lernsprung/.env.production
+ExecStart=/usr/bin/node /var/www/lernsprung/scripts/alarm-mail.mjs "Dienst ausgefallen: %i" "systemd hat %i nach mehreren Abbrüchen aufgegeben. Prüfen: journalctl -u %i -n 100"

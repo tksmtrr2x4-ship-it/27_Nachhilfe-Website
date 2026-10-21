@@ -44,7 +44,10 @@ tar -C / -cf "$WORK/$NAME/dateien.tar" \
 
 ( cd "$WORK/$NAME" && sha256sum mongodb.archive.gz dateien.tar > SHA256SUMS )
 
-install -d -m 750 -o root -g deploy "$DEST"
+# Verzeichnis: Gruppe lernsprung (App-Benutzer, deploy ist Mitglied) darf es
+# auflisten – die Cockpit-Karte „System“ liest nur Name, Datum und Größe.
+# Die Dateien selbst bleiben root:deploy 640 (Abholung auf den Mac als deploy).
+install -d -m 750 -o root -g lernsprung "$DEST"
 OUT="$DEST/$NAME.tar.enc"
 tar -C "$WORK" -cf - "$NAME" \
   | openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -salt -pass "file:$KEY" -out "$OUT.part"

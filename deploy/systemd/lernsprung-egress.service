@@ -1,0 +1,15 @@
+# Lädt den Ausgangsfilter für den App-Benutzer (deploy/nftables/).
+# Auf dem Server: /etc/systemd/system/lernsprung-egress.service
+[Unit]
+Description=Lernsprung Ausgangsfilter (nftables, nur Benutzer lernsprung)
+Before=lernsprung.service
+After=ufw.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/lernsprung-egress.nft
+ExecStop=/usr/sbin/nft delete table inet lernsprung_egress
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+# Ausgangsfilter NUR für den Benutzer „lernsprung“ (die Next.js-App). Die
+# Policy bleibt accept: SSH, nginx, Jitsi, MongoDB, Backups und alle anderen
+# Benutzer sind nicht betroffen. Auf dem Server:
+# /etc/nftables.d/lernsprung-egress.nft, geladen von lernsprung-egress.service.
+#
+# Was die App wirklich braucht (Inventur 21.10.2026):
+#   - Loopback: MongoDB 127.0.0.1:27017, DNS über systemd-resolved 127.0.0.53,
+#     Status-Prüfung im Cockpit (www./meet. zeigen auf diesen Server, der
+#     Kernel routet eigene Adressen über lo)
+#   - SMTP smtp.strato.de:465 (nodemailer, implizites TLS)
+# Alles andere wird verworfen und protokolliert (Präfix lernsprung-egress-drop,
+# höchstens 10 Einträge je Minute).
+#
+# Neu laden: sudo systemctl restart lernsprung-egress
+table inet lernsprung_egress
+delete table inet lernsprung_egress
+table inet lernsprung_egress {
+    chain output {
+        type filter hook output priority 0; policy accept;
+        meta skuid != "lernsprung" accept
+        oifname "lo" accept
+        ct state established,related accept
+        tcp dport 465 accept
+        limit rate 10/minute log prefix "lernsprung-egress-drop " level warn
+        counter drop
+    }
+}

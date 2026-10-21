@@ -1,0 +1,70 @@
+# Next.js-App als eigener, eingesperrter Dienst (ersetzt PM2).
+# Auf dem Server: /etc/systemd/system/lernsprung.service
+# Siehe docs/security/SERVER_HARDENING.md, Abschnitt „Prozess-Isolation“.
+#
+# Aufteilung der Benutzer:
+#   deploy      besitzt /var/www/lernsprung, baut (npm ci, next build)
+#   lernsprung  führt die App aus, darf den Code nur lesen und schreibt nur
+#               in .next/cache und seine Datenverzeichnisse
+[Unit]
+Description=Lernsprung Website (Next.js)
+After=network-online.target mongod.service lernsprung-egress.service
+Wants=network-online.target lernsprung-egress.service
+# Bricht der Dienst fünfmal in zehn Minuten ab, gibt systemd auf und meldet
+# das per Mail (lernsprung-alarm@.service).
+StartLimitIntervalSec=600
+StartLimitBurst=5
+OnFailure=lernsprung-alarm@%n.service
+
+[Service]
+Type=simple
+User=lernsprung
+Group=lernsprung
+WorkingDirectory=/var/www/lernsprung
+EnvironmentFile=/etc/lernsprung/.env.production
+Environment=NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+# Nur auf der Loopback-Schnittstelle lauschen (S-10); nginx ist die einzige Tür.
+ExecStart=/usr/bin/node /var/www/lernsprung/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+# Dateisystem: alles schreibgeschützt außer den nötigen Pfaden.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/www/lernsprung/.next/cache /var/lib/lernsprung /var/lib/lernsprung-raum
+# Gruppe darf lesen (deploy räumt beim Build in .next/cache auf).
+UMask=0007
+
+# Rechte und Kernel.
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RemoveIPC=yes
+# AF_NETLINK braucht Node für os.networkInterfaces().
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# Kein MemoryDenyWriteExecute: das bricht den JIT von V8.
+
+# Speicher als cgroup-Grenze (PM2 startete bei 300 MB neu).
+MemoryHigh=600M
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

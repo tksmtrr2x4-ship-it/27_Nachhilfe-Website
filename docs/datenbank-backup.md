@@ -129,7 +129,11 @@ sudo bash -c 'set -a; . /etc/lernsprung/.env.production; . /etc/lernsprung/secre
 ([deploy/backup/compare-dbs.cjs](../deploy/backup/compare-dbs.cjs))
 
 Für den Ernstfall statt `--nsFrom/--nsTo` direkt in `$MONGODB_DB` mit `--drop`, vorher
-`pm2 stop lernsprung-website`. Dateien: `tar -C / -xf /root/restore/<name>/dateien.tar <pfad>`.
+`sudo systemctl stop lernsprung` (seit 21.10.2026 kein PM2 mehr, siehe
+[security/SERVER_HARDENING.md](security/SERVER_HARDENING.md)). Dateien:
+`tar -C / -xf /root/restore/<name>/dateien.tar <pfad>`, danach die Rechte zurück an den
+App-Benutzer: `chown -R lernsprung:lernsprung /var/lib/lernsprung/{invoices,belege,quittungen}`,
+dann `sudo systemctl start lernsprung`.
 
 **Test-Restore** am 16.09.2026 durchgeführt: alle Collections, Dokumente und Indizes identisch
 mit der Live-Datenbank. Empfehlung: einmal im Quartal wiederholen (siehe [dsgvo/tom.md](dsgvo/tom.md)).

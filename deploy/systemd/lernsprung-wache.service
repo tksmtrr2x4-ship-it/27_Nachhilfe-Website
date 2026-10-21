@@ -1,0 +1,10 @@
+# Tägliche Prüfung: Versionen, PHP-frei, Integrität des Deploy-Verzeichnisses,
+# blockierte ausgehende Verbindungen. Läuft als root (liest Paketstand,
+# nftables-Zähler und das root-eigene Manifest), schickt bei Befund eine Mail.
+# Auf dem Server: /etc/systemd/system/lernsprung-wache.service
+[Unit]
+Description=Lernsprung Sicherheits-Wache
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lernsprung-security-check --wache

@@ -1,0 +1,17 @@
+# Wöchentliche Prüfung der npm-Abhängigkeiten (Bauplan PHP2Shell, 6.7).
+# Sicherheitsupdates kommen zusätzlich sofort, sobald GitHub ein Advisory
+# kennt (Einstellung „Dependabot security updates“ im Repository).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    groups:
+      kleinkram:
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "deps"

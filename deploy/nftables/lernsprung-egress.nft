@@ -15,15 +15,18 @@
 table inet lernsprung_egress
 delete table inet lernsprung_egress
 table inet lernsprung_egress {
+    # Nur Pakete, die einem Socket des Benutzers lernsprung gehören, landen in
+    # app_out. Pakete ohne Socket (Kernel-Antworten wie FIN/ACK nach dem
+    # Schließen, RST, IPv6-Nachbarerkennung) haben keinen Benutzer und bleiben
+    # unberührt – ein „skuid != lernsprung accept“ hätte sie verworfen.
     chain output {
         type filter hook output priority 0; policy accept;
-        meta skuid != "lernsprung" accept
-        # ICMP/ICMPv6 nie sperren: Der Kernel ordnet z. B. IPv6-Nachbar-
-        # antworten (NDP) gelegentlich dem Socket-Benutzer zu – ohne sie
-        # fällt IPv6 aus.
-        meta l4proto { icmp, ipv6-icmp } accept
+        meta skuid "lernsprung" jump app_out
+    }
+    chain app_out {
         oifname "lo" accept
         ct state established,related accept
+        meta l4proto { icmp, ipv6-icmp } accept
         tcp dport 465 accept
         limit rate 10/minute log prefix "lernsprung-egress-drop " level warn
         counter drop

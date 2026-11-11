@@ -139,3 +139,19 @@ test("Absagen und Widerruf aus der Akte: Server prüft Frist und Zugehörigkeit 
   assert.match(widerruf, /schritt !== "bestaetigen"/, "zwei Schritte nach § 356a BGB");
   assert.match(widerruf, /erfasseWiderruf\(eingabe/);
 });
+
+test("Kennenlern-Meeting nur bis zur ersten echten Nachhilfestunde", async () => {
+  const { hatteSchonUnterricht } = await import("../lib/kunden/dokumente.js");
+  const heute = "2026-11-11";
+  const stunde = { status: "confirmed", offerSnapshot: { type: "session" }, requestedDate: "2026-11-05" };
+  assert.equal(hatteSchonUnterricht([], heute), false);
+  assert.equal(hatteSchonUnterricht([{ ...stunde, requestedDate: "2026-11-20" }], heute), false, "nur geplant");
+  assert.equal(hatteSchonUnterricht([{ ...stunde, kennenlernen: true }], heute), false, "das Kennenlernen selbst zählt nicht");
+  assert.equal(hatteSchonUnterricht([{ ...stunde, status: "cancelled" }], heute), false, "abgesagt");
+  assert.equal(hatteSchonUnterricht([{ ...stunde, heldStatus: "missed" }], heute), false, "ausgefallen");
+  assert.equal(hatteSchonUnterricht([{ ...stunde, status: "pending" }], heute), false, "nur angefragt");
+  assert.equal(hatteSchonUnterricht([stunde], heute), true, "stattgefunden");
+  assert.equal(hatteSchonUnterricht([{ ...stunde, requestedDate: "2026-11-20", heldStatus: "held" }], heute), true, "als gehalten markiert");
+  const route = fs.readFileSync(new URL("../app/api/konto/kennenlernen/route.js", import.meta.url), "utf8");
+  assert.match(route, /hatteSchonUnterricht\(bisher/, "auch der Server lehnt danach ab");
+});

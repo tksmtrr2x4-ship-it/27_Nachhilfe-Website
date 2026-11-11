@@ -239,6 +239,8 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten, onNeuLaden }) {
   const kind = schueler.find((s) => s._id === aktiv) || null;
   const mappe = mappen[aktiv] || { stunden: [], rechnungen: [], quittungen: [] };
   const nochKeineStunde = Object.values(mappen).every((m) => m.stunden.length === 0);
+  // Nach der ersten Nachhilfestunde verschwindet das Kennenlern-Meeting.
+  const kennenlernenMoeglich = !mappe.schonUnterricht;
   const kommende = [naechste, ...weitere].filter(Boolean);
   const naechsteDesKindes = kommende.find((s) => !kind || s.schuelerName === kind.name) || null;
   const nachrichtenDesKindes = nachrichten.filter((n) => !n.schuelerName || !kind || n.schuelerName === kind.name);
@@ -308,7 +310,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten, onNeuLaden }) {
           </div>
         ) : null}
 
-        {nochKeineStunde || weiterOffen ? (
+        {(nochKeineStunde || weiterOffen) && kennenlernenMoeglich ? (
           <div ref={weiterRef}>
             <WieWeiter kind={kind} kunde={kunde} offen={kennenlernen[kind._id] || null} />
           </div>
@@ -353,7 +355,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten, onNeuLaden }) {
                 kunde={kunde}
                 naechste={naechsteDesKindes}
                 onBearbeiten={() => onBearbeiten(kind._id)}
-                onKennenlernen={zeigeWeiter}
+                onKennenlernen={kennenlernenMoeglich ? zeigeWeiter : null}
                 onSchliessen={() => setOffen(false)}
               />
             }
@@ -365,7 +367,7 @@ function AktenRegal({ daten, meldung, onAbmelden, onBearbeiten, onNeuLaden }) {
                 kunde={kunde}
                 naechste={naechsteDesKindes}
                 onBearbeiten={() => onBearbeiten(kind._id)}
-                onKennenlernen={zeigeWeiter}
+                onKennenlernen={kennenlernenMoeglich ? zeigeWeiter : null}
                 onSchliessen={() => setOffen(false)}
               />
             </div>
@@ -423,9 +425,11 @@ function Steckbrief({ kind, kunde, naechste, kompakt = false, onBearbeiten, onKe
         <Link href="/angebote" className="underline underline-offset-4">
           Termin buchen
         </Link>
-        <button type="button" onClick={onKennenlernen} className="underline underline-offset-4">
-          Kennenlern-Meeting
-        </button>
+        {onKennenlernen ? (
+          <button type="button" onClick={onKennenlernen} className="underline underline-offset-4">
+            Kennenlern-Meeting
+          </button>
+        ) : null}
         <button type="button" onClick={onBearbeiten} className="underline underline-offset-4">
           Angaben ändern
         </button>

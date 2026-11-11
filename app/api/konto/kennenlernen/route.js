@@ -6,6 +6,7 @@ import { KONTO_COOKIE, darfMailSenden, kurz, sessionKonto, sitzungSieht } from "
 import { benachrichtigeKennenlernen, sendeKennenlernMail } from "@/lib/kunden/mail";
 import { legeTodoAn } from "@/lib/admin/todos";
 import { siteOrigin } from "@/lib/mailBrief";
+import { hatteSchonUnterricht } from "@/lib/kunden/dokumente";
 import { todayIsoBerlin } from "@/lib/adminError";
 
 // Kostenloses Kennenlern-Meeting per Video – nur aus einer angelegten
@@ -32,6 +33,16 @@ export async function POST(request) {
   const db = await getDb();
   const kind = studentId ? await db.collection("students").findOne({ _id: studentId, customerId: kunde._id }) : null;
   if (!kind || !sitzungSieht(konto, kind._id)) return Response.json({ error: "Diese Schülerakte gehört nicht zu diesem Konto." }, { status: 404 });
+
+  // Nach der ersten Nachhilfestunde braucht es kein Kennenlernen mehr.
+  const bisher = await db
+    .collection("bookings")
+    .find({ studentId: kind._id, "offerSnapshot.type": "session" })
+    .project({ status: 1, heldStatus: 1, requestedDate: 1, kennenlernen: 1 })
+    .toArray();
+  if (hatteSchonUnterricht(bisher, todayIsoBerlin())) {
+    return Response.json({ error: "Sie kennen sich ja schon – nach der ersten Stunde gibt es kein Kennenlern-Meeting mehr." }, { status: 409 });
+  }
 
   const datum = kurz(body.datum, 10);
   const zeit = kurz(body.zeit, 5);

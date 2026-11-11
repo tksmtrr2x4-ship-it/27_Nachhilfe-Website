@@ -164,6 +164,19 @@ test("Die Kundenansicht zeigt keine internen Notizen", async () => {
     diary: [{ text: "INTERN: Tagebuch" }],
     __col: "bookings",
   });
+  // Präsenzstunde mit Raum-Token (früher online geplant): kein Video-Knopf.
+  db.docs.set("b2", {
+    _id: "b2",
+    studentId: "s1",
+    status: "confirmed",
+    offerSnapshot: { type: "session", durationMinutes: 90 },
+    requestedDate: "2099-01-09",
+    requestedTime: "16:00",
+    subject: "Mathe",
+    locationType: "tutor",
+    meetingToken: "tok999",
+    __col: "bookings",
+  });
 
   const quelle = fs
     .readFileSync(new URL("../lib/kunden/uebersicht.js", import.meta.url), "utf8")
@@ -187,6 +200,7 @@ test("Die Kundenansicht zeigt keine internen Notizen", async () => {
   assert.ok(!alsText.includes("INTERN"), "weder Notizen noch Tagebuch dürfen in der Kundenansicht stehen");
   assert.equal(sicht.naechste.fach, "Mathe");
   assert.equal(sicht.naechste.onlineLink, "/meeting/tok123", "der Meeting-Link ist erwünscht");
+  assert.equal(sicht.weitere[0].onlineLink, null, "Präsenzstunde: kein Video-Link, auch wenn ein Raum-Token existiert");
   assert.equal(sicht.schueler[0].name, "Kind");
   assert.equal(sicht.kunde.email, "a@example.de");
 });

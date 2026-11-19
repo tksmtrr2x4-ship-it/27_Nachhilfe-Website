@@ -89,9 +89,19 @@ Vier Reiter, dahinter **keine neue Fachlogik**:
 | Reiter | Was passiert | Bestehende Logik |
 |---|---|---|
 | Übersicht | Eckdaten, Jitsi-Raum, Verschieben, Absagen, Ablauf | `LessonForm`, `PATCH /api/admin/bookings/[id]` |
-| Tagebuch | Eintrag zu dieser Stunde, Verlauf der Schülerin / des Schülers | `TagebuchFormular`, `lib/lessons/diary.js` |
+| Tagebuch | Eintrag zu dieser Stunde, Verlauf der Schülerin / des Schülers, Themen aus dem Themenfahrplan abhaken | `TagebuchFormular`, `lib/lessons/diary.js` |
 | Rechnung | Entwurf im Layout des fertigen Dokuments, Quittung | `POST /api/admin/invoices`, Finanzen → Rechnungen |
 | Akte | Stammdaten, Tagebuchblatt und Aufnahmebogen als .docx | `lib/papierakte` |
+
+**Themenfahrplan.** Im Schülerprofil eine chronologische Themenliste (z. B. aus dem
+Aufnahmegespräch, `student.fahrplan`), gültig ab einem Startdatum. Im Tagebuch einer
+Stunde ab diesem Datum werden die behandelten Themen angehakt (`diary.fahrplan`,
+optional „sitzt jetzt“). Der Fahrplan zeigt je Thema die Tagebucheinträge (Was wurde
+gemacht?, Verständnis, Mitarbeit, offene Fragen) und den Status offen / läuft / sitzt;
+Einträge seit dem Start ohne Thema stehen darunter, ältere Stunden bleiben außen vor.
+Nichts wird doppelt gespeichert – die Zusammenführung rechnet
+[../lib/students/fahrplan.js](../lib/students/fahrplan.js) (`fahrplanUebersicht`).
+Das gedruckte Tagebuchblatt ist unverändert.
 
 **Eine Regel je Frage.** Was „Tagebuch geführt" heißt, entscheidet allein
 `hasDiary()` ([../lib/lessons/diary.js](../lib/lessons/diary.js)); ob und wie eine

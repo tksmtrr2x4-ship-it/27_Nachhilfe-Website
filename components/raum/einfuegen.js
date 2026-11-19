@@ -59,7 +59,17 @@ async function pdfjs() {
 
 export async function pdfZuSeiten(datei, { beiFortschritt } = {}) {
   const lib = await pdfjs();
-  const doc = await lib.getDocument({ data: new Uint8Array(await datei.arrayBuffer()) }).promise;
+  // Ab pdf.js 6 räumt die Lade-Aufgabe auf (das Dokument selbst hat kein destroy() mehr) –
+  // auch wenn eine Seite nicht gerendert werden kann.
+  const laden = lib.getDocument({ data: new Uint8Array(await datei.arrayBuffer()) });
+  try {
+    return await seitenRendern(await laden.promise, beiFortschritt);
+  } finally {
+    await laden.destroy();
+  }
+}
+
+async function seitenRendern(doc, beiFortschritt) {
   const anzahl = Math.min(doc.numPages, MAX_SEITEN);
   const seiten = [];
   for (let i = 1; i <= anzahl; i++) {
@@ -76,7 +86,6 @@ export async function pdfZuSeiten(datei, { beiFortschritt } = {}) {
     seiten.push(seiteFuer(c.width, c.height, { url: alsJpeg(c), w: c.width, h: c.height }));
     beiFortschritt?.(i, anzahl);
   }
-  await doc.destroy();
   return { seiten, gekuerzt: doc.numPages > MAX_SEITEN };
 }
 

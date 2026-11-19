@@ -101,7 +101,10 @@ gemacht?, Verständnis, Mitarbeit, offene Fragen) und den Status offen / läuft 
 Einträge seit dem Start ohne Thema stehen darunter, ältere Stunden bleiben außen vor.
 Nichts wird doppelt gespeichert – die Zusammenführung rechnet
 [../lib/students/fahrplan.js](../lib/students/fahrplan.js) (`fahrplanUebersicht`).
-Das gedruckte Tagebuchblatt ist unverändert.
+Auf dem gedruckten Tagebuchblatt stehen die behandelten Themen und der Stand des
+Fahrplans nach dieser Stunde (je höchstens zwei Druckzeilen, `fahrplanFuerBlatt`).
+Gestaltung bewusst sachlich: rechteckige Felder und Schaltflächen
+(`components/admin/management/sachlich.js`), keine Kapseln, Status als Text.
 
 **Eine Regel je Frage.** Was „Tagebuch geführt" heißt, entscheidet allein
 `hasDiary()` ([../lib/lessons/diary.js](../lib/lessons/diary.js)); ob und wie eine

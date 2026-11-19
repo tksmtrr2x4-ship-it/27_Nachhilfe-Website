@@ -7,6 +7,8 @@ const BEISPIEL = {
   stunde: {
     nr: 7, datum: "30.09.2026", uhrzeit: "15:00 – 16:30", dauer: 90, ort: "online",
     thema: "Ableitungsregeln: Produkt- und Kettenregel",
+    fahrplanHeute: "3. Produktregel (abgeschlossen) · 4. Kettenregel",
+    fahrplanStand: "3 von 6 Themen abgeschlossen · nächstes Thema: Kettenregel",
     inhalt: "Wiederholung Potenzregel\nProduktregel an drei Beispielen hergeleitet\nKettenregel mit verketteten Funktionen geübt",
     hausaufgabe: "Aufgaben 4 bis 7", material: "Buch S. 112",
     verstaendnis: 3, mitarbeit: 5,

@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
     ]);
     const docx = await renderTagebuchblatt({
       kopf: tagebuchKopf({ student, lesson }),
-      stunde: tagebuchStunde({ lesson, allLessons, invoice }),
+      stunde: tagebuchStunde({ lesson, allLessons, invoice, fahrplan: student?.fahrplan || null }),
     });
     return new Response(docx, {
       headers: {

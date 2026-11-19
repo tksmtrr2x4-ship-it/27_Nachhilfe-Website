@@ -79,3 +79,21 @@ test("Auswahl im Tagebuch: offene + schon verknüpfte Themen, nicht vor dem Star
   assert.ok(themenFuerStunde(fahrplan, stunden, stunden[0]).some((t) => t.id === "thema-potenz" && t.gewaehlt && t.sitzt));
   assert.equal(themenFuerStunde(fahrplan, stunden, stunde("alt", "2026-11-01")), null);
 });
+
+test("Tagebuchblatt: Fahrplan-Themen der Stunde und Stand nach dieser Stunde", async () => {
+  const { tagebuchStunde } = await import("@/lib/papierakte/index");
+  const stunden = [
+    stunde("s1", "2026-11-12", { fahrplan: [{ id: "thema-potenz", sitzt: true }] }),
+    stunde("s2", "2026-11-17", { fahrplan: [{ id: "thema-pgleich", sitzt: false }] }, { lessonNotes: "x" }),
+    stunde("s3", "2026-11-24", { fahrplan: [{ id: "thema-pgleich", sitzt: true }] }, { lessonNotes: "y" }),
+  ];
+  const s2 = tagebuchStunde({ lesson: stunden[1], allLessons: stunden, fahrplan });
+  assert.equal(s2.fahrplanHeute, "2. Potenzgleichungen");
+  assert.equal(s2.fahrplanStand, "1 von 3 Themen abgeschlossen · nächstes Thema: Potenzgleichungen"); // s3 liegt später und zählt noch nicht
+  const s3 = tagebuchStunde({ lesson: stunden[2], allLessons: stunden, fahrplan });
+  assert.equal(s3.fahrplanHeute, "2. Potenzgleichungen (abgeschlossen)");
+  assert.equal(s3.fahrplanStand, "2 von 3 Themen abgeschlossen · nächstes Thema: Wurzelgleichungen");
+  // ohne Fahrplan oder vor dem Start: Felder bleiben leer
+  assert.equal("fahrplanStand" in tagebuchStunde({ lesson: stunden[1], allLessons: stunden }), false);
+  assert.equal("fahrplanStand" in tagebuchStunde({ lesson: stunde("alt", "2026-11-01"), allLessons: stunden, fahrplan }), false);
+});

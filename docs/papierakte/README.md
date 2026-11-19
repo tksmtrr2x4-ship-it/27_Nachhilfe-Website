@@ -22,6 +22,8 @@ Das Tagebuch gehört zu einer Stunde und wird dort gespeichert:
   von Hand, mit Eintrag ist alles eingetragen. Aus der Stunde selbst kommen
   Schüler/in, Fach (Kursniveau als LF/BF), Klasse · Schule, laufende Nummer,
   Datum, Uhrzeit, Dauer, Ort, nächster Termin, Abrechnung und Ausfall.
+  Hat das Kind einen Themenfahrplan, stehen in der Zeile „Themenfahrplan“
+  die in der Stunde behandelten Themen und der Stand nach dieser Stunde.
 
 Route: `GET /api/admin/lessons/[id]/tagebuch`
 

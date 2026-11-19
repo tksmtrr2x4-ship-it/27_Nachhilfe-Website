@@ -4,50 +4,46 @@ import { useMemo, useState } from "react";
 import { formatDate } from "@/lib/format";
 import { FAHRPLAN_GRENZEN, fahrplanUebersicht } from "@/lib/students/fahrplan";
 import { useStundeOeffnen } from "@/components/admin/shell/stunde";
-import { btnPrimary, btnSecondary, card, errorText, input, todayIso } from "@/components/admin/management/ui";
+import { card, errorText, todayIso } from "@/components/admin/management/ui";
+import { beschriftung, feld, knopf, knopfKlein, knopfPrimaer, meta, text } from "@/components/admin/management/sachlich";
 
 // Themenfahrplan im Schülerprofil: chronologische Themenliste (z. B. aus dem
 // Aufnahmegespräch), zusammengeführt mit dem Tagebuch. Je Thema stehen die
-// Stunden, in denen es dran war – mit dem, was im Tagebuch steht. Logik und
-// Datenform: lib/students/fahrplan.js.
+// Stunden, in denen es behandelt wurde – mit dem, was im Tagebuch steht.
+// Logik und Datenform: lib/students/fahrplan.js. Gestaltung bewusst sachlich:
+// rechteckige Felder, Status als Text, Bewertungen als Zahl.
 
 const STATUS = {
-  offen: { text: "offen", cls: "bg-[var(--ck-surface2)] text-[var(--ck-muted)]" },
-  laeuft: { text: "läuft", cls: "bg-[var(--ck-warn-soft)] text-[var(--ck-warn)]" },
-  sitzt: { text: "sitzt", cls: "bg-[var(--ck-pos-soft)] text-[var(--ck-pos)]" },
+  offen: { text: "Offen", cls: "text-[var(--ck-muted)]" },
+  laeuft: { text: "In Arbeit", cls: "text-[var(--ck-warn)]" },
+  sitzt: { text: "Abgeschlossen", cls: "text-[var(--ck-pos)]" },
 };
 
-function Punkte({ wert, label }) {
-  if (!wert) return null;
-  return (
-    <span className="text-xs text-[var(--ck-muted)]" title={`${label}: ${wert} von 5`}>
-      {label} {"●".repeat(wert)}
-      <span className="text-[var(--ck-faint)]">{"●".repeat(5 - wert)}</span>
-    </span>
-  );
+function Bewertung({ e }) {
+  const teile = [
+    e.verstaendnis ? `Verständnis ${e.verstaendnis}/5` : null,
+    e.mitarbeit ? `Mitarbeit ${e.mitarbeit}/5` : null,
+    e.sitzt ? "Thema abgeschlossen" : null,
+  ].filter(Boolean);
+  return teile.length ? <p className={`${meta} mt-1`}>{teile.join(" · ")}</p> : null;
 }
 
 function Eintrag({ e, oeffnen }) {
   return (
-    <li className="rounded-xl bg-[var(--ck-surface2)] p-3 text-sm">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <button type="button" className="font-semibold text-[var(--ck-accent)] hover:underline" onClick={() => oeffnen(e.stundeId, "tagebuch")}>
+    <li className="min-w-0 py-2.5 first:pt-0 last:pb-0">
+      <p className={`${text} min-w-0 break-words`}>
+        <button type="button" className="font-semibold text-[var(--ck-accent)] underline-offset-2 hover:underline" onClick={() => oeffnen(e.stundeId, "tagebuch")}>
           {formatDate(e.datum)}
         </button>
-        {e.thema ? <span className="text-[var(--ck-text)]">{e.thema}</span> : null}
-        {e.sitzt ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS.sitzt.cls}`}>abgeschlossen</span> : null}
-        <span className="ml-auto flex gap-3">
-          <Punkte wert={e.verstaendnis} label="Verständnis" />
-          <Punkte wert={e.mitarbeit} label="Mitarbeit" />
-        </span>
-      </div>
-      {e.gemacht ? <p className="mt-1 whitespace-pre-wrap text-[var(--ck-text)]">{e.gemacht}</p> : null}
+        {e.thema ? <span className="text-[var(--ck-muted)]"> · {e.thema}</span> : null}
+      </p>
+      {e.gemacht ? <p className={`${text} mt-0.5 whitespace-pre-wrap break-words`}>{e.gemacht}</p> : null}
       {e.offeneFragen ? (
-        <p className="mt-1 whitespace-pre-wrap text-[var(--ck-muted)]">
-          <span className="font-semibold">Offen: </span>
-          {e.offeneFragen}
+        <p className={`${meta} mt-0.5 whitespace-pre-wrap break-words`}>
+          <span className="font-semibold">Offen:</span> {e.offeneFragen}
         </p>
       ) : null}
+      <Bewertung e={e} />
     </li>
   );
 }
@@ -56,14 +52,14 @@ function Bearbeiten({ fahrplan, onSpeichern, onAbbrechen, busy }) {
   const [start, setStart] = useState(fahrplan?.start || todayIso());
   const [themen, setThemen] = useState(() => (fahrplan?.themen?.length ? fahrplan.themen : [{ titel: "", notiz: "" }]));
   const [neu, setNeu] = useState("");
-  const aendern = (i, feld, wert) => setThemen((t) => t.map((x, j) => (j === i ? { ...x, [feld]: wert } : x)));
+  const aendern = (i, f, wert) => setThemen((t) => t.map((x, j) => (j === i ? { ...x, [f]: wert } : x)));
   const schieben = (i, d) =>
     setThemen((t) => {
       const n = [...t];
       [n[i], n[i + d]] = [n[i + d], n[i]];
       return n;
     });
-  // Mehrere Themen auf einmal: eine Zeile = ein Thema (z. B. aus dem Aufnahmebogen abgetippt)
+  // Mehrere Themen auf einmal: eine Zeile = ein Thema (z. B. vom Aufnahmebogen abgetippt)
   const hinzufuegen = () => {
     const zeilen = neu.split("\n").map((z) => z.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, "").trim()).filter(Boolean);
     if (!zeilen.length) return;
@@ -72,50 +68,52 @@ function Bearbeiten({ fahrplan, onSpeichern, onAbbrechen, busy }) {
   };
 
   return (
-    <div className="mt-3 grid gap-3">
-      <label className="block text-xs font-semibold text-[var(--ck-muted)] sm:w-60">
-        Gilt ab (Tagebucheinträge ab diesem Tag)
-        <input type="date" className={input} value={start} onChange={(e) => setStart(e.target.value)} />
+    <div className="mt-4 grid gap-4">
+      <label className="block sm:w-56">
+        <span className={beschriftung}>Gültig ab</span>
+        <input type="date" className={`${feld} mt-1`} value={start} onChange={(e) => setStart(e.target.value)} />
+        <span className={`${meta} mt-1 block`}>Tagebucheinträge ab diesem Tag werden zugeordnet.</span>
       </label>
-      <ol className="grid gap-2">
-        {themen.map((t, i) => (
-          <li key={t.id || `neu-${i}`} className="grid gap-2 rounded-xl bg-[var(--ck-surface2)] p-2 sm:grid-cols-[2rem_1fr_1fr_auto] sm:items-center">
-            <span className="text-center text-sm font-semibold text-[var(--ck-muted)]">{i + 1}.</span>
-            <input className={`${input} mt-0`} aria-label={`Thema ${i + 1}`} placeholder="z. B. Potenzgleichungen" maxLength={FAHRPLAN_GRENZEN.titel} value={t.titel} onChange={(e) => aendern(i, "titel", e.target.value)} />
-            <input className={`${input} mt-0`} aria-label={`Notiz zu Thema ${i + 1}`} placeholder="Notiz (optional), z. B. bis zur KA am 12.12." maxLength={FAHRPLAN_GRENZEN.notiz} value={t.notiz || ""} onChange={(e) => aendern(i, "notiz", e.target.value)} />
-            <span className="flex gap-1">
-              <button type="button" className={btnSecondary} disabled={i === 0} onClick={() => schieben(i, -1)} aria-label="nach oben">
-                ↑
-              </button>
-              <button type="button" className={btnSecondary} disabled={i === themen.length - 1} onClick={() => schieben(i, 1)} aria-label="nach unten">
-                ↓
-              </button>
-              <button type="button" className={btnSecondary} onClick={() => setThemen((x) => x.filter((_, j) => j !== i))} aria-label={`Thema ${i + 1} entfernen`}>
-                ×
-              </button>
-            </span>
-          </li>
-        ))}
-      </ol>
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
-        <label className="block text-xs font-semibold text-[var(--ck-muted)]">
-          Themen hinzufügen – eine Zeile pro Thema
-          <textarea className={input} rows={3} value={neu} onChange={(e) => setNeu(e.target.value)} placeholder={"Potenzgesetze\nPotenzgleichungen\nWurzelgleichungen"} />
-        </label>
-        <button type="button" className={btnSecondary} disabled={!neu.trim()} onClick={hinzufuegen}>
-          Hinzufügen
-        </button>
+
+      <div>
+        <span className={beschriftung}>Themen in geplanter Reihenfolge</span>
+        <ol className="mt-1 divide-y divide-[var(--ck-line)] rounded-[4px] border border-[var(--ck-line)]">
+          {themen.map((t, i) => (
+            <li key={t.id || `neu-${i}`} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 gap-y-2 p-2.5 sm:grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+              <span className={`${text} pt-2 text-right font-semibold text-[var(--ck-muted)] sm:pt-0`}>{i + 1}.</span>
+              <input className={feld} aria-label={`Thema ${i + 1}`} placeholder="Thema, z. B. Potenzgleichungen" maxLength={FAHRPLAN_GRENZEN.titel} value={t.titel} onChange={(e) => aendern(i, "titel", e.target.value)} />
+              <input className={`${feld} col-start-2 sm:col-start-auto`} aria-label={`Notiz zu Thema ${i + 1}`} placeholder="Notiz (optional), z. B. bis zur Klassenarbeit" maxLength={FAHRPLAN_GRENZEN.notiz} value={t.notiz || ""} onChange={(e) => aendern(i, "notiz", e.target.value)} />
+              <span className="col-start-2 flex justify-end gap-1 sm:col-start-auto">
+                <button type="button" className={knopfKlein} disabled={i === 0} onClick={() => schieben(i, -1)} aria-label={`Thema ${i + 1} nach oben`}>
+                  ↑
+                </button>
+                <button type="button" className={knopfKlein} disabled={i === themen.length - 1} onClick={() => schieben(i, 1)} aria-label={`Thema ${i + 1} nach unten`}>
+                  ↓
+                </button>
+                <button type="button" className={knopfKlein} onClick={() => setThemen((x) => x.filter((_, j) => j !== i))} aria-label={`Thema ${i + 1} entfernen`}>
+                  ✕
+                </button>
+              </span>
+            </li>
+          ))}
+        </ol>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={btnPrimary}
-          disabled={busy}
-          onClick={() => onSpeichern({ start, themen: themen.filter((t) => t.titel.trim()) })}
-        >
-          {busy ? "Speichert …" : "Fahrplan speichern"}
+
+      <label className="block">
+        <span className={beschriftung}>Weitere Themen hinzufügen – eine Zeile pro Thema</span>
+        <textarea className={`${feld} mt-1`} rows={3} value={neu} onChange={(e) => setNeu(e.target.value)} placeholder={"Potenzgesetze\nPotenzgleichungen\nWurzelgleichungen"} />
+        <span className="mt-2 flex justify-end">
+          <button type="button" className={knopf} disabled={!neu.trim()} onClick={hinzufuegen}>
+            Übernehmen
+          </button>
+        </span>
+      </label>
+
+      <div className="flex flex-wrap gap-2 border-t border-[var(--ck-line)] pt-3">
+        <button type="button" className={knopfPrimaer} disabled={busy} onClick={() => onSpeichern({ start, themen: themen.filter((t) => t.titel.trim()) })}>
+          {busy ? "Wird gespeichert …" : "Fahrplan speichern"}
         </button>
-        <button type="button" className={btnSecondary} onClick={onAbbrechen}>
+        <button type="button" className={knopf} onClick={onAbbrechen}>
           Abbrechen
         </button>
       </div>
@@ -128,7 +126,7 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
   const fahrplan = student.fahrplan || null;
   const [bearbeiten, setBearbeiten] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [zeigeErledigte, setZeigeErledigte] = useState(true);
+  const [abgeschlosseneZeigen, setAbgeschlosseneZeigen] = useState(true);
   const uebersicht = useMemo(() => fahrplanUebersicht(fahrplan, lessons), [fahrplan, lessons]);
 
   async function speichern(body) {
@@ -145,87 +143,100 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
     }
   }
 
-  // „sitzt“ von Hand setzen oder zurücknehmen (z. B. Thema in der Schule abgeschlossen)
-  function sitzt(thema, an) {
+  // Abschluss von Hand setzen oder zurücknehmen (z. B. Thema in der Schule abgeschlossen)
+  function abschliessen(thema, an) {
     speichern({
       start: fahrplan.start,
       themen: fahrplan.themen.map((t) => (t.id === thema.id ? { ...t, sitztAm: an ? todayIso() : null } : t)),
     });
   }
 
+  const sichtbar = uebersicht ? uebersicht.themen.filter((t) => abgeschlosseneZeigen || t.status !== "sitzt") : [];
+
   return (
-    <div className={`${card} min-w-0`}>
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-[var(--ck-text)]">Themenfahrplan</h3>
-        {uebersicht ? (
-          <span className="text-xs text-[var(--ck-muted)]">
-            ab {formatDate(uebersicht.start)} · {uebersicht.fortschritt.sitzt} von {uebersicht.fortschritt.gesamt} sitzen
-            {uebersicht.fortschritt.laeuft ? ` · ${uebersicht.fortschritt.laeuft} laufen` : ""}
-          </span>
-        ) : null}
-        <span className="ml-auto flex gap-2">
-          {uebersicht && !bearbeiten && uebersicht.fortschritt.sitzt ? (
-            <button type="button" className={btnSecondary} onClick={() => setZeigeErledigte((z) => !z)}>
-              {zeigeErledigte ? "Erledigte ausblenden" : "Erledigte zeigen"}
-            </button>
+    <section className={`${card} min-w-0`} aria-labelledby="themenfahrplan-titel">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h3 id="themenfahrplan-titel" className="font-semibold text-[var(--ck-text)]">
+            Themenfahrplan
+          </h3>
+          {uebersicht ? (
+            <p className={`${meta} mt-0.5`}>
+              Gültig ab {formatDate(uebersicht.start)} · {uebersicht.fortschritt.sitzt} von {uebersicht.fortschritt.gesamt} Themen abgeschlossen
+              {uebersicht.fortschritt.laeuft ? `, ${uebersicht.fortschritt.laeuft} in Arbeit` : ""}
+            </p>
           ) : null}
-          {!bearbeiten ? (
-            <button type="button" className={fahrplan ? btnSecondary : btnPrimary} onClick={() => setBearbeiten(true)}>
+        </div>
+        {!bearbeiten ? (
+          <div className="flex flex-wrap gap-2">
+            {uebersicht?.fortschritt.sitzt ? (
+              <button type="button" className={knopf} onClick={() => setAbgeschlosseneZeigen((z) => !z)}>
+                {abgeschlosseneZeigen ? "Abgeschlossene ausblenden" : "Abgeschlossene einblenden"}
+              </button>
+            ) : null}
+            <button type="button" className={fahrplan ? knopf : knopfPrimaer} onClick={() => setBearbeiten(true)}>
               {fahrplan ? "Bearbeiten" : "Fahrplan anlegen"}
             </button>
-          ) : null}
-        </span>
+          </div>
+        ) : null}
       </div>
 
       {bearbeiten ? (
         <Bearbeiten fahrplan={fahrplan} busy={busy} onSpeichern={speichern} onAbbrechen={() => setBearbeiten(false)} />
       ) : !uebersicht ? (
-        <p className="mt-2 text-sm text-[var(--ck-muted)]">
-          Noch kein Fahrplan. Z. B. nach dem Aufnahmegespräch die Themen der Reihe nach eintragen. Im Tagebuch jeder Stunde
-          lässt sich dann wählen, welches Thema dran war; wie es lief, erscheint hier beim Thema. Ältere Tagebucheinträge
-          bleiben außen vor.
+        <p className={`${text} mt-2 text-[var(--ck-muted)]`}>
+          Noch kein Fahrplan angelegt. Nach dem Aufnahmegespräch die Themen in der geplanten Reihenfolge eintragen. Im Tagebuch jeder
+          Stunde wird dann das behandelte Thema angegeben; Inhalt und Bewertung der Stunde erscheinen hier beim Thema. Stunden vor dem
+          Startdatum werden nicht berücksichtigt.
         </p>
       ) : (
         <>
-          <ol className="mt-4 grid gap-3">
-            {uebersicht.themen
-              .filter((t) => zeigeErledigte || t.status !== "sitzt")
-              .map((t) => (
-                <li key={t.id} className={`rounded-2xl border p-3 ${t.aktuell ? "border-[var(--ck-accent)]" : "border-[var(--ck-line)]"}`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-[var(--ck-muted)]">{uebersicht.themen.indexOf(t) + 1}.</span>
-                    <span className="font-semibold text-[var(--ck-text)]">{t.titel}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[t.status].cls}`}>{STATUS[t.status].text}</span>
-                    {t.aktuell ? <span className="text-[11px] font-semibold text-[var(--ck-accent)]">als Nächstes</span> : null}
-                    <span className="ml-auto text-xs text-[var(--ck-muted)]">
-                      {t.eintraege.length ? `${t.eintraege.length} ${t.eintraege.length === 1 ? "Stunde" : "Stunden"}` : ""}
-                    </span>
-                    {t.status === "sitzt" && t.sitztAm ? (
-                      <button type="button" className="text-xs text-[var(--ck-faint)] hover:text-[var(--ck-text)]" disabled={busy} onClick={() => sitzt(t, false)}>
-                        wieder öffnen
-                      </button>
-                    ) : t.status !== "sitzt" ? (
-                      <button type="button" className="text-xs text-[var(--ck-accent)] hover:underline" disabled={busy} onClick={() => sitzt(t, true)}>
-                        sitzt
-                      </button>
+          <ol className="mt-4 divide-y divide-[var(--ck-line)] rounded-[4px] border border-[var(--ck-line)]">
+            {sichtbar.map((t) => {
+              const nr = uebersicht.themen.indexOf(t) + 1;
+              return (
+                <li key={t.id} className={`grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 p-3 ${t.aktuell ? "border-l-[3px] border-l-[var(--ck-accent)] pl-[9px]" : ""}`}>
+                  <span className={`${text} text-right font-semibold text-[var(--ck-muted)]`}>{nr}.</span>
+                  <div className="min-w-0">
+                    <p className={`${text} break-words font-semibold`}>{t.titel}</p>
+                    <p className={`${meta} mt-0.5`}>
+                      <span className={`font-semibold ${STATUS[t.status].cls}`}>{STATUS[t.status].text}</span>
+                      {t.aktuell ? " · nächstes Thema" : ""}
+                      {t.eintraege.length ? ` · ${t.eintraege.length} ${t.eintraege.length === 1 ? "Stunde" : "Stunden"}` : ""}
+                      {t.status === "sitzt" && t.sitztAm ? ` · abgeschlossen am ${formatDate(t.sitztAm)}` : ""}
+                      {" · "}
+                      {t.status === "sitzt" && t.sitztAm ? (
+                        <button type="button" className="text-[var(--ck-accent)] underline-offset-2 hover:underline" disabled={busy} onClick={() => abschliessen(t, false)}>
+                          Abschluss zurücknehmen
+                        </button>
+                      ) : t.status !== "sitzt" ? (
+                        <button type="button" className="text-[var(--ck-accent)] underline-offset-2 hover:underline" disabled={busy} onClick={() => abschliessen(t, true)}>
+                          als abgeschlossen markieren
+                        </button>
+                      ) : (
+                        <span>im Tagebuch abgeschlossen</span>
+                      )}
+                    </p>
+                    {t.notiz ? <p className={`${meta} mt-1 break-words`}>{t.notiz}</p> : null}
+                    {t.eintraege.length ? (
+                      <ul className="mt-2.5 divide-y divide-[var(--ck-line)] border-t border-[var(--ck-line)] pt-2.5">
+                        {t.eintraege.map((e) => (
+                          <Eintrag key={`${t.id}-${e.stundeId}`} e={e} oeffnen={oeffnen} />
+                        ))}
+                      </ul>
                     ) : null}
                   </div>
-                  {t.notiz ? <p className="mt-1 text-sm text-[var(--ck-muted)]">{t.notiz}</p> : null}
-                  {t.eintraege.length ? (
-                    <ul className="mt-2 grid gap-2">
-                      {t.eintraege.map((e) => (
-                        <Eintrag key={`${t.id}-${e.stundeId}`} e={e} oeffnen={oeffnen} />
-                      ))}
-                    </ul>
-                  ) : null}
                 </li>
-              ))}
+              );
+            })}
+            {sichtbar.length === 0 ? <li className={`${text} p-3 text-[var(--ck-muted)]`}>Alle Themen sind abgeschlossen.</li> : null}
           </ol>
+
           {uebersicht.ohneThema.length ? (
             <div className="mt-5">
-              <h4 className="text-sm font-semibold text-[var(--ck-text)]">Tagebuch ohne Fahrplan-Thema</h4>
-              <p className="text-xs text-[var(--ck-muted)]">Seit Start des Fahrplans – im Tagebuch der Stunde einem Thema zuordnen.</p>
-              <ul className="mt-2 grid gap-2">
+              <h4 className={`${text} font-semibold`}>Tagebucheinträge ohne Fahrplan-Thema</h4>
+              <p className={`${meta} mt-0.5`}>Seit Beginn des Fahrplans. Über das Datum das Tagebuch öffnen und ein Thema zuordnen.</p>
+              <ul className="mt-2 divide-y divide-[var(--ck-line)] rounded-[4px] border border-[var(--ck-line)] px-3 py-2.5">
                 {uebersicht.ohneThema.map((e) => (
                   <Eintrag key={e.stundeId} e={e} oeffnen={oeffnen} />
                 ))}
@@ -234,6 +245,6 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
           ) : null}
         </>
       )}
-    </div>
+    </section>
   );
 }

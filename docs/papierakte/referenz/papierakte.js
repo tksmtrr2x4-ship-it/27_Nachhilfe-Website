@@ -309,6 +309,7 @@ T.push(new Paragraph({ keepNext: true, spacing: { before: 150, after: 60 }, chil
 T.push(formTable([
   row([["Datum", E4[0], { value: st.datum }], ["Uhrzeit (von – bis)", E4[1], { value: st.uhrzeit }], ["Dauer", E4[2], { opts: dauerOpts }], ["Ort", E4[3], { opts: ortOpts }]], 520),
   row([["Thema der Stunde", CW, { span: 4, value: st.thema }]], 560),
+  row([["Themenfahrplan – heute behandelt", E4[0] + E4[1], { span: 2, value: st.fahrplanHeute }], ["Stand des Themenfahrplans", E4[2] + E4[3], { span: 2, value: st.fahrplanStand }]], 520),
   row([["Was wurde gemacht? (Inhalte, Aufgaben, Erklärungen)", CW, { span: 4, value: st.inhalt }]], 3400),
   row([["Hausaufgabe / Übung bis zum nächsten Mal", E4[0] + E4[1] + E4[2], { span: 3, value: st.hausaufgabe }], ["Material / Seiten", E4[3], { value: st.material }]], 1400),
   row([["Verständnis (einkreisen)", E4[0] + E4[1], { span: 2, opts: skala("kaum", st.verstaendnis, "sicher") }], ["Mitarbeit (einkreisen)", E4[2] + E4[3], { span: 2, opts: skala("wenig", st.mitarbeit, "sehr gut") }]], 480),
@@ -348,7 +349,7 @@ function buildPapierakte({ logo: logoBuffer } = {}) {
  * @param {Buffer} opts.logo
  * @param {object} [opts.kopf]   { schueler, fach, klasseSchule }
  * @param {object} [opts.stunde] { nr, datum, uhrzeit, dauer (Minuten), ort ("online" | "vor Ort"),
- *   thema, inhalt, hausaufgabe, material, verstaendnis (1–5), mitarbeit (1–5), offen,
+ *   thema, fahrplanHeute, fahrplanStand, inhalt, hausaufgabe, material, verstaendnis (1–5), mitarbeit (1–5), offen,
  *   naechsterTermin, naechsteKlausur, abrechnung: { imAdmin, rechnungNr, bezahlt }, ausgefallen }
  */
 function buildTagebuchblatt({ logo: logoBuffer, kopf, stunde } = {}) {

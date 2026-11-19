@@ -5,7 +5,8 @@ import { formatDate } from "@/lib/format";
 import { DIARY_FIELDS, DIARY_SCALES, fitsSheet } from "@/lib/lessons/diary";
 import { themenFuerStunde } from "@/lib/students/fahrplan";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
-import { Button, Field, Modal, downloadProtectedFile, errorText, input } from "@/components/admin/ui";
+import { Modal, downloadProtectedFile, errorText } from "@/components/admin/ui";
+import { beschriftung, feld, knopf, knopfPrimaer, meta, text } from "@/components/admin/management/sachlich";
 
 // Nachhilfetagebuch einer Stunde: im Admin ausfüllen und/oder als Blatt
 // (Word) herunterladen – leer zum Ausfüllen von Hand oder mit allem, was
@@ -69,26 +70,28 @@ function FahrplanAuswahl({ lesson, form, setForm }) {
   const sitzt = (t) => setForm((f) => ({ ...f, fahrplan: f.fahrplan.map((l) => (l.id === t.id ? { ...l, sitzt: !l.sitzt } : l)) }));
 
   return (
-    <fieldset className="rounded-xl border border-[var(--ck-line)] p-3">
-      <legend className="px-1 text-xs font-semibold text-[var(--ck-muted)]">Themenfahrplan – was war heute dran?</legend>
+    <fieldset className="min-w-0 rounded-[4px] border border-[var(--ck-line)] px-3 pb-3 pt-1">
+      <legend className={`${beschriftung} px-1`}>Themenfahrplan – in dieser Stunde behandelt</legend>
       {themen.length === 0 ? (
-        <p className="text-xs text-[var(--ck-muted)]">Alle Themen des Fahrplans sitzen. Neue Themen im Schülerprofil ergänzen.</p>
+        <p className={meta}>Alle Themen des Fahrplans sind abgeschlossen. Neue Themen im Schülerprofil ergänzen.</p>
       ) : (
-        <ul className="grid gap-1.5">
+        <ul className="divide-y divide-[var(--ck-line)]">
           {themen.map((t) => {
             const an = gewaehlt.has(t.id);
             return (
-              <li key={t.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={an} onChange={() => umschalten(t)} />
-                  <span className="text-[var(--ck-text)]">{t.titel}</span>
+              <li key={t.id} className="grid min-w-0 gap-1.5 py-2 sm:flex sm:items-center sm:gap-4">
+                <label className={`${text} flex min-w-0 items-start gap-2 sm:flex-1`}>
+                  <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 rounded-none" checked={an} onChange={() => umschalten(t)} />
+                  <span className="min-w-0 break-words">
+                    {t.titel}
+                    {t.aktuell ? <span className={`${meta} ml-1.5`}>(nächstes Thema)</span> : null}
+                    {!an && t.passtZumThema ? <span className={`${meta} ml-1.5`}>(passt zum Thema der Stunde)</span> : null}
+                  </span>
                 </label>
-                {t.aktuell ? <span className="text-[11px] font-semibold text-[var(--ck-accent)]">als Nächstes</span> : null}
-                {!an && t.passtZumThema ? <span className="text-[11px] text-[var(--ck-warn)]">passt zum Thema der Stunde</span> : null}
                 {an ? (
-                  <label className="ml-auto flex items-center gap-1.5 text-xs text-[var(--ck-muted)]">
-                    <input type="checkbox" checked={Boolean(gewaehlt.get(t.id)?.sitzt)} onChange={() => sitzt(t)} />
-                    sitzt jetzt (abgeschlossen)
+                  <label className={`${meta} flex items-center gap-1.5 pl-6 sm:shrink-0 sm:pl-0`}>
+                    <input type="checkbox" className="h-4 w-4 rounded-none" checked={Boolean(gewaehlt.get(t.id)?.sitzt)} onChange={() => sitzt(t)} />
+                    Thema abgeschlossen
                   </label>
                 ) : null}
               </li>
@@ -96,7 +99,7 @@ function FahrplanAuswahl({ lesson, form, setForm }) {
           })}
         </ul>
       )}
-      <p className="mt-2 text-[11px] text-[var(--ck-faint)]">Wie es lief (Was wurde gemacht?, Verständnis, Mitarbeit) erscheint im Fahrplan beim Thema.</p>
+      <p className={`${meta} mt-1`}>Inhalt und Bewertung dieser Stunde erscheinen im Themenfahrplan beim gewählten Thema und auf dem Tagebuchblatt.</p>
     </fieldset>
   );
 }
@@ -106,45 +109,49 @@ function TextField({ name, form, set, rows = 3 }) {
   const value = form[name];
   const fits = fitsSheet(name, value.trim());
   const common = {
-    className: `${input} ${fits ? "" : "border-[var(--ck-neg)]"}`,
+    id: `tagebuch-${name}`,
+    className: `${feld} mt-1 ${fits ? "" : "border-[var(--ck-neg)]"}`,
     value,
     onChange: (e) => set(name, e.target.value),
   };
   return (
-    <Field label={f.label}>
+    <div className="min-w-0">
+      <label htmlFor={common.id} className={beschriftung}>
+        {f.label}
+      </label>
       {f.lines === 1 ? <input {...common} maxLength={f.max} /> : <textarea {...common} rows={rows} />}
       <span className={`mt-0.5 block text-right text-[11px] ${fits ? "text-[var(--ck-faint)]" : "text-[var(--ck-neg)]"}`}>
         {fits ? `${value.length}/${f.max}` : "passt so nicht aufs Blatt – bitte kürzen"}
       </span>
-    </Field>
+    </div>
   );
 }
 
+// Bewertung 1–5 als rechteckige Segmentleiste (kein Kreis, keine Kapsel)
 function Scale({ name, form, set }) {
   const s = DIARY_SCALES[name];
   return (
-    <div>
-      <span className="text-xs font-semibold text-[var(--ck-muted)]">{s.label}</span>
-      <div className="mt-1 flex items-center gap-1.5 text-xs text-[var(--ck-muted)]">
-        <span>{s.low}</span>
+    <fieldset className="min-w-0">
+      <legend className={beschriftung}>
+        {s.label} <span className="font-normal normal-case tracking-normal">(1 = {s.low}, 5 = {s.high})</span>
+      </legend>
+      <div className="mt-1 grid grid-cols-5 overflow-hidden rounded-[4px] border border-[var(--ck-line)]">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
             aria-pressed={form[name] === n}
+            aria-label={`${s.label} ${n} von 5`}
             onClick={() => set(name, form[name] === n ? null : n)}
-            className={`h-8 w-8 rounded-full border text-sm font-semibold transition ${
-              form[name] === n
-                ? "border-[var(--ck-accent)] bg-[var(--ck-accent)] text-white"
-                : "border-[var(--ck-line)] text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
+            className={`h-9 border-l border-[var(--ck-line)] text-[13px] font-semibold first:border-l-0 sm:text-sm ${
+              form[name] === n ? "bg-[var(--ck-accent)] text-white" : "bg-[var(--ck-surface)] text-[var(--ck-text)] hover:bg-[var(--ck-surface2)]"
             }`}
           >
             {n}
           </button>
         ))}
-        <span>{s.high}</span>
       </div>
-    </div>
+    </fieldset>
   );
 }
 
@@ -192,21 +199,21 @@ export function TagebuchFormular({ lesson, onSaved, onAbbrechen }) {
           <TextField name="nextExam" form={form} set={set} />
         </div>
       </div>
-      <p className="mt-2 text-xs text-[var(--ck-muted)]">
+      <p className={`${meta} mt-2`}>
         Keine Gesundheitsdaten ohne ausdrückliche schriftliche Einwilligung notieren. Datum, Dauer, Ort, nächster Termin und Abrechnung
         übernimmt das Blatt aus der Stunde.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="primary" busy={busy === "save"} busyLabel="Speichert …" disabled={!allFit || busy === "print"} onClick={() => save()}>
-          Speichern
-        </Button>
-        <Button busy={busy === "print"} busyLabel="Wird erstellt …" disabled={!allFit || busy === "save"} onClick={() => save({ print: true })}>
-          Speichern &amp; Blatt herunterladen
-        </Button>
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--ck-line)] pt-3">
+        <button type="button" className={knopfPrimaer} disabled={!allFit || busy !== null} onClick={() => save()}>
+          {busy === "save" ? "Wird gespeichert …" : "Speichern"}
+        </button>
+        <button type="button" className={knopf} disabled={!allFit || busy !== null} onClick={() => save({ print: true })}>
+          {busy === "print" ? "Wird erstellt …" : "Speichern und Blatt herunterladen"}
+        </button>
         {onAbbrechen ? (
-          <Button variant="ghost" onClick={onAbbrechen}>
+          <button type="button" className={knopf} onClick={onAbbrechen}>
             Abbrechen
-          </Button>
+          </button>
         ) : null}
       </div>
     </>

@@ -10,6 +10,7 @@ import { AUSFALL_KURZ } from "@/lib/ausfall/berechnung";
 import ElternNachricht from "@/components/admin/management/ElternNachricht";
 import AkteZugang from "@/components/admin/management/AkteZugang";
 import SelbstauskunftKarte from "@/components/admin/management/SelbstauskunftKarte";
+import Themenfahrplan from "@/components/admin/management/Themenfahrplan";
 import StudentForm from "@/components/admin/management/StudentForm";
 import LessonForm from "@/components/admin/management/LessonForm";
 import PaymentDialog from "@/components/admin/management/PaymentDialog";
@@ -316,6 +317,10 @@ export default function StudentDetail({ id, adminFetch, pin, setNotice, customer
         <ElternNachricht customer={customer} studentName={student.name} adminFetch={adminFetch} setNotice={setNotice} />
 
         <SelbstauskunftKarte auskunft={student.selbstauskunft} />
+      </div>
+
+      <div className="mt-4">
+        <Themenfahrplan student={student} lessons={lessons} adminFetch={adminFetch} setNotice={setNotice} onSaved={refresh} />
       </div>
 
       {kundeBearbeiten ? (

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/format";
 import { DIARY_FIELDS, DIARY_SCALES, fitsSheet } from "@/lib/lessons/diary";
+import { themenFuerStunde } from "@/lib/students/fahrplan";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { Button, Field, Modal, downloadProtectedFile, errorText, input } from "@/components/admin/ui";
 
@@ -30,7 +31,74 @@ function initialForm(lesson) {
     nextExam: d.nextExam || "",
     understanding: d.understanding || null,
     participation: d.participation || null,
+    fahrplan: Array.isArray(d.fahrplan) ? d.fahrplan : [],
   };
+}
+
+// Themenfahrplan des Kindes (lib/students/fahrplan.js): Welche Themen waren in
+// dieser Stunde dran – und ist eins damit abgeschlossen? Erscheint nur, wenn es
+// einen Fahrplan gibt und die Stunde ab seinem Startdatum liegt.
+function FahrplanAuswahl({ lesson, form, setForm }) {
+  const { adminFetch } = useAdmin();
+  const [daten, setDaten] = useState(null);
+  useEffect(() => {
+    if (!lesson.studentId) return;
+    let aktiv = true;
+    adminFetch(`/api/admin/students/${lesson.studentId}/fahrplan`)
+      .then((d) => aktiv && setDaten(d))
+      .catch(() => {});
+    return () => {
+      aktiv = false;
+    };
+  }, [adminFetch, lesson.studentId]);
+  if (!daten?.fahrplan) return null;
+  const themen = themenFuerStunde(daten.fahrplan, daten.stunden, { ...lesson, diary: { ...lesson.diary, topic: form.topic, fahrplan: form.fahrplan } });
+  if (!themen) return null;
+  const gewaehlt = new Map(form.fahrplan.map((l) => [l.id, l]));
+
+  const umschalten = (t) =>
+    setForm((f) => {
+      const an = !f.fahrplan.some((l) => l.id === t.id);
+      return {
+        ...f,
+        fahrplan: an ? [...f.fahrplan, { id: t.id, sitzt: false }] : f.fahrplan.filter((l) => l.id !== t.id),
+        // Thema der Stunde vorbelegen, wenn noch leer
+        topic: an && !f.topic.trim() ? t.titel.slice(0, DIARY_FIELDS.topic.max) : f.topic,
+      };
+    });
+  const sitzt = (t) => setForm((f) => ({ ...f, fahrplan: f.fahrplan.map((l) => (l.id === t.id ? { ...l, sitzt: !l.sitzt } : l)) }));
+
+  return (
+    <fieldset className="rounded-xl border border-[var(--ck-line)] p-3">
+      <legend className="px-1 text-xs font-semibold text-[var(--ck-muted)]">Themenfahrplan – was war heute dran?</legend>
+      {themen.length === 0 ? (
+        <p className="text-xs text-[var(--ck-muted)]">Alle Themen des Fahrplans sitzen. Neue Themen im Schülerprofil ergänzen.</p>
+      ) : (
+        <ul className="grid gap-1.5">
+          {themen.map((t) => {
+            const an = gewaehlt.has(t.id);
+            return (
+              <li key={t.id} className="flex flex-wrap items-center gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={an} onChange={() => umschalten(t)} />
+                  <span className="text-[var(--ck-text)]">{t.titel}</span>
+                </label>
+                {t.aktuell ? <span className="text-[11px] font-semibold text-[var(--ck-accent)]">als Nächstes</span> : null}
+                {!an && t.passtZumThema ? <span className="text-[11px] text-[var(--ck-warn)]">passt zum Thema der Stunde</span> : null}
+                {an ? (
+                  <label className="ml-auto flex items-center gap-1.5 text-xs text-[var(--ck-muted)]">
+                    <input type="checkbox" checked={Boolean(gewaehlt.get(t.id)?.sitzt)} onChange={() => sitzt(t)} />
+                    sitzt jetzt (abgeschlossen)
+                  </label>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="mt-2 text-[11px] text-[var(--ck-faint)]">Wie es lief (Was wurde gemacht?, Verständnis, Mitarbeit) erscheint im Fahrplan beim Thema.</p>
+    </fieldset>
+  );
 }
 
 function TextField({ name, form, set, rows = 3 }) {
@@ -108,6 +176,7 @@ export function TagebuchFormular({ lesson, onSaved, onAbbrechen }) {
   return (
     <>
       <div className="grid gap-3">
+        <FahrplanAuswahl lesson={lesson} form={form} setForm={setForm} />
         <TextField name="topic" form={form} set={set} />
         <TextField name="lessonNotes" form={form} set={set} rows={6} />
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">

@@ -16,6 +16,7 @@ const METHODS = [
   ["cash", "Bar"],
   ["bank", "Überweisung"],
   ["card", "Karte"],
+  ["paypal", "PayPal"],
 ];
 
 export default function PaymentDialog({ student, customer, lessons, totalCents, adminFetch, pin, setNotice, onClose, onSaved }) {
@@ -101,7 +102,7 @@ export default function PaymentDialog({ student, customer, lessons, totalCents, 
         <legend className="text-xs font-semibold text-[var(--ck-muted)]">Zahlungsart</legend>
         <div className="mt-1 flex flex-wrap gap-2">
           {METHODS.map(([key, text]) => (
-            <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
+            <label key={key} className={`cursor-pointer rounded-[4px] border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
               <input type="radio" name="lesson-payment-method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
               {text}
             </label>

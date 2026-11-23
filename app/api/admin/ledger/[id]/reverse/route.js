@@ -9,7 +9,7 @@ export async function POST(request, { params }) {
     const { id } = await params;
     const entry = await getEntry(id);
     if (!entry) throw new AdminError("Eintrag nicht gefunden.", { status: 404 });
-    if (entry.source === "invoice") {
+    if (entry.source === "invoice" || entry.source === "invoice_fee") {
       throw new AdminError("Zahlungen zu Rechnungen bitte im Tab „Rechnungen“ über „Bezahlt zurücknehmen“ korrigieren.", { status: 409 });
     }
     const body = await request.json().catch(() => ({}));

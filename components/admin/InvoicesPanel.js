@@ -515,7 +515,8 @@ function ConfigBanner({ config }) {
   if (problems.length === 0) {
     return (
       <p className="text-xs text-[var(--ck-muted)]">
-        Nummernformat {config.numberFormat} · Zahlungsziel {config.paymentTermDays} Tage · Ablage {config.storage?.path}
+        Nummernformat {config.numberFormat} · Zahlungsziel {config.paymentTermDays} Tage · Ablage {config.storage?.path} ·{" "}
+        {config.paypalMe ? `PayPal auf Rechnungen: paypal.me/${config.paypalMe} (mit Gebührenaufschlag)` : "PayPal auf Rechnungen: aus (INVOICE_PAYPAL_ME nicht gesetzt)"}
       </p>
     );
   }
@@ -1274,6 +1275,7 @@ const PAYMENT_METHODS = [
   ["bank", "Überweisung"],
   ["cash", "Bar"],
   ["card", "Karte"],
+  ["paypal", "PayPal"],
 ];
 
 function PaymentDialog({ invoice, onConfirm, onClose }) {
@@ -1288,6 +1290,9 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
       <div className="w-full max-w-md rounded-2xl bg-[var(--ck-surface)] p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-[var(--ck-text)]">Zahlungseingang {invoice.number}</h3>
         <p className="mt-1 text-sm text-[var(--ck-muted)]">{formatPrice(invoice.totalCents)} · {invoice.recipient?.name}</p>
+        {invoice.paypal ? (
+          <p className="mt-1 text-xs text-[var(--ck-muted)]">Per PayPal: {formatPrice(invoice.paypal.bruttoCents)} inkl. {formatPrice(invoice.paypal.aufschlagCents)} Aufschlag.</p>
+        ) : null}
         <div className="mt-4 grid gap-3">
           <label className="block">
             <span className={label}>Bezahlt am</span>
@@ -1297,7 +1302,7 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
             <legend className={label}>Zahlungsart</legend>
             <div className="mt-1 flex flex-wrap gap-2">
               {PAYMENT_METHODS.map(([key, text]) => (
-                <label key={key} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
+                <label key={key} className={`cursor-pointer rounded-[4px] border px-3 py-1.5 text-sm ${method === key ? "border-[var(--ck-accent)] bg-[var(--ck-accent-soft)] text-[var(--ck-accent)]" : "border-[var(--ck-line)] text-[var(--ck-text)]"}`}>
                   <input type="radio" name="method" value={key} checked={method === key} onChange={() => setMethod(key)} className="sr-only" />
                   {text}
                 </label>
@@ -1311,7 +1316,13 @@ function PaymentDialog({ invoice, onConfirm, onClose }) {
               <span className="block text-xs text-[var(--ck-muted)]">{mail ? `An ${mail} – „Ihre Zahlung ist angekommen“.` : "Keine E-Mail-Adresse hinterlegt."}</span>
             </span>
           </label>
-          <p className="text-xs text-[var(--ck-muted)]">Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht (Tab „Schüler &amp; Buchhaltung“).</p>
+          <p className="text-xs text-[var(--ck-muted)]">
+            {method === "paypal"
+              ? invoice.paypal
+                ? `Gebucht werden ${formatPrice(invoice.paypal.bruttoCents)} Einnahme und die von PayPal einbehaltene Gebühr als Ausgabe („Bank- und Zahlungsgebühren“).`
+                : "Diese Rechnung enthält kein PayPal-Angebot: Gebucht wird der Rechnungsbetrag als Einnahme, die PayPal-Gebühr trägt Lernsprung (als Ausgabe gebucht)."
+              : "Die Einnahme wird automatisch im Buchhaltungs-Journal gebucht."}
+          </p>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <button

@@ -22,6 +22,7 @@ ausgewiesen, auch nicht als 0 %. Online-Zahlung (Stripe) gibt es seit
 | Konfiguration | `lib/invoicing/config.js` | Liest `INVOICE_*` aus der Umgebung, meldet fehlende Pflichtwerte |
 | Nummernkreis | `lib/invoicing/numbering.js` | Format `LS-{YYYY}-{NNNN}`, atomarer `$inc`-Zähler (Collection `counters`) |
 | GiroCode | `lib/invoicing/girocode.js` | EPC069-12-Payload + QR-PNG (Fehlerkorrektur M) |
+| PayPal | `lib/invoicing/paypal.js` | freiwillige Alternative mit Aufschlag in Höhe der PayPal-Gebühr, Link + QR |
 | Validierung | `lib/invoicing/validation.js` | Pflichtfelder (§ 14 UStG), Normalisierung der Formular-Eingaben |
 | Mailtext | `lib/invoicing/mailText.js` | Vorlage der Rechnungs-/Storno-Mail, Header-Injection-Schutz |
 | PDF-Layout | `lib/invoicing/pdf.js` | Sichtbares PDF (DIN 5008 Form B, Inter-Schrift eingebettet, Logo, Navy/Orange) |
@@ -299,3 +300,29 @@ Die Tests laden die App-Module über den `@/`-Alias (`tests/register-alias.mjs`)
       (rechtlich gegenprüfen lassen).
 - [ ] Backup um `INVOICE_STORAGE_PATH` erweitern.
 - [x] Stripe entfernt (17.09.2026).
+
+## PayPal als Alternative (mit Gebührenaufschlag)
+
+Ist `INVOICE_PAYPAL_ME` gesetzt (nur der Name aus `paypal.me/<Name>` des
+PayPal-Geschäftskontos), steht im Zahlungskasten jeder neuen Rechnung rechts
+„Alternativ per PayPal“: Betrag inklusive Aufschlag, QR-Code und Link
+(`paypal.me/<Name>/<Betrag>EUR`). Die Rechnungsmail nennt Betrag und Link ebenfalls.
+
+* **Aufschlag:** kleinster Betrag B mit B − Gebühr(B) ≥ Rechnungsbetrag, Gebühr
+  nach PayPal-Händlerkonditionen DE „Geld für Waren und Dienstleistungen
+  senden/empfangen“ 2,49 % + 0,35 € (Stand 04.11.2026). Der Aufschlag ist damit
+  nie höher als die Gebühr, die PayPal tatsächlich einbehält. Gebühren ändern:
+  nur `PAYPAL_GEBUEHR` in `lib/invoicing/paypal.js`.
+* **Rechtlich:** BGH, Urteil vom 25.03.2021 – I ZR 203/19 (PayPal-Entgelt
+  verstößt nicht gegen § 270a BGB); § 312a Abs. 4 BGB verlangt eine kostenlose
+  Alternative (Überweisung/GiroCode auf derselben Rechnung) und dass das Entgelt
+  die Kosten nicht übersteigt.
+* **Snapshot:** Betrag, Aufschlag und Link werden beim Ausstellen an der Rechnung
+  gespeichert (`invoice.paypal`); spätere Gebührenänderungen ändern ausgestellte
+  Rechnungen nicht. Der Rechnungsbetrag und das E-Rechnungs-XML bleiben unverändert.
+* **Zahlungseingang „PayPal“:** gebucht werden die volle Zahlung als Einnahme
+  (Rechnungsbetrag + Aufschlag) und die PayPal-Gebühr als Ausgabe „Bank- und
+  Zahlungsgebühren“ (`source: invoice_fee`). „Bezahlt zurücknehmen“ storniert beides.
+  Ohne PayPal-Angebot auf der Rechnung wird der Rechnungsbetrag gebucht, die
+  Gebühr trägt Lernsprung.
+

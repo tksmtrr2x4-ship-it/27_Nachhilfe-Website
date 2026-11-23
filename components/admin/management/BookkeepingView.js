@@ -112,7 +112,7 @@ export default function BookkeepingView({ adminFetch, pin, setNotice, onShowStud
       <button className={link} onClick={() => openProtectedFile(pin, `/api/admin/ledger/${e._id}/receipt`).catch((err) => setNotice(err.message))}>
         Beleg anzeigen
       </button>
-    ) : e.source === "invoice" ? (
+    ) : e.source === "invoice" || e.source === "invoice_fee" ? (
       <span className="text-xs text-[var(--ck-muted)]">Rechnung {e.invoiceNumber}</span>
     ) : !e.reverses ? (
       <ReceiptUpload onFile={(file) => attach(e, file)} />

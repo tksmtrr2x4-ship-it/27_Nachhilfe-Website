@@ -23,5 +23,7 @@ export async function GET(request) {
     hasTaxRegistration: Boolean(config.seller.taxNumber || config.seller.vatId),
     // Eine Steuer-ID im Feld für die Steuernummer wird bewusst ignoriert.
     taxNumberRejected: config.taxNumberRejected,
+    // PayPal.Me-Name (öffentlich) – leer = kein PayPal auf Rechnungen.
+    paypalMe: config.bank.paypalMe || "",
   });
 }

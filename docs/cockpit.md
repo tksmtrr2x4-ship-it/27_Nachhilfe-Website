@@ -93,9 +93,13 @@ Vier Reiter, dahinter **keine neue Fachlogik**:
 | Rechnung | Entwurf im Layout des fertigen Dokuments, Quittung | `POST /api/admin/invoices`, Finanzen → Rechnungen |
 | Akte | Stammdaten, Tagebuchblatt und Aufnahmebogen als .docx | `lib/papierakte` |
 
-**Themenfahrplan.** Im Schülerprofil eine chronologische Themenliste (z. B. aus dem
-Aufnahmegespräch, `student.fahrplan`), gültig ab einem Startdatum. Im Tagebuch einer
-Stunde ab diesem Datum werden die behandelten Themen angehakt (`diary.fahrplan`,
+**Themenfahrplan.** Im Schülerprofil je Fach eine chronologische Themenliste (z. B. aus
+dem Aufnahmegespräch, `student.fahrplaene = [{ fach, start, themen }]`), gültig ab einem
+Startdatum. Das Fach wählt ein Auswahlmenü mit den Fächern des Profils; zugeordnet werden
+nur Stunden dieses Fachs (`lesson.subjectName`). Ein alter Fahrplan ohne Fach
+(`student.fahrplan`) gilt als Fahrplan des ersten Fachs und wird beim nächsten Speichern
+übernommen. Im Tagebuch einer Stunde ab dem Startdatum werden die behandelten Themen
+aus dem Fahrplan ihres Fachs angehakt (`diary.fahrplan`,
 optional „sitzt jetzt“). Der Fahrplan zeigt je Thema die Tagebucheinträge (Was wurde
 gemacht?, Verständnis, Mitarbeit, offene Fragen) und den Status offen / läuft / sitzt;
 Einträge seit dem Start ohne Thema stehen darunter, ältere Stunden bleiben außen vor.

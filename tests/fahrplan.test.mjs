@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fahrplanUebersicht, normalizeFahrplanInput, normalizeFahrplanLinks, themenFuerStunde } from "@/lib/students/fahrplan";
+import { fachVonStunde, fahrplaeneVon, fahrplanFaecher, fahrplanFuerStunde, fahrplanUebersicht, normalizeFahrplanInput, normalizeFahrplanLinks, themenFuerStunde } from "@/lib/students/fahrplan";
 import { normalizeDiaryInput } from "@/lib/lessons/diary";
 
 let n = 0;
@@ -19,16 +19,17 @@ const stunde = (id, datum, diary = {}, extra = {}) => ({ _id: id, requestedDate:
 
 test("Fahrplan-Eingabe: Startdatum Pflicht, Titel Pflicht, IDs bleiben, Duplikate bekommen neue", () => {
   const { fahrplan: f, problems } = normalizeFahrplanInput(
-    { start: "2026-11-19", themen: [{ id: "abcdef1", titel: "  Potenz   gesetze " }, { id: "abcdef1", titel: "B" }, { titel: "C", sitztAm: "2026-11-01" }] },
+    { fach: "Mathematik", start: "2026-11-19", themen: [{ id: "abcdef1", titel: "  Potenz   gesetze " }, { id: "abcdef1", titel: "B" }, { titel: "C", sitztAm: "2026-11-01" }] },
     neueId
   );
   assert.deepEqual(problems, []);
+  assert.equal(f.fach, "Mathematik");
   assert.equal(f.themen[0].id, "abcdef1");
   assert.equal(f.themen[0].titel, "Potenz gesetze");
   assert.notEqual(f.themen[1].id, "abcdef1");
   assert.equal(f.themen[2].sitztAm, "2026-11-01");
-  assert.ok(normalizeFahrplanInput({ start: "gestern", themen: [{ titel: "" }] }, neueId).problems.length === 2);
-  assert.ok(normalizeFahrplanInput({ start: "2026-11-19", themen: [{ titel: "x".repeat(91) }] }, neueId).problems.length === 1);
+  assert.ok(normalizeFahrplanInput({ fach: "Mathematik", start: "gestern", themen: [{ titel: "" }] }, neueId).problems.length === 2);
+  assert.ok(normalizeFahrplanInput({ fach: "Mathematik", start: "2026-11-19", themen: [{ titel: "x".repeat(91) }] }, neueId).problems.length === 1);
 });
 
 test("Tagebuch speichert Fahrplan-Verknüpfungen (bereinigt, höchstens 10, ohne Duplikate)", () => {
@@ -96,4 +97,44 @@ test("Tagebuchblatt: Fahrplan-Themen der Stunde und Stand nach dieser Stunde", a
   // ohne Fahrplan oder vor dem Start: Felder bleiben leer
   assert.equal("fahrplanStand" in tagebuchStunde({ lesson: stunden[1], allLessons: stunden }), false);
   assert.equal("fahrplanStand" in tagebuchStunde({ lesson: stunde("alt", "2026-11-01"), allLessons: stunden, fahrplan }), false);
+});
+
+test("Fahrplan je Fach: Fach ist Pflicht und muss ein Fach des Kindes sein", () => {
+  assert.deepEqual(normalizeFahrplanInput({ start: "2026-11-19", themen: [{ titel: "A" }] }, neueId).problems, ["Bitte ein Fach wählen."]);
+  assert.deepEqual(normalizeFahrplanInput({ fach: "Physik", start: "2026-11-19", themen: [{ titel: "A" }] }, neueId, ["Mathematik"]).problems, ["Physik ist kein Fach dieses Kindes."]);
+  assert.deepEqual(normalizeFahrplanInput({ fach: "Mathematik", start: "2026-11-19", themen: [{ titel: "A" }] }, neueId, ["Mathematik"]).problems, []);
+});
+
+test("Fahrplan je Fach: Liste, Auswahlmenü und alter Fahrplan ohne Fach", () => {
+  const kind = { subjects: [{ subject: "Mathematik" }, { subject: "Biologie", courseLevel: "basis" }] };
+  assert.deepEqual(fahrplanFaecher(kind), ["Mathematik", "Biologie"]);
+  assert.deepEqual(fahrplaeneVon(kind), []);
+  // alter Fahrplan ohne Fach gehört zum ersten Fach
+  const alt = { ...kind, fahrplan };
+  assert.equal(fahrplaeneVon(alt).length, 1);
+  assert.equal(fahrplaeneVon(alt)[0].fach, "Mathematik");
+  // neue Liste hat Vorrang, Reihenfolge wie die Fächer; Fach mit Fahrplan, aber nicht mehr eingetragen, bleibt wählbar
+  const neu = { subjects: [{ subject: "Mathematik" }], fahrplaene: [{ ...fahrplan, fach: "Physik" }, { ...fahrplan, fach: "Mathematik" }], fahrplan };
+  assert.deepEqual(fahrplaeneVon(neu).map((f) => f.fach), ["Mathematik", "Physik"]);
+  assert.deepEqual(fahrplanFaecher(neu), ["Mathematik", "Physik"]);
+});
+
+test("Fahrplan je Fach: Stunden werden nur dem Fahrplan ihres Fachs zugeordnet", () => {
+  assert.equal(fachVonStunde({ subject: "Biologie (Basisfach)" }), "Biologie");
+  assert.equal(fachVonStunde({ subjectName: "Mathematik", subject: "Mathematik" }), "Mathematik");
+  const mathe = { ...fahrplan, fach: "Mathematik" };
+  const bio = { fach: "Biologie", start: "2026-11-10", themen: [{ id: "thema-zelle", titel: "Zelle", notiz: "", sitztAm: null }] };
+  assert.equal(fahrplanFuerStunde([mathe, bio], { subject: "Biologie (Basisfach)", subjectName: "Biologie" }), bio);
+  assert.equal(fahrplanFuerStunde([mathe, bio], { subjectName: "Physik" }), null);
+  assert.equal(fahrplanFuerStunde([mathe], { subjectName: "" }), mathe);
+  const stunden = [
+    stunde("m1", "2026-11-12", { topic: "Potenzen" }, { subjectName: "Mathematik" }),
+    stunde("b1", "2026-11-13", { topic: "Zellaufbau", fahrplan: [{ id: "thema-zelle", sitzt: false }] }, { subjectName: "Biologie" }),
+  ];
+  const um = fahrplanUebersicht(mathe, stunden);
+  assert.equal(um.fach, "Mathematik");
+  assert.deepEqual(um.ohneThema.map((e) => e.stundeId), ["m1"]); // Bio-Stunde taucht im Mathe-Fahrplan nicht auf
+  const ub = fahrplanUebersicht(bio, stunden);
+  assert.deepEqual(ub.themen[0].eintraege.map((e) => e.stundeId), ["b1"]);
+  assert.deepEqual(ub.ohneThema, []);
 });

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/format";
 import { DIARY_FIELDS, DIARY_SCALES, fitsSheet } from "@/lib/lessons/diary";
-import { themenFuerStunde } from "@/lib/students/fahrplan";
+import { fahrplanFuerStunde, themenFuerStunde } from "@/lib/students/fahrplan";
 import { useAdmin } from "@/components/admin/shell/AdminContext";
 import { Modal, downloadProtectedFile, errorText } from "@/components/admin/ui";
 import { beschriftung, feld, knopf, knopfPrimaer, meta, text } from "@/components/admin/management/sachlich";
@@ -36,9 +36,9 @@ function initialForm(lesson) {
   };
 }
 
-// Themenfahrplan des Kindes (lib/students/fahrplan.js): Welche Themen waren in
-// dieser Stunde dran – und ist eins damit abgeschlossen? Erscheint nur, wenn es
-// einen Fahrplan gibt und die Stunde ab seinem Startdatum liegt.
+// Themenfahrplan des Kindes im Fach der Stunde (lib/students/fahrplan.js): Welche
+// Themen waren in dieser Stunde dran – und ist eins damit abgeschlossen? Erscheint
+// nur, wenn es für das Fach einen Fahrplan gibt und die Stunde ab seinem Startdatum liegt.
 function FahrplanAuswahl({ lesson, form, setForm }) {
   const { adminFetch } = useAdmin();
   const [daten, setDaten] = useState(null);
@@ -52,8 +52,9 @@ function FahrplanAuswahl({ lesson, form, setForm }) {
       aktiv = false;
     };
   }, [adminFetch, lesson.studentId]);
-  if (!daten?.fahrplan) return null;
-  const themen = themenFuerStunde(daten.fahrplan, daten.stunden, { ...lesson, diary: { ...lesson.diary, topic: form.topic, fahrplan: form.fahrplan } });
+  const plan = fahrplanFuerStunde(daten?.fahrplaene, lesson);
+  if (!plan) return null;
+  const themen = themenFuerStunde(plan, daten.stunden, { ...lesson, diary: { ...lesson.diary, topic: form.topic, fahrplan: form.fahrplan } });
   if (!themen) return null;
   const gewaehlt = new Map(form.fahrplan.map((l) => [l.id, l]));
 
@@ -71,7 +72,7 @@ function FahrplanAuswahl({ lesson, form, setForm }) {
 
   return (
     <fieldset className="min-w-0 rounded-[4px] border border-[var(--ck-line)] px-3 pb-3 pt-1">
-      <legend className={`${beschriftung} px-1`}>Themenfahrplan – in dieser Stunde behandelt</legend>
+      <legend className={`${beschriftung} px-1`}>Themenfahrplan {plan.fach} – in dieser Stunde behandelt</legend>
       {themen.length === 0 ? (
         <p className={meta}>Alle Themen des Fahrplans sind abgeschlossen. Neue Themen im Schülerprofil ergänzen.</p>
       ) : (

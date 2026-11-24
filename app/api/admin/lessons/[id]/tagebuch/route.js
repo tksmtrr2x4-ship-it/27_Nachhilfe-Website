@@ -3,6 +3,7 @@ import { getBooking } from "@/lib/db";
 import { getStudent } from "@/lib/students/db";
 import { listLessons } from "@/lib/lessons/db";
 import { getInvoice } from "@/lib/invoicing/db";
+import { fahrplaeneVon, fahrplanFuerStunde } from "@/lib/students/fahrplan";
 import { contentDisposition, renderTagebuchblatt, tagebuchFilename, tagebuchKopf, tagebuchStunde } from "@/lib/papierakte/index";
 
 // Der Generator braucht fs und Buffer – nie Edge.
@@ -29,7 +30,7 @@ export async function GET(request, { params }) {
     ]);
     const docx = await renderTagebuchblatt({
       kopf: tagebuchKopf({ student, lesson }),
-      stunde: tagebuchStunde({ lesson, allLessons, invoice, fahrplan: student?.fahrplan || null }),
+      stunde: tagebuchStunde({ lesson, allLessons, invoice, fahrplan: fahrplanFuerStunde(fahrplaeneVon(student), lesson) }),
     });
     return new Response(docx, {
       headers: {

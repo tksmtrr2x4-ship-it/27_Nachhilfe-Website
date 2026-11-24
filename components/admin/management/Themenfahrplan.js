@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { formatDate } from "@/lib/format";
-import { FAHRPLAN_GRENZEN, fahrplanUebersicht } from "@/lib/students/fahrplan";
+import { FAHRPLAN_GRENZEN, fahrplanFaecher, fahrplaeneVon, fahrplanUebersicht } from "@/lib/students/fahrplan";
 import { useStundeOeffnen } from "@/components/admin/shell/stunde";
 import { card, errorText, todayIso } from "@/components/admin/management/ui";
 import { beschriftung, feld, knopf, knopfKlein, knopfPrimaer, meta, text } from "@/components/admin/management/sachlich";
 
-// Themenfahrplan im Schülerprofil: chronologische Themenliste (z. B. aus dem
-// Aufnahmegespräch), zusammengeführt mit dem Tagebuch. Je Thema stehen die
+// Themenfahrplan im Schülerprofil: je Fach eine chronologische Themenliste (z. B.
+// aus dem Aufnahmegespräch), zusammengeführt mit dem Tagebuch der Stunden dieses
+// Fachs. Das Fach wird oben im Auswahlmenü gewählt (Fächer aus dem Profil). Je Thema stehen die
 // Stunden, in denen es behandelt wurde – mit dem, was im Tagebuch steht.
 // Logik und Datenform: lib/students/fahrplan.js. Gestaltung bewusst sachlich:
 // rechteckige Felder, Status als Text, Bewertungen als Zahl.
@@ -48,7 +49,7 @@ function Eintrag({ e, oeffnen }) {
   );
 }
 
-function Bearbeiten({ fahrplan, onSpeichern, onAbbrechen, busy }) {
+function Bearbeiten({ fach, fahrplan, onSpeichern, onEntfernen, onAbbrechen, busy }) {
   const [start, setStart] = useState(fahrplan?.start || todayIso());
   const [themen, setThemen] = useState(() => (fahrplan?.themen?.length ? fahrplan.themen : [{ titel: "", notiz: "" }]));
   const [neu, setNeu] = useState("");
@@ -110,12 +111,17 @@ function Bearbeiten({ fahrplan, onSpeichern, onAbbrechen, busy }) {
       </label>
 
       <div className="flex flex-wrap gap-2 border-t border-[var(--ck-line)] pt-3">
-        <button type="button" className={knopfPrimaer} disabled={busy} onClick={() => onSpeichern({ start, themen: themen.filter((t) => t.titel.trim()) })}>
-          {busy ? "Wird gespeichert …" : "Fahrplan speichern"}
+        <button type="button" className={knopfPrimaer} disabled={busy} onClick={() => onSpeichern({ fach, start, themen: themen.filter((t) => t.titel.trim()) })}>
+          {busy ? "Wird gespeichert …" : `Fahrplan ${fach} speichern`}
         </button>
         <button type="button" className={knopf} onClick={onAbbrechen}>
           Abbrechen
         </button>
+        {fahrplan ? (
+          <button type="button" className={`${knopf} sm:ml-auto`} disabled={busy} onClick={onEntfernen}>
+            Fahrplan {fach} löschen
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -123,17 +129,22 @@ function Bearbeiten({ fahrplan, onSpeichern, onAbbrechen, busy }) {
 
 export default function Themenfahrplan({ student, lessons, adminFetch, setNotice, onSaved }) {
   const oeffnen = useStundeOeffnen();
-  const fahrplan = student.fahrplan || null;
+  const fahrplaene = useMemo(() => fahrplaeneVon(student), [student]);
+  const faecher = useMemo(() => fahrplanFaecher(student), [student]);
+  const [gewaehlt, setGewaehlt] = useState("");
+  // Vorauswahl: zuletzt gewähltes Fach, sonst das erste mit Fahrplan, sonst das erste Fach
+  const fach = faecher.includes(gewaehlt) ? gewaehlt : fahrplaene[0]?.fach || faecher[0] || "";
+  const fahrplan = fahrplaene.find((f) => f.fach === fach) || null;
   const [bearbeiten, setBearbeiten] = useState(false);
   const [busy, setBusy] = useState(false);
   const [abgeschlosseneZeigen, setAbgeschlosseneZeigen] = useState(true);
   const uebersicht = useMemo(() => fahrplanUebersicht(fahrplan, lessons), [fahrplan, lessons]);
 
-  async function speichern(body) {
+  async function senden(body, hinweis) {
     setBusy(true);
     try {
       await adminFetch(`/api/admin/students/${student._id}/fahrplan`, { method: "PUT", body: JSON.stringify(body) });
-      setNotice("Themenfahrplan gespeichert.");
+      setNotice(hinweis);
       setBearbeiten(false);
       onSaved?.();
     } catch (err) {
@@ -142,13 +153,24 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
       setBusy(false);
     }
   }
+  const speichern = (body) => senden(body, `Themenfahrplan ${body.fach} gespeichert.`);
+  function entfernen() {
+    if (!window.confirm(`Themenfahrplan ${fach} löschen? Die Tagebucheinträge bleiben erhalten, nur die Zuordnung zu den Themen entfällt.`)) return;
+    senden({ fach, fahrplan: null }, `Themenfahrplan ${fach} gelöscht.`);
+  }
 
   // Abschluss von Hand setzen oder zurücknehmen (z. B. Thema in der Schule abgeschlossen)
   function abschliessen(thema, an) {
     speichern({
+      fach,
       start: fahrplan.start,
       themen: fahrplan.themen.map((t) => (t.id === thema.id ? { ...t, sitztAm: an ? todayIso() : null } : t)),
     });
+  }
+
+  function fachWechseln(neu) {
+    setGewaehlt(neu);
+    setBearbeiten(false);
   }
 
   const sichtbar = uebersicht ? uebersicht.themen.filter((t) => abgeschlosseneZeigen || t.status !== "sitzt") : [];
@@ -158,7 +180,7 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
           <h3 id="themenfahrplan-titel" className="font-semibold text-[var(--ck-text)]">
-            Themenfahrplan
+            Themenfahrplan{fach ? ` ${fach}` : ""}
           </h3>
           {uebersicht ? (
             <p className={`${meta} mt-0.5`}>
@@ -167,7 +189,7 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
             </p>
           ) : null}
         </div>
-        {!bearbeiten ? (
+        {!bearbeiten && fach ? (
           <div className="flex flex-wrap gap-2">
             {uebersicht?.fortschritt.sitzt ? (
               <button type="button" className={knopf} onClick={() => setAbgeschlosseneZeigen((z) => !z)}>
@@ -175,19 +197,39 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
               </button>
             ) : null}
             <button type="button" className={fahrplan ? knopf : knopfPrimaer} onClick={() => setBearbeiten(true)}>
-              {fahrplan ? "Bearbeiten" : "Fahrplan anlegen"}
+              {fahrplan ? "Bearbeiten" : `Fahrplan ${fach} anlegen`}
             </button>
           </div>
         ) : null}
       </div>
 
-      {bearbeiten ? (
-        <Bearbeiten fahrplan={fahrplan} busy={busy} onSpeichern={speichern} onAbbrechen={() => setBearbeiten(false)} />
+      {faecher.length ? (
+        <label className="mt-3 block sm:w-72">
+          <span className={beschriftung}>Fach</span>
+          <select className={`${feld} mt-1`} value={fach} disabled={busy} onChange={(e) => fachWechseln(e.target.value)}>
+            {faecher.map((f) => {
+              const plan = fahrplaene.find((p) => p.fach === f);
+              return (
+                <option key={f} value={f}>
+                  {f} – {plan ? `${plan.themen.length} ${plan.themen.length === 1 ? "Thema" : "Themen"}` : "noch kein Fahrplan"}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+      ) : null}
+
+      {!fach ? (
+        <p className={`${text} mt-2 text-[var(--ck-muted)]`}>
+          Themenfahrpläne werden je Fach angelegt. Bitte zuerst oben im Profil unter „Bearbeiten“ ein Fach eintragen.
+        </p>
+      ) : bearbeiten ? (
+        <Bearbeiten key={fach} fach={fach} fahrplan={fahrplan} busy={busy} onSpeichern={speichern} onEntfernen={entfernen} onAbbrechen={() => setBearbeiten(false)} />
       ) : !uebersicht ? (
         <p className={`${text} mt-2 text-[var(--ck-muted)]`}>
-          Noch kein Fahrplan angelegt. Nach dem Aufnahmegespräch die Themen in der geplanten Reihenfolge eintragen. Im Tagebuch jeder
-          Stunde wird dann das behandelte Thema angegeben; Inhalt und Bewertung der Stunde erscheinen hier beim Thema. Stunden vor dem
-          Startdatum werden nicht berücksichtigt.
+          Für {fach} ist noch kein Fahrplan angelegt. Nach dem Aufnahmegespräch die Themen in der geplanten Reihenfolge eintragen. Im
+          Tagebuch jeder {fach}-Stunde wird dann das behandelte Thema angegeben; Inhalt und Bewertung der Stunde erscheinen hier beim
+          Thema. Stunden vor dem Startdatum werden nicht berücksichtigt.
         </p>
       ) : (
         <>
@@ -235,7 +277,7 @@ export default function Themenfahrplan({ student, lessons, adminFetch, setNotice
           {uebersicht.ohneThema.length ? (
             <div className="mt-5">
               <h4 className={`${text} font-semibold`}>Tagebucheinträge ohne Fahrplan-Thema</h4>
-              <p className={`${meta} mt-0.5`}>Seit Beginn des Fahrplans. Über das Datum das Tagebuch öffnen und ein Thema zuordnen.</p>
+              <p className={`${meta} mt-0.5`}>{fach}-Stunden seit Beginn des Fahrplans. Über das Datum das Tagebuch öffnen und ein Thema zuordnen.</p>
               <ul className="mt-2 divide-y divide-[var(--ck-line)] rounded-[4px] border border-[var(--ck-line)] px-3 py-2.5">
                 {uebersicht.ohneThema.map((e) => (
                   <Eintrag key={e.stundeId} e={e} oeffnen={oeffnen} />
